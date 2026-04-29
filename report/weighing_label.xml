@@ -45,10 +45,6 @@
                                     <strong>Picking:</strong>
                                     <p t-field="move_line.picking_id.name"/>
                                 </div>
-                                <div class="col-6">
-                                    <strong>Package:</strong>
-                                    <p t-field="move_line.result_package_id.name" t-if="move_line.result_package_id"/>
-                                </div>
                             </div>
                         </div>
                     </div>

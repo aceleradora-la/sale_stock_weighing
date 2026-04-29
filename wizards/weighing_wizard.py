@@ -26,15 +26,6 @@ class WeighingWizard(models.TransientModel):
         comodel_name="stock.lot",
         domain="[('id', 'in', available_lot_ids)]",
     )
-    available_result_package_ids = fields.Many2many(
-        comodel_name="stock.quant.package",
-        compute="_compute_available_result_package_ids",
-    )
-    result_package_id = fields.Many2one(
-        comodel_name="stock.quant.package",
-        string="Destination Package",
-        domain="[('id', 'in', available_result_package_ids)]",
-    )
     product_tracking = fields.Selection(
         related="product_id.tracking",
     )
@@ -72,16 +63,6 @@ class WeighingWizard(models.TransientModel):
             default_lot_id = self.env.context.get("default_lot_id", False)
             if default_lot_id:
                 wiz.available_lot_ids = wiz.available_lot_ids | self.env["stock.lot"].browse(default_lot_id)
-
-    @api.depends("product_id")
-    def _compute_available_result_package_ids(self):
-        self.available_result_package_ids = False
-        for wiz in self:
-            wiz.available_result_package_ids = self.env["stock.quant.package"].search(
-                [],
-                order="create_date desc",
-                limit=10,
-            )
 
     @api.depends("move_id", "selected_move_line_id")
     def _compute_has_weight(self):

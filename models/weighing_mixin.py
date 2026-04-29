@@ -10,33 +10,24 @@ class WeighingMixin(models.AbstractModel):
         search="_search_has_weight",
     )
 
-    @api.model
-    def _has_weigh_domain(self):
-        return [
-            (
-                "product_uom_category_id",
-                "=",
-                self.env.ref("uom.product_uom_categ_kgm").id,
-            ),
-        ]
+    def _get_weight_category(self):
+        return self.env.ref("uom.product_uom_categ_kgm", raise_if_not_found=False)
 
-    @api.depends("product_uom_category_id")
+    @api.depends("product_id.uom_id.category_id")
     def _compute_has_weight(self):
-        weight_category = self.env.ref("uom.product_uom_categ_kgm", raise_if_not_found=False)
+        weight_category = self._get_weight_category()
         if not weight_category:
             self.has_weight = False
             return
-        for record in self:
-            record.has_weight = (
-                record.product_uom_category_id == weight_category
-                if record.product_uom_category_id
-                else False
-            )
+        for record in self.filtered("product_id"):
+            record.has_weight = record.product_id.uom_id.category_id == weight_category
+        for record in self.filtered(lambda r: not r.product_id):
+            record.has_weight = False
 
     def _search_has_weight(self, operator, value):
-        weight_category = self.env.ref("uom.product_uom_categ_kgm", raise_if_not_found=False)
+        weight_category = self._get_weight_category()
         if not weight_category:
             return [("id", "=", False)]
         return [
-            ("product_uom_category_id", operator, weight_category.id),
+            ("product_id.uom_id.category_id", operator, weight_category.id),
         ]

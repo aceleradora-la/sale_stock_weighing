@@ -8,26 +8,21 @@ class WeighingMixin(models.AbstractModel):
     has_weight = fields.Boolean(
         compute="_compute_has_weight",
         search="_search_has_weight",
+        store=True,
     )
 
-    def _get_weight_category(self):
-        return self.env.ref("uom.product_uom_categ_kgm", raise_if_not_found=False)
-
-    @api.depends("product_id.uom_id.category_id")
+    @api.depends("product_id.is_weighed_product")
     def _compute_has_weight(self):
-        weight_category = self._get_weight_category()
-        if not weight_category:
-            self.has_weight = False
-            return
-        for record in self.filtered("product_id"):
-            record.has_weight = record.product_id.uom_id.category_id == weight_category
-        for record in self.filtered(lambda r: not r.product_id):
-            record.has_weight = False
+        for record in self:
+            record.has_weight = bool(record.product_id.is_weighed_product)
 
     def _search_has_weight(self, operator, value):
-        weight_category = self._get_weight_category()
-        if not weight_category:
-            return [("id", "=", False)]
-        return [
-            ("product_id.uom_id.category_id", operator, weight_category.id),
-        ]
+        if operator == "=" and value:
+            return [("product_id.is_weighed_product", "=", True)]
+        elif operator == "=" and not value:
+            return [("product_id.is_weighed_product", "=", False)]
+        elif operator == "!=" and value:
+            return [("product_id.is_weighed_product", "=", False)]
+        elif operator == "!=" and not value:
+            return [("product_id.is_weighed_product", "=", True)]
+        return [("id", "=", False)]

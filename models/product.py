@@ -12,7 +12,6 @@ class ProductTemplate(models.Model):
     weighing_uom_id = fields.Many2one(
         comodel_name="uom.uom",
         string="Weighing UoM",
-        domain="[('category_id', '=', %(weight_category_id)d)]",
         help="Unit of measure used for weighing (e.g. kg). "
         "Price is per this unit.",
     )

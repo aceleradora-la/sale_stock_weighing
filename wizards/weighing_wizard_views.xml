@@ -10,20 +10,20 @@
                         <field name="product_id" readonly="1"/>
                         <field name="move_id" readonly="1"/>
                         <field name="selected_move_line_id" readonly="1"
-                               attrs="{'invisible': [('selected_move_line_id', '=', False)]}"/>
+                               invisible="not selected_move_line_id"/>
                     </group>
                     <group>
                         <field name="weight" class="oe_inline"
                                style="font-size: 200%; font-weight: bold;"
-                               attrs="{'readonly': [('product_id', '=', False)]}"/>
+                               readonly="not product_id"/>
                         <field name="has_weight" invisible="1"/>
                     </group>
                 </group>
                 <group>
                     <group>
                         <field name="lot_id"
-                               attrs="{'invisible': [('product_tracking', '=', 'none')],
-                                       'required': [('product_tracking', '!=', 'none')]}"/>
+                               invisible="product_tracking == 'none'"
+                               required="product_tracking != 'none'"/>
                         <field name="product_tracking" invisible="1"/>
                     </group>
                     <group>
@@ -35,7 +35,7 @@
                             string="Record Weight" class="btn-primary"/>
                     <button name="add_operation_and_record" type="object"
                             string="Add &amp; Record" class="btn-secondary"
-                            attrs="{'invisible': [('wizard_state', '!=', 'new_move_line')]}"/>
+                            invisible="wizard_state != 'new_move_line'"/>
                     <button name="action_close" type="object"
                             string="Close" class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>

@@ -8,7 +8,7 @@
             <group name="inventory" position="inside">
                 <group name="weighing" string="Weighing">
                     <field name="is_weighed_product"/>
-                    <field name="weighing_uom_id" attrs="{'invisible': [('is_weighed_product', '=', False)], 'required': [('is_weighed_product', '=', True)]}"/>
+                    <field name="weighing_uom_id" invisible="not is_weighed_product" required="is_weighed_product"/>
                 </group>
             </group>
         </field>

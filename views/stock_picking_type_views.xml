@@ -8,8 +8,8 @@
             <group name="additional_info" position="inside">
                 <group name="weighing" string="Weighing">
                     <field name="weighing_operations"/>
-                    <field name="print_weighing_label" attrs="{'invisible': [('weighing_operations', '=', False)]}"/>
-                    <field name="weighing_label_report_id" attrs="{'invisible': [('weighing_operations', '=', False)]}"/>
+                    <field name="print_weighing_label" invisible="not weighing_operations"/>
+                    <field name="weighing_label_report_id" invisible="not weighing_operations"/>
                 </group>
             </group>
         </field>

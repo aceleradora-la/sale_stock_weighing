@@ -78,7 +78,7 @@
                                 <div class="oe_kanban_bottom_left">
                                     <button name="action_weighing" type="object"
                                             class="btn btn-primary btn-sm"
-                                            attrs="{'invisible': [('is_weighing_operation_locked', '=', True)]}">
+                                            invisible="is_weighing_operation_locked">
                                         <i class="fa fa-balance-scale"/> Weigh
                                     </button>
                                     <button name="action_add_move_line" type="object"
@@ -123,7 +123,7 @@
                 <field name="qty_picked"/>
                 <button name="action_weighing" type="object" string="Weigh"
                         icon="fa-balance-scale"
-                        attrs="{'invisible': [('has_weight', '=', False)]}"/>
+                        invisible="not has_weight"/>
             </tree>
         </field>
     </record>
@@ -141,7 +141,7 @@
                         <button name="action_print_weight_record_label" type="object"
                                 class="oe_stat_button" icon="fa-print"
                                 string="Print Label"
-                                attrs="{'invisible': [('show_weighing_print_button', '=', False)]}"/>
+                                invisible="not show_weighing_print_button"/>
                     </div>
                     <group>
                         <group>

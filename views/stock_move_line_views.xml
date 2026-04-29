@@ -18,10 +18,10 @@
                 <field name="weighing_date" optional="hide"/>
                 <button name="action_weighing" type="object" string="Weigh"
                         icon="fa-balance-scale"
-                        attrs="{'invisible': [('has_weight', '=', False)]}"/>
+                        invisible="not has_weight"/>
                 <button name="action_reset_weights" type="object" string="Reset"
                         icon="fa-undo"
-                        attrs="{'invisible': [('has_recorded_weight', '=', False)]}"/>
+                        invisible="not has_recorded_weight"/>
             </tree>
         </field>
     </record>
@@ -52,10 +52,10 @@
                     <footer>
                         <button name="action_weighing" type="object"
                                 string="Weigh" class="btn-primary"
-                                attrs="{'invisible': [('has_weight', '=', False)]}"/>
+                                invisible="not has_weight"/>
                         <button name="action_reset_weights" type="object"
                                 string="Reset Weights"
-                                attrs="{'invisible': [('has_recorded_weight', '=', False)]}"/>
+                                invisible="not has_recorded_weight"/>
                         <button name="action_print_weight_record_label" type="object"
                                 string="Print Label"/>
                         <button string="Close" class="btn-secondary" special="cancel"/>

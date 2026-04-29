@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_weighing_label_document">
+        <t t-call="web.external_layout">
+            <t t-set="doc" t-value="doc"/>
+            <div class="page">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h2>Weighing Label</h2>
+                    </div>
+                </div>
+                <t t-foreach="docs" t-as="move_line">
+                    <div class="row" style="border: 1px solid #000; padding: 15px; margin: 10px 0;">
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Product:</strong>
+                                    <p t-field="move_line.product_id.display_name"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Lot/Serial:</strong>
+                                    <p t-field="move_line.lot_id.name" t-if="move_line.lot_id"/>
+                                    <p t-else=""/>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    <strong>Weight:</strong>
+                                    <p>
+                                        <span t-field="move_line.recorded_weight"/>
+                                        <span t-field="move_line.product_uom_id.name"/>
+                                    </p>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Date:</strong>
+                                    <p t-field="move_line.weighing_date"/>
+                                </div>
+                                <div class="col-4">
+                                    <strong>User:</strong>
+                                    <p t-field="move_line.weighing_user_id.name"/>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Picking:</strong>
+                                    <p t-field="move_line.picking_id.name"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Package:</strong>
+                                    <p t-field="move_line.result_package_id.name" t-if="move_line.result_package_id"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_weighing_label">
+        <t t-call="web.html_container">
+            <t t-call="sale_stock_weighing.report_weighing_label_document"/>
+        </t>
+    </template>
+
+    <record id="action_report_weighing_label" model="ir.actions.report">
+        <field name="name">Weighing Label</field>
+        <field name="model">stock.move.line</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sale_stock_weighing.report_weighing_label</field>
+        <field name="report_file">sale_stock_weighing.report_weighing_label</field>
+        <field name="print_report_name">'Weighing Label - %s' % (object.product_id.display_name)</field>
+    </record>
+</odoo>

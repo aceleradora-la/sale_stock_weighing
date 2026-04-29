@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_move_line_weighing_tree" model="ir.ui.view">
+        <field name="name">stock.move.line.weighing.tree</field>
+        <field name="model">stock.move.line</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="picking_id"/>
+                <field name="product_id"/>
+                <field name="lot_id"/>
+                <field name="quantity"/>
+                <field name="qty_picked"/>
+                <field name="recorded_weight"/>
+                <field name="has_recorded_weight"/>
+                <field name="location_id"/>
+                <field name="location_dest_id"/>
+                <field name="weighing_user_id" optional="hide"/>
+                <field name="weighing_date" optional="hide"/>
+                <button name="action_weighing" type="object" string="Weigh"
+                        icon="fa-balance-scale"
+                        attrs="{'invisible': [('has_weight', '=', False)]}"/>
+                <button name="action_reset_weights" type="object" string="Reset"
+                        icon="fa-undo"
+                        attrs="{'invisible': [('has_recorded_weight', '=', False)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="stock_move_line_weighing_form" model="ir.ui.view">
+        <field name="name">stock.move.line.weighing.form</field>
+        <field name="model">stock.move.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="picking_id"/>
+                            <field name="move_id"/>
+                            <field name="lot_id"/>
+                        </group>
+                        <group>
+                            <field name="has_weight" invisible="1"/>
+                            <field name="quantity"/>
+                            <field name="qty_picked"/>
+                            <field name="recorded_weight"/>
+                            <field name="has_recorded_weight"/>
+                            <field name="weighing_user_id"/>
+                            <field name="weighing_date"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_weighing" type="object"
+                                string="Weigh" class="btn-primary"
+                                attrs="{'invisible': [('has_weight', '=', False)]}"/>
+                        <button name="action_reset_weights" type="object"
+                                string="Reset Weights"
+                                attrs="{'invisible': [('has_recorded_weight', '=', False)]}"/>
+                        <button name="action_print_weight_record_label" type="object"
+                                string="Print Label"/>
+                        <button string="Close" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

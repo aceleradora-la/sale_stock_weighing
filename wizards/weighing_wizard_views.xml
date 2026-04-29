@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="weighing_wizard_view_form" model="ir.ui.view">
+        <field name="name">weighing.wizard.form</field>
+        <field name="model">weighing.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Weighing Wizard">
+                <group>
+                    <group>
+                        <field name="product_id" readonly="1"/>
+                        <field name="move_id" readonly="1"/>
+                        <field name="selected_move_line_id" readonly="1"
+                               attrs="{'invisible': [('selected_move_line_id', '=', False)]}"/>
+                    </group>
+                    <group>
+                        <field name="weight" class="oe_inline"
+                               style="font-size: 200%; font-weight: bold;"
+                               attrs="{'readonly': [('product_id', '=', False)]}"/>
+                        <field name="has_weight" invisible="1"/>
+                    </group>
+                </group>
+                <group>
+                    <group>
+                        <field name="lot_id"
+                               attrs="{'invisible': [('product_tracking', '=', 'none')],
+                                       'required': [('product_tracking', '!=', 'none')]}"/>
+                        <field name="product_tracking" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="result_package_id"/>
+                        <field name="print_label"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="record_weight" type="object"
+                            string="Record Weight" class="btn-primary"/>
+                    <button name="add_operation_and_record" type="object"
+                            string="Add &amp; Record" class="btn-secondary"
+                            attrs="{'invisible': [('wizard_state', '!=', 'new_move_line')]}"/>
+                    <button name="action_close" type="object"
+                            string="Close" class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="weighing_wizard_action" model="ir.actions.act_window">
+        <field name="name">Weighing Wizard</field>
+        <field name="res_model">weighing.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_weighing_root"
+              name="Weighing"
+              parent="stock.menu_stock_root"
+              sequence="50"/>
+
+    <menuitem id="menu_weighing_incoming"
+              name="Incoming Weighing"
+              parent="menu_weighing_root"
+              action="weighing_operation_action"
+              sequence="10"/>
+
+    <menuitem id="menu_weighing_outgoing"
+              name="Outgoing Weighing"
+              parent="menu_weighing_root"
+              action="weighing_operation_action"
+              sequence="20"/>
+</odoo>

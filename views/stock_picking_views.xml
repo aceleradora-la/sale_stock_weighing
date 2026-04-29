@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_weighing" model="ir.ui.view">
+        <field name="name">stock.picking.form.weighing</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_weighing_operations" type="object"
+                        class="oe_stat_button" icon="fa-balance-scale"
+                        attrs="{'invisible': [('weighing_operations', '=', False)]}">
+                    <field name="has_weighing_operations" widget="boolean_button"
+                           options='{"terminology": "open"}'/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='picking_type_id']" position="after">
+                <field name="weighing_operations" invisible="1"/>
+                <field name="has_weighing_operations" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

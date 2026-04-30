@@ -44,10 +44,8 @@ class StockPicking(models.Model):
         return action
 
     def button_validate(self):
-        move_lines_with_weight = self.move_ids.move_line_ids.filtered("has_weight")
-        for move_line in move_lines_with_weight:
+        move_lines_weighed = self.move_ids.move_line_ids.filtered("has_recorded_weight")
+        for move_line in move_lines_weighed:
             if move_line.qty_picked > 0:
                 move_line.quantity = move_line.qty_picked
-            else:
-                move_line.quantity = 0
         return super().button_validate()

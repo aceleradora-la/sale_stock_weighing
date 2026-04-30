@@ -25,16 +25,20 @@
                              colors='{"weighed": "success", "weighing": "warning", "to_weigh": "danger"}'/>
                 <templates>
                     <t t-name="card">
-                        <div class="oe_kanban_card" t-attf-class="o_kanban_record has_hover #{record.weighing_state_color.raw_value === 10 ? 'border-success' : record.weighing_state_color.raw_value === 3 ? 'border-warning' : 'border-danger'}" style="border-left: 4px solid #{record.weighing_state_color.raw_value === 10 ? '#28a745' : record.weighing_state_color.raw_value === 3 ? '#ffc107' : '#dc3545'}">
-                            <div class="o_kanban_card_header">
-                                <div class="o_kanban_record_top">
-                                    <strong class="o_kanban_record_title">
-                                        <field name="product_id"/>
-                                    </strong>
-                                    <span class="badge" t-attf-class="badge-#{record.weighing_state.raw_value}">
-                                        <field name="weighing_state"/>
-                                    </span>
-                                </div>
+                        <div class="o_kanban_record">
+                            <div class="o_kanban_record_top">
+                                <strong class="o_kanban_record_title">
+                                    <field name="product_id"/>
+                                </strong>
+                                <span class="badge text-bg-success" t-if="record.weighing_state.raw_value === 'weighed'">
+                                    <field name="weighing_state"/>
+                                </span>
+                                <span class="badge text-bg-warning" t-if="record.weighing_state.raw_value === 'weighing'">
+                                    <field name="weighing_state"/>
+                                </span>
+                                <span class="badge text-bg-danger" t-if="record.weighing_state.raw_value === 'to_weigh'">
+                                    <field name="weighing_state"/>
+                                </span>
                             </div>
                             <div class="o_kanban_record_body">
                                 <div>
@@ -61,16 +65,12 @@
                                     <span>Lots: </span>
                                     <field name="lot_names"/>
                                 </div>
-                                <div t-if="record.origin_names.raw_value">
-                                    <span>From: </span>
-                                    <field name="origin_names"/>
-                                </div>
                             </div>
                             <div class="o_kanban_record_bottom">
                                 <div class="oe_kanban_bottom_left">
                                     <button name="action_weighing" type="object"
                                             class="btn btn-primary btn-sm"
-                                            invisible="is_weighing_operation_locked">
+                                            t-if="!record.is_weighing_operation_locked.raw_value">
                                         <i class="fa fa-balance-scale"/> Weigh
                                     </button>
                                     <button name="action_add_move_line" type="object"

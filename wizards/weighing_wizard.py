@@ -72,6 +72,23 @@ class WeighingWizard(models.TransientModel):
                 wiz.move_id.has_weight or wiz.selected_move_line_id.has_weight
             )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for record in records:
+            if record.move_id and not record.selected_move_line_id:
+                unweighed_lines = record.move_id.move_line_ids.filtered(
+                    lambda l: not l.has_recorded_weight
+                )
+                if unweighed_lines:
+                    record.selected_move_line_id = unweighed_lines[0]
+                elif record.move_id.product_id.tracking == "none":
+                    line_vals = record.move_id._prepare_move_line_vals()
+                    line_vals.pop("product_uom_qty", None)
+                    new_line = record.move_id.move_line_ids.create(line_vals)
+                    record.selected_move_line_id = new_line
+        return records
+
     def _lot_creation_constraints(self):
         return [self.product_tracking != "none", not self.lot_id]
 

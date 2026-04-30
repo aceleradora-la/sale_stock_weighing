@@ -51,7 +51,8 @@ class StockPicking(models.Model):
 
             for move in moves_with_weight:
                 weighed_lines = move.move_line_ids.filtered("has_recorded_weight")
-                if len(weighed_lines) < move.product_uom_qty:
+                total_weight = sum(weighed_lines.mapped("qty_picked"))
+                if total_weight <= 0:
                     return {
                         "type": "ir.actions.act_window",
                         "name": _("Weighing Assistant"),
@@ -66,10 +67,10 @@ class StockPicking(models.Model):
                         },
                     }
 
-        move_lines_weighed = self.move_ids.move_line_ids.filtered("has_recorded_weight")
-        for move_line in move_lines_weighed:
-            if move_line.qty_picked > 0:
-                move_line.quantity = 1
+                move.product_uom_qty = total_weight
+                for line in weighed_lines:
+                    line.quantity = line.qty_picked
+
         return super().button_validate()
 
     def _create_weighing_wizard_view_action(self):

@@ -55,6 +55,9 @@ class StockMove(models.Model):
     weighing_state_color = fields.Integer(
         compute="_compute_weighing_state_color",
     )
+    weighing_uom_name = fields.Char(
+        compute="_compute_weighing_uom_name",
+    )
     qty_picked = fields.Float(
         string="Picked Quantity",
         compute="_compute_qty_picked",
@@ -67,6 +70,11 @@ class StockMove(models.Model):
     def _compute_qty_picked(self):
         for move in self:
             move.qty_picked = sum(move.move_line_ids.mapped("qty_picked"))
+
+    @api.depends("product_id.weighing_uom_id")
+    def _compute_weighing_uom_name(self):
+        for move in self:
+            move.weighing_uom_name = move.product_id.weighing_uom_id.name or "kg"
 
     @api.depends("move_line_ids.recorded_weight")
     def _compute_recorded_weight(self):

@@ -50,6 +50,14 @@ class WeighingWizard(models.TransientModel):
         compute="_compute_has_weight",
         readonly=False,
     )
+    weighing_uom_name = fields.Char(
+        compute="_compute_weighing_uom_name",
+    )
+
+    @api.depends("product_id.weighing_uom_id")
+    def _compute_weighing_uom_name(self):
+        for wiz in self:
+            wiz.weighing_uom_name = wiz.product_id.weighing_uom_id.name or "kg"
 
     @api.depends("product_id")
     def _compute_available_lot_ids(self):
@@ -82,11 +90,6 @@ class WeighingWizard(models.TransientModel):
                 )
                 if unweighed_lines:
                     record.selected_move_line_id = unweighed_lines[0]
-                elif record.move_id.product_id.tracking == "none":
-                    line_vals = record.move_id._prepare_move_line_vals()
-                    line_vals.pop("product_uom_qty", None)
-                    new_line = record.move_id.move_line_ids.create(line_vals)
-                    record.selected_move_line_id = new_line
         return records
 
     def _lot_creation_constraints(self):
@@ -101,23 +104,19 @@ class WeighingWizard(models.TransientModel):
         pass
 
     def add_operation_and_record(self):
-        vals = self.move_id._prepare_move_line_vals(quantity=self.weight)
-        vals.pop("product_uom_qty", None)
-        vals.pop("quantity", None)
-        vals.update({"qty_picked": self.weight})
+        vals = self.move_id._prepare_move_line_vals()
         if self.lot_id:
             vals["lot_id"] = self.lot_id.id
         self._check_lot_creation()
-        self.selected_move_line_id = (
-            self.env["stock.move.line"]
-            .with_context(**clean_context(self.env.context))
-            .create(vals)
-        )
+        new_line = self.env["stock.move.line"].create(vals)
+        self.selected_move_line_id = new_line
         self._post_add_detailed_operation()
         return self.record_weight()
 
     def record_weight(self):
         selected_line = self.selected_move_line_id
+        if not selected_line:
+            raise UserError(_("No move line selected"))
         if self.weight:
             selected_line.qty_picked = self.weight
             selected_line.recorded_weight = self.weight
@@ -133,6 +132,19 @@ class WeighingWizard(models.TransientModel):
 
         selected_line.move_id.action_unlock_weigh_operation()
         self.weight = 0.0
+        unweighed_lines = self.move_id.move_line_ids.filtered(
+            lambda l: not l.has_recorded_weight
+        )
+        if unweighed_lines:
+            self.selected_move_line_id = unweighed_lines[0]
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": self._name,
+                "view_mode": "form",
+                "res_id": self.id,
+                "target": "new",
+                "context": dict(self.env.context, reload_wizard_action=False),
+            }
         if self.print_label:
             action = selected_line.action_print_weight_record_label()
             action["close_on_report_download"] = True

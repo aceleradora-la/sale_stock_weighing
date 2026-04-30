@@ -18,6 +18,8 @@
                 <field name="product_uom_qty"/>
                 <field name="quantity"/>
                 <field name="product_uom"/>
+                <field name="weighing_uom_id"/>
+                <field name="weighing_uom_name"/>
                 <field name="picking_id"/>
                 <field name="weighing_label_report_id"/>
                 <field name="show_weighing_print_button"/>
@@ -54,12 +56,16 @@
                                 <div t-if="record.has_weight.raw_value">
                                     <span>Picked: </span>
                                     <field name="qty_picked"/>
-                                    <field name="product_uom"/>
+                                    <t t-if="record.weighing_uom_name.raw_value">
+                                        <t t-esc="record.weighing_uom_name.raw_value"/>
+                                    </t>
                                 </div>
                                 <div t-if="record.has_weight.raw_value">
                                     <span>Weight: </span>
                                     <field name="recorded_weight"/>
-                                    <field name="product_uom"/>
+                                    <t t-if="record.weighing_uom_name.raw_value">
+                                        <t t-esc="record.weighing_uom_name.raw_value"/>
+                                    </t>
                                 </div>
                                 <div t-if="record.lot_names.raw_value">
                                     <span>Lots: </span>

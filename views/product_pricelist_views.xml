@@ -5,10 +5,13 @@
         <field name="model">product.pricelist.item</field>
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='price']" position="after">
+            <field name="price" position="attributes">
+                <attribute name="invisible">is_weighed_price</attribute>
+            </field>
+            <field name="applied_on" position="before">
                 <field name="is_weighed_price"/>
                 <field name="price_per_weight" invisible="not is_weighed_price"/>
-            </xpath>
+            </field>
         </field>
     </record>
 
@@ -18,8 +21,8 @@
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="is_weighed_price" string="Precio por peso" optional="hide"/>
-                <field name="price_per_weight" string="Precio/kg" optional="hide"/>
+                <field name="is_weighed_price" optional="hide"/>
+                <field name="price_per_weight" optional="hide"/>
             </field>
         </field>
     </record>

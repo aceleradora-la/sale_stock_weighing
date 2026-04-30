@@ -6,8 +6,14 @@
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="is_weighed_price"/>
-                <field name="price_per_weight" invisible="not is_weighed_price" required="is_weighed_price"/>
+                <field name="is_weighed_price" string="Precio por peso"/>
+                <label for="price_per_weight" invisible="not is_weighed_price"/>
+                <div class="o_row" invisible="not is_weighed_price">
+                    <field name="price_per_weight" class="oe_inline"/>
+                    <span class="text-muted oe_inline">
+                        / <field name="weighing_uom_name" readonly="1" class="oe_inline"/>
+                    </span>
+                </div>
             </field>
         </field>
     </record>
@@ -18,8 +24,8 @@
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="is_weighed_price"/>
-                <field name="price_per_weight" invisible="not is_weighed_price"/>
+                <field name="is_weighed_price" string="Precio por peso" optional="hide"/>
+                <field name="price_per_weight" string="Precio/kg" optional="hide"/>
             </field>
         </field>
     </record>

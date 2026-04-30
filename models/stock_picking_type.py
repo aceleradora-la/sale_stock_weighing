@@ -20,7 +20,15 @@ class StockPickingType(models.Model):
         comodel_name="ir.actions.report",
         string="Weighing Label Report",
         domain="[('model', '=', 'stock.move.line')]",
-        help="Report template for weighing labels",
+        help="Report template for weighing labels (PDF or ZPL)",
+    )
+    weighing_label_format = fields.Selection(
+        selection=[
+            ("pdf", "PDF"),
+            ("zpl", "ZPL"),
+        ],
+        default="pdf",
+        string="Label Format",
     )
     weight_move_ids = fields.Many2many(
         comodel_name="stock.move",

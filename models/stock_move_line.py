@@ -60,7 +60,14 @@ class StockMoveLine(models.Model):
         return name
 
     def action_print_weight_record_label(self):
-        return self.move_id.picking_type_id.weighing_label_report_id.report_action(self)
+        picking_type = self.move_id.picking_type_id
+        if picking_type.weighing_label_format == "zpl":
+            report = self.env.ref("sale_stock_weighing.action_report_weighing_label_zpl")
+        else:
+            report = picking_type.weighing_label_report_id or self.env.ref(
+                "sale_stock_weighing.action_report_weighing_label"
+            )
+        return report.report_action(self)
 
     def action_reset_weights(self):
         self.write({

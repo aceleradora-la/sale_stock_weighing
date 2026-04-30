@@ -27,7 +27,19 @@
                                 <div class="col-4">
                                     <strong>Weight:</strong>
                                     <p>
-                                        <span t-field="move_line.recorded_weight"/>
+                                        <span t-esc="'%.3f' % move_line.recorded_weight"/>
+                                        <t t-if="move_line.product_id.weighing_uom_id">
+                                            <span t-field="move_line.product_id.weighing_uom_id.name"/>
+                                        </t>
+                                        <t t-else="">
+                                            <span>kg</span>
+                                        </t>
+                                    </p>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Units:</strong>
+                                    <p>
+                                        <span t-esc="'%.0f' % move_line.product_uom_qty"/>
                                         <span t-field="move_line.product_uom_id.name"/>
                                     </p>
                                 </div>
@@ -35,12 +47,12 @@
                                     <strong>Date:</strong>
                                     <p t-field="move_line.weighing_date"/>
                                 </div>
-                                <div class="col-4">
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
                                     <strong>User:</strong>
                                     <p t-field="move_line.weighing_user_id.name"/>
                                 </div>
-                            </div>
-                            <div class="row">
                                 <div class="col-6">
                                     <strong>Picking:</strong>
                                     <p t-field="move_line.picking_id.name"/>
@@ -59,6 +71,22 @@
         </t>
     </template>
 
+    <template id="report_weighing_label_zpl">
+        <t t-foreach="docs" t-as="move_line">
+            <t t-set="weight_uom" t-value="move_line.product_id.weighing_uom_id.name if move_line.product_id.weighing_uom_id else 'kg'"/>
+            ^XA
+            ^FO50,50^A0N,40,40^FDWeighing Label^FS
+            ^FO50,100^A0N,30,30^FDProduct: <t t-esc="move_line.product_id.display_name"/>^FS
+            ^FO50,150^A0N,30,30^FDLot/Serial: <t t-esc="move_line.lot_id.name if move_line.lot_id else ''"/>^FS
+            ^FO50,200^A0N,30,30^FDWeight: <t t-esc="'%.3f' % move_line.recorded_weight"/> <t t-esc="weight_uom"/>^FS
+            ^FO50,250^A0N,30,30^FDUnits: <t t-esc="'%.0f' % move_line.product_uom_qty"/> <t t-esc="move_line.product_uom_id.name"/>^FS
+            ^FO50,300^A0N,30,30^FDDate: <t t-esc="move_line.weighing_date.strftime('%d/%m/%Y %H:%M:%S') if move_line.weighing_date else ''"/>^FS
+            ^FO50,350^A0N,30,30^FDUser: <t t-esc="move_line.weighing_user_id.name if move_line.weighing_user_id else ''"/>^FS
+            ^FO50,400^A0N,30,30^FDPicking: <t t-esc="move_line.picking_id.name"/>^FS
+            ^XZ
+        </t>
+    </template>
+
     <record id="action_report_weighing_label" model="ir.actions.report">
         <field name="name">Weighing Label</field>
         <field name="model">stock.move.line</field>
@@ -66,5 +94,14 @@
         <field name="report_name">sale_stock_weighing.report_weighing_label</field>
         <field name="report_file">sale_stock_weighing.report_weighing_label</field>
         <field name="print_report_name">'Weighing Label - %s' % (object.product_id.display_name)</field>
+    </record>
+
+    <record id="action_report_weighing_label_zpl" model="ir.actions.report">
+        <field name="name">Weighing Label (ZPL)</field>
+        <field name="model">stock.move.line</field>
+        <field name="report_type">qweb-text</field>
+        <field name="report_name">sale_stock_weighing.report_weighing_label_zpl</field>
+        <field name="report_file">sale_stock_weighing.report_weighing_label_zpl</field>
+        <field name="print_report_name">'ZPL-Label-%s' % (object.product_id.display_name)</field>
     </record>
 </odoo>

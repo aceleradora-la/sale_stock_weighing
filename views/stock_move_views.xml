@@ -18,7 +18,6 @@
                 <field name="product_uom_qty"/>
                 <field name="quantity"/>
                 <field name="product_uom"/>
-                <field name="weighing_uom_id"/>
                 <field name="weighing_uom_name"/>
                 <field name="picking_id"/>
                 <field name="weighing_label_report_id"/>

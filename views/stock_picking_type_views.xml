@@ -20,7 +20,7 @@
         <field name="model">stock.picking.type</field>
         <field name="inherit_id" ref="stock.view_picking_type_tree"/>
         <field name="arch" type="xml">
-            <field name="use_create_lots" position="after">
+            <field name="name" position="after">
                 <field name="weighing_operations" optional="hide"/>
             </field>
         </field>

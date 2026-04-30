@@ -73,26 +73,22 @@
     <template id="report_weighing_label_zpl">
         <t t-foreach="docs" t-as="move_line">
             <t t-set="weight_uom" t-value="move_line.product_id.weighing_uom_id.name if move_line.product_id.weighing_uom_id else 'kg'"/>
-            <t t-esc="
-^XA
-^FO50,50^A0N,40,40^FDWeighing Label^FS
-^FO50,100^A0N,30,30^FDProduct: %s^FS
-^FO50,150^A0N,30,30^FDLot/Serial: %s^FS
-^FO50,200^A0N,30,30^FDWeight: %s %s^FS
-^FO50,250^A0N,30,30^FDUnits: %s %s^FS
-^FO50,300^A0N,30,30^FDDate: %s^FS
-^FO50,350^A0N,30,30^FDUser: %s^FS
-^FO50,400^A0N,30,30^FDPicking: %s^FS
-^XZ
-" t-translation="off" t-esc="move_line.product_id.display_name,
-                                move_line.lot_id.name if move_line.lot_id else '',
-                                '%.3f' % move_line.recorded_weight,
-                                weight_uom,
-                                int(move_line.move_id.product_uom_qty),
-                                move_line.product_uom_id.name,
-                                move_line.weighing_date.strftime('%d/%m/%Y %H:%M:%S') if move_line.weighing_date else '',
-                                move_line.weighing_user_id.name if move_line.weighing_user_id else '',
-                                move_line.picking_id.name"/>
+            <t t-set="zpl_data" t-value="{
+                'product': move_line.product_id.display_name,
+                'lot': move_line.lot_id.name if move_line.lot_id else '',
+                'weight': '%.3f' % move_line.recorded_weight,
+                'w_uom': weight_uom,
+                'units': '%.0f' % move_line.move_id.product_uom_qty,
+                'u_uom': move_line.product_uom_id.name,
+                'date': move_line.weighing_date.strftime('%d/%m/%Y %H:%M:%S') if move_line.weighing_date else '',
+                'user': move_line.weighing_user_id.name if move_line.weighing_user_id else '',
+                'picking': move_line.picking_id.name,
+            }"/>
+            <t t-raw="'^XA^FO50,50^A0N,40,40^FDWeighing Label^FS^FO50,100^A0N,30,30^FDProduct: %s^FS^FO50,150^A0N,30,30^FDLot/Serial: %s^FS^FO50,200^A0N,30,30^FDWeight: %s %s^FS^FO50,250^A0N,30,30^FDUnits: %s %s^FS^FO50,300^A0N,30,30^FDDate: %s^FS^FO50,350^A0N,30,30^FDUser: %s^FS^FO50,400^A0N,30,30^FDPicking: %s^FS^XZ' % (
+                zpl_data['product'], zpl_data['lot'], zpl_data['weight'], zpl_data['w_uom'],
+                zpl_data['units'], zpl_data['u_uom'], zpl_data['date'], zpl_data['user'],
+                zpl_data['picking']
+            )"/>
         </t>
     </template>
 

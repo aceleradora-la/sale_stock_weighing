@@ -49,28 +49,27 @@ class StockPicking(models.Model):
             if not moves_with_weight:
                 continue
 
-            all_weighed = all(
-                ml.has_recorded_weight
-                for ml in moves_with_weight.mapped("move_line_ids")
-            )
-            if not all_weighed:
-                return {
-                    "type": "ir.actions.act_window",
-                    "name": _("Weighing Assistant"),
-                    "res_model": "weighing.wizard",
-                    "view_mode": "form",
-                    "target": "new",
-                    "context": {
-                        "default_picking_id": picking.id,
-                        "active_id": picking.id,
-                        "active_model": "stock.picking",
-                    },
-                }
+            for move in moves_with_weight:
+                weighed_lines = move.move_line_ids.filtered("has_recorded_weight")
+                if len(weighed_lines) < move.product_uom_qty:
+                    return {
+                        "type": "ir.actions.act_window",
+                        "name": _("Weighing Assistant"),
+                        "res_model": "weighing.wizard",
+                        "view_mode": "form",
+                        "target": "new",
+                        "context": {
+                            "default_picking_id": picking.id,
+                            "default_move_id": move.id,
+                            "active_id": picking.id,
+                            "active_model": "stock.picking",
+                        },
+                    }
 
         move_lines_weighed = self.move_ids.move_line_ids.filtered("has_recorded_weight")
         for move_line in move_lines_weighed:
             if move_line.qty_picked > 0:
-                move_line.quantity = move_line.qty_picked
+                move_line.quantity = 1
         return super().button_validate()
 
     def _create_weighing_wizard_view_action(self):

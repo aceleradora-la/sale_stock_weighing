@@ -5,9 +5,6 @@
         <field name="model">product.pricelist.item</field>
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
-            <field name="price" position="attributes">
-                <attribute name="invisible">is_weighed_price</attribute>
-            </field>
             <field name="applied_on" position="before">
                 <field name="is_weighed_price"/>
                 <field name="price_per_weight" invisible="not is_weighed_price"/>

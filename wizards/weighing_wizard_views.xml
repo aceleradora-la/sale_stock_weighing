@@ -9,33 +9,30 @@
                     <group>
                         <field name="product_id" readonly="1"/>
                         <field name="move_id" readonly="1"/>
-                        <field name="selected_move_line_id" readonly="1"
-                               invisible="not selected_move_line_id"/>
+                        <field name="selected_move_line_id" readonly="1"/>
                     </group>
+                    <group>
+                        <field name="remaining_count" string="Remaining to weigh"/>
+                    </group>
+                </group>
+                <group>
                     <group>
                         <field name="weight" class="oe_inline"
                                style="font-size: 200%; font-weight: bold;"
                                readonly="not product_id"/>
                         <field name="has_weight" invisible="1"/>
+                        <field name="weighing_uom_name" invisible="1"/>
                     </group>
-                </group>
-                <group>
                     <group>
                         <field name="lot_id"
                                invisible="product_tracking == 'none'"
                                required="product_tracking != 'none'"/>
                         <field name="product_tracking" invisible="1"/>
                     </group>
-                    <group>
-                        <field name="print_label"/>
-                    </group>
                 </group>
                 <footer>
                     <button name="record_weight" type="object"
                             string="Record Weight" class="btn-primary"/>
-                    <button name="add_operation_and_record" type="object"
-                            string="Add &amp; Record" class="btn-secondary"
-                            invisible="wizard_state != 'new_move_line'"/>
                     <button name="action_close" type="object"
                             string="Close" class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>

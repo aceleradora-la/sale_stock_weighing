@@ -7,13 +7,6 @@ class WeighingWizard(models.TransientModel):
     _name = "weighing.wizard"
     _description = "Record weights over detailed operations"
 
-    wizard_state = fields.Selection(
-        selection=[
-            ("weight", "Weight"),
-            ("new_move_line", "Add Operation"),
-        ],
-        default="weight",
-    )
     move_id = fields.Many2one(comodel_name="stock.move")
     product_id = fields.Many2one(
         comodel_name="product.product", related="move_id.product_id", store=True
@@ -32,9 +25,6 @@ class WeighingWizard(models.TransientModel):
     selected_move_line_id = fields.Many2one(
         comodel_name="stock.move.line",
     )
-    move_line_ids = fields.Many2many(
-        comodel_name="stock.move.line",
-    )
     weight = fields.Float(
         string="Weight",
         digits="Product Unit of Measure",
@@ -43,21 +33,27 @@ class WeighingWizard(models.TransientModel):
         string="Print Label",
         help="Print label after recording the weight",
     )
-    label_report_id = fields.Many2one(
-        comodel_name="ir.actions.report",
-    )
     has_weight = fields.Boolean(
         compute="_compute_has_weight",
-        readonly=False,
     )
     weighing_uom_name = fields.Char(
         compute="_compute_weighing_uom_name",
+    )
+    remaining_count = fields.Integer(
+        compute="_compute_remaining_count",
     )
 
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
         for wiz in self:
             wiz.weighing_uom_name = wiz.product_id.weighing_uom_id.name or "kg"
+
+    @api.depends("move_id.move_line_ids.has_recorded_weight")
+    def _compute_remaining_count(self):
+        for wiz in self:
+            wiz.remaining_count = len(
+                wiz.move_id.move_line_ids.filtered(lambda l: not l.has_recorded_weight)
+            )
 
     @api.depends("product_id")
     def _compute_available_lot_ids(self):
@@ -100,19 +96,6 @@ class WeighingWizard(models.TransientModel):
         if all(self._lot_creation_constraints()):
             raise UserError(_("You need to supply a Lot/Serial Number"))
 
-    def _post_add_detailed_operation(self):
-        pass
-
-    def add_operation_and_record(self):
-        vals = self.move_id._prepare_move_line_vals()
-        if self.lot_id:
-            vals["lot_id"] = self.lot_id.id
-        self._check_lot_creation()
-        new_line = self.env["stock.move.line"].create(vals)
-        self.selected_move_line_id = new_line
-        self._post_add_detailed_operation()
-        return self.record_weight()
-
     def record_weight(self):
         selected_line = self.selected_move_line_id
         if not selected_line:
@@ -132,19 +115,6 @@ class WeighingWizard(models.TransientModel):
 
         selected_line.move_id.action_unlock_weigh_operation()
         self.weight = 0.0
-        unweighed_lines = self.move_id.move_line_ids.filtered(
-            lambda l: not l.has_recorded_weight
-        )
-        if unweighed_lines:
-            self.selected_move_line_id = unweighed_lines[0]
-            return {
-                "type": "ir.actions.act_window",
-                "res_model": self._name,
-                "view_mode": "form",
-                "res_id": self.id,
-                "target": "new",
-                "context": dict(self.env.context, reload_wizard_action=False),
-            }
         if self.print_label:
             action = selected_line.action_print_weight_record_label()
             action["close_on_report_download"] = True

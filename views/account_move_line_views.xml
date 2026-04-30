@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="account_move_line_form_weighing" model="ir.ui.view">
+        <field name="name">account.move.line.form.weighing</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_form"/>
+        <field name="arch" type="xml">
+            <field name="quantity" position="after">
+                <field name="recorded_weight" invisible="not recorded_weight"/>
+                <field name="weight_uom_id" invisible="not weight_uom_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

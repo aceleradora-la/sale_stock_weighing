@@ -54,18 +54,6 @@ class StockMove(models.Model):
     weighing_uom_name = fields.Char(
         compute="_compute_weighing_uom_name",
     )
-    qty_picked = fields.Float(
-        string="Picked Quantity",
-        compute="_compute_qty_picked",
-        digits="Product Unit of Measure",
-        store=True,
-        readonly=False,
-    )
-
-    @api.depends("move_line_ids.qty_picked")
-    def _compute_qty_picked(self):
-        for move in self:
-            move.qty_picked = sum(move.move_line_ids.mapped("qty_picked"))
 
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
@@ -85,23 +73,11 @@ class StockMove(models.Model):
         self.weighing_state = False
         for move in self.filtered("has_weight"):
             move_to_do = move.state not in {"draft", "cancel", "done"}
-            if (
-                move.move_lines_weighed
-                or float_compare(
-                    move.quantity,
-                    move.product_uom_qty,
-                    precision_rounding=move.product_uom.rounding,
-                ) >= 0
-            ) and any(move.move_line_ids.mapped("has_recorded_weight")):
+            if move.move_lines_weighed and move_to_do:
                 move.weighing_state = "weighed"
-            elif move.recorded_weight and not move.move_lines_weighed and move_to_do:
+            elif move.recorded_weight and move_to_do:
                 move.weighing_state = "weighing"
-            elif (
-                not move.recorded_weight
-                and not move.move_lines_weighed
-                and move_to_do
-                and not move.qty_picked
-            ):
+            elif not move.recorded_weight and move_to_do:
                 move.weighing_state = "to_weigh"
 
     @api.depends("move_line_ids.lot_id")
@@ -176,24 +152,6 @@ class StockMove(models.Model):
             default_weight=self.recorded_weight or self.quantity,
             default_move_line_ids=self.move_line_ids.ids,
             default_print_label=self._get_default_print_label(),
-        )
-        return action
-
-    def action_add_move_line(self):
-        action = self.action_weighing()
-        action["context"].update(
-            default_wizard_state="new_move_line",
-            default_move_id=self.id,
-            default_weight=0,
-        )
-        action["context"].pop("default_selected_move_line_id", None)
-        action["name"] = _(
-            "New operation for %(product)s (%(operation)s) "
-            "%(remain).2f %(uom)s remaining",
-            product=self.product_id.name,
-            operation=self.reference,
-            remain=max((self.product_uom_qty - self.quantity), 0),
-            uom=self.product_uom.name,
         )
         return action
 

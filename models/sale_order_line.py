@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class SaleOrderLine(models.Model):
@@ -37,13 +37,13 @@ class SaleOrderLine(models.Model):
             else:
                 line.total_planned_weight = 0.0
 
-    @api.depends("move_ids.move_line_ids.qty_picked", "move_ids.state")
+    @api.depends("move_ids.move_line_ids.recorded_weight", "move_ids.state")
     def _compute_total_delivered_weight(self):
         for line in self:
             if line.move_ids:
                 line.total_delivered_weight = sum(
                     line.move_ids.move_line_ids.filtered("has_recorded_weight").mapped(
-                        "qty_picked"
+                        "recorded_weight"
                     )
                 )
             else:
@@ -54,6 +54,9 @@ class SaleOrderLine(models.Model):
         if self.product_id.is_weighed_product and self.total_delivered_weight > 0:
             res["quantity"] = self.total_delivered_weight
             res["price_unit"] = self.price_per_weight
+            res["product_uom_id"] = self.product_id.weighing_uom_id.id
+            res["recorded_weight"] = self.total_delivered_weight
+            res["weight_uom_id"] = self.product_id.weighing_uom_id.id
             res["name"] = "%s\n[%s] %s x %s %s" % (
                 self.name or "",
                 self.product_id.default_code or "",
@@ -61,8 +64,6 @@ class SaleOrderLine(models.Model):
                 self.total_delivered_weight,
                 self.product_id.weighing_uom_id.name,
             )
-            if self.product_id.weighing_uom_id:
-                res["product_uom_id"] = self.product_id.weighing_uom_id.id
         return res
 
     def _get_price_per_weight_from_pricelist(self):

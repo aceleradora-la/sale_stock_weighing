@@ -23,13 +23,6 @@ class StockMoveLine(models.Model):
         string="Weighing Date",
         readonly=True,
     )
-    qty_picked = fields.Float(
-        string="Picked Quantity",
-        digits="Product Unit of Measure",
-        store=True,
-        readonly=False,
-        help="Weight picked during weighing. Used to compute delivered weight.",
-    )
 
     def action_weighing(self):
         self.move_id.action_lock_weighing_operation()
@@ -70,7 +63,6 @@ class StockMoveLine(models.Model):
     def action_reset_weights(self):
         self.write({
             "recorded_weight": 0,
-            "qty_picked": 0,
             "has_recorded_weight": False,
             "weighing_user_id": False,
             "weighing_date": False,

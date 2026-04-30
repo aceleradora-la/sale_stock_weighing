@@ -9,7 +9,6 @@
                 <field name="weighing_state"/>
                 <field name="weighing_state_color"/>
                 <field name="recorded_weight"/>
-                <field name="qty_picked"/>
                 <field name="has_weight"/>
                 <field name="is_weighing_operation_locked"/>
                 <field name="lot_names"/>
@@ -51,14 +50,7 @@
                                     <field name="quantity"/>
                                     <field name="product_uom"/>
                                 </div>
-                                <div t-if="record.has_weight.raw_value">
-                                    <span>Picked: </span>
-                                    <field name="qty_picked"/>
-                                    <t t-if="record.weighing_uom_name.raw_value">
-                                        <t t-esc="record.weighing_uom_name.raw_value"/>
-                                    </t>
-                                </div>
-                                <div t-if="record.has_weight.raw_value">
+                                <div t-if="record.has_weight.raw_value and record.recorded_weight.raw_value">
                                     <span>Weight: </span>
                                     <field name="recorded_weight"/>
                                     <t t-if="record.weighing_uom_name.raw_value">
@@ -76,11 +68,6 @@
                                             class="btn btn-primary btn-sm"
                                             t-if="!record.is_weighing_operation_locked.raw_value">
                                         <i class="fa fa-balance-scale"/> Weigh
-                                    </button>
-                                    <button name="action_add_move_line" type="object"
-                                            class="btn btn-secondary btn-sm"
-                                            t-if="record.has_weight.raw_value">
-                                        <i class="fa fa-plus"/> Add
                                     </button>
                                 </div>
                                 <div class="oe_kanban_bottom_right">
@@ -116,7 +103,6 @@
                 <field name="has_weight" optional="hide"/>
                 <field name="weighing_state"/>
                 <field name="recorded_weight"/>
-                <field name="qty_picked"/>
                 <button name="action_weighing" type="object" string="Weigh"
                         icon="fa-balance-scale"
                         invisible="not has_weight"/>
@@ -151,7 +137,6 @@
                             <field name="has_weight"/>
                             <field name="weighing_state"/>
                             <field name="recorded_weight"/>
-                            <field name="qty_picked"/>
                             <field name="is_weighing_operation_locked"/>
                             <field name="weighing_user_id"/>
                         </group>
@@ -163,7 +148,6 @@
                                     <field name="product_id"/>
                                     <field name="lot_id"/>
                                     <field name="quantity"/>
-                                    <field name="qty_picked"/>
                                     <field name="recorded_weight"/>
                                     <field name="has_recorded_weight"/>
                                     <field name="location_id"/>

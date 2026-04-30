@@ -5,63 +5,30 @@
         <field name="model">stock.move.line</field>
         <field name="arch" type="xml">
             <list>
-                <field name="picking_id"/>
                 <field name="product_id"/>
                 <field name="lot_id"/>
                 <field name="quantity"/>
-                <field name="qty_picked"/>
+                <field name="product_uom_id"/>
                 <field name="recorded_weight"/>
                 <field name="has_recorded_weight"/>
+                <field name="weighing_user_id"/>
+                <field name="weighing_date"/>
                 <field name="location_id"/>
                 <field name="location_dest_id"/>
-                <field name="weighing_user_id" optional="hide"/>
-                <field name="weighing_date" optional="hide"/>
+                <field name="picking_id"/>
                 <button name="action_weighing" type="object" string="Weigh"
-                        icon="fa-balance-scale"
-                        invisible="not has_weight"/>
-                <button name="action_reset_weights" type="object" string="Reset"
-                        icon="fa-undo"
-                        invisible="not has_recorded_weight"/>
+                        icon="fa-balance-scale"/>
             </list>
         </field>
     </record>
 
-    <record id="stock_move_line_weighing_form" model="ir.ui.view">
-        <field name="name">stock.move.line.weighing.form</field>
-        <field name="model">stock.move.line</field>
-        <field name="arch" type="xml">
-            <form>
-                <sheet>
-                    <group>
-                        <group>
-                            <field name="product_id"/>
-                            <field name="picking_id"/>
-                            <field name="move_id"/>
-                            <field name="lot_id"/>
-                        </group>
-                        <group>
-                            <field name="has_weight" invisible="1"/>
-                            <field name="quantity"/>
-                            <field name="qty_picked"/>
-                            <field name="recorded_weight"/>
-                            <field name="has_recorded_weight"/>
-                            <field name="weighing_user_id"/>
-                            <field name="weighing_date"/>
-                        </group>
-                    </group>
-                    <footer>
-                        <button name="action_weighing" type="object"
-                                string="Weigh" class="btn-primary"
-                                invisible="not has_weight"/>
-                        <button name="action_reset_weights" type="object"
-                                string="Reset Weights"
-                                invisible="not has_recorded_weight"/>
-                        <button name="action_print_weight_record_label" type="object"
-                                string="Print Label"/>
-                        <button string="Close" class="btn-secondary" special="cancel"/>
-                    </footer>
-                </sheet>
-            </form>
-        </field>
+    <record id="stock_move_line_weighing_action" model="ir.actions.act_window">
+        <field name="name">Weighing Lines</field>
+        <field name="res_model">stock.move.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('stock_move_line_weighing_tree')}),
+            (0, 0, {'view_mode': 'form'})]"/>
+        <field name="domain">[('has_recorded_weight', '=', True)]</field>
     </record>
 </odoo>

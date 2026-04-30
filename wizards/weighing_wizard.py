@@ -1,6 +1,4 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
-from odoo.tools.misc import clean_context
 
 
 class WeighingWizard(models.TransientModel):
@@ -94,20 +92,18 @@ class WeighingWizard(models.TransientModel):
     def _check_lot_creation(self):
         self.ensure_one()
         if all(self._lot_creation_constraints()):
-            raise UserError(_("You need to supply a Lot/Serial Number"))
+            raise Exception(_("You need to supply a Lot/Serial Number"))
 
     def record_weight(self):
         selected_line = self.selected_move_line_id
         if not selected_line:
-            raise UserError(_("No move line selected"))
+            return {"type": "ir.actions.act_window_close"}
         if self.weight:
-            selected_line.qty_picked = self.weight
             selected_line.recorded_weight = self.weight
             selected_line.has_recorded_weight = True
             selected_line.weighing_user_id = self.env.user
             selected_line.weighing_date = fields.Datetime.now()
         else:
-            selected_line.qty_picked = 0
             selected_line.recorded_weight = 0
             selected_line.has_recorded_weight = False
             selected_line.weighing_user_id = False

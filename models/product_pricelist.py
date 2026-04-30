@@ -7,13 +7,18 @@ class Pricelist(models.Model):
 
     def _get_matched_weighing_items(self, product):
         self.ensure_one()
-        category_ids = product.categ_id._get_recursive_parent_ids() | product.categ_id
+        category_ids = set()
+        cat = product.categ_id
+        while cat:
+            category_ids.add(cat.id)
+            cat = cat.parent_id
+
         items = self.item_ids.filtered(
             lambda i: i.is_weighed_price
             and (
                 (i.applied_on == "0_product_variant" and i.product_id == product)
                 or (i.applied_on == "1_product" and i.product_tmpl_id == product.product_tmpl_id)
-                or (i.applied_on == "2_product_category" and i.categ_id in category_ids)
+                or (i.applied_on == "2_product_category" and i.categ_id.id in category_ids)
                 or i.applied_on == "3_global"
             )
         )

@@ -133,29 +133,11 @@ class WeighingWizard(models.TransientModel):
 
         selected_line.move_id.action_unlock_weigh_operation()
         self.weight = 0.0
-        action_list = []
-        other_action = False
         if self.print_label:
             action = selected_line.action_print_weight_record_label()
-            if not self.env.context.get("reload_wizard_action", False):
-                action["close_on_report_download"] = True
-            from odoo.addons.web.controllers.utils import clean_action as web_clean_action
-            web_clean_action(action, self.env)
-            action_list.append(action)
-        if self.env.context.get("reload_wizard_action", False):
-            other_action = self.reload_action_wizard()
-            from odoo.addons.web.controllers.utils import clean_action as web_clean_action
-            web_clean_action(other_action, self.env)
-        return self._actions_after_record_weight(action_list, other_action=other_action)
-
-    @api.model
-    def _actions_after_record_weight(self, actions, other_action=False):
-        action_list = []
-        if other_action:
-            action_list = actions + [other_action]
-        else:
-            action_list = actions + [{"type": "ir.actions.act_window_close"}]
-        return {"type": "ir.actions.act_multi", "actions": action_list}
+            action["close_on_report_download"] = True
+            return action
+        return {"type": "ir.actions.act_window_close"}
 
     def action_close(self):
         (self.move_id or self.selected_move_line_id.move_id).action_unlock_weigh_operation()
@@ -163,13 +145,3 @@ class WeighingWizard(models.TransientModel):
     def unlink(self):
         (self.move_id | self.selected_move_line_id.move_id).weighing_user_id = False
         return super().unlink()
-
-    def reload_action_wizard(self):
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": self._name,
-            "view_mode": "form",
-            "res_id": self.id,
-            "target": "new",
-            "context": dict(self.env.context, reload_wizard_action=False),
-        }

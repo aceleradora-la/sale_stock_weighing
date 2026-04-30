@@ -23,14 +23,6 @@ class SaleOrderLine(models.Model):
         store=True,
         help="Actual total weight delivered from stock moves.",
     )
-    weighing_uom_name = fields.Char(
-        compute="_compute_weighing_uom_name",
-    )
-
-    @api.depends("product_id.weighing_uom_id")
-    def _compute_weighing_uom_name(self):
-        for line in self:
-            line.weighing_uom_name = line.product_id.weighing_uom_id.name or "kg"
 
     @api.depends("product_id.weighing_uom_id", "product_uom_qty")
     def _compute_total_planned_weight(self):
@@ -78,15 +70,9 @@ class SaleOrderLine(models.Model):
         if not self.product_id.is_weighed_product:
             return 0.0
         pricelist = self.order_id.pricelist_id
-        for item in pricelist.item_ids:
-            if item.product_id == self.product_id and item.applied_on == "0_product_variant":
-                return item.price_per_weight
-        for item in pricelist.item_ids:
-            if item.product_tmpl_id == self.product_id.product_tmpl_id and item.applied_on == "1_product":
-                return item.price_per_weight
-        for item in pricelist.item_ids:
-            if item.categ_id == self.product_id.categ_id and item.applied_on == "2_product_category":
-                return item.price_per_weight
+        result = pricelist._get_matched_weighing_items(self.product_id)
+        if result:
+            return result[0].compute_price_per_weight(self.product_id, 1.0)
         return 0.0
 
     @api.onchange("product_id")

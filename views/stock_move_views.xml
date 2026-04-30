@@ -5,7 +5,7 @@
         <field name="model">stock.move</field>
         <field name="priority">200</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" default_group_by="picking_id" sample="1">
+            <kanban class="o_kanban_mobile" sample="1">
                 <field name="weighing_state"/>
                 <field name="weighing_state_color"/>
                 <field name="recorded_weight"/>
@@ -37,41 +37,33 @@
                                 </div>
                             </div>
                             <div class="o_kanban_record_body">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <span>Planned: </span>
-                                        <field name="product_uom_qty"/>
-                                        <field name="product_uom"/>
-                                    </div>
-                                    <div class="col-6">
-                                        <span>Done: </span>
-                                        <field name="quantity"/>
-                                        <field name="product_uom"/>
-                                    </div>
+                                <div>
+                                    <span>Planned: </span>
+                                    <field name="product_uom_qty"/>
+                                    <field name="product_uom"/>
                                 </div>
-                                <div class="row" t-if="record.has_weight.raw_value">
-                                    <div class="col-6">
-                                        <span>Picked: </span>
-                                        <field name="qty_picked"/>
-                                        <field name="product_uom"/>
-                                    </div>
-                                    <div class="col-6">
-                                        <span>Weight: </span>
-                                        <field name="recorded_weight"/>
-                                        <field name="product_uom"/>
-                                    </div>
+                                <div>
+                                    <span>Done: </span>
+                                    <field name="quantity"/>
+                                    <field name="product_uom"/>
                                 </div>
-                                <div class="row" t-if="record.lot_names.raw_value">
-                                    <div class="col-12">
-                                        <span>Lots: </span>
-                                        <field name="lot_names"/>
-                                    </div>
+                                <div t-if="record.has_weight.raw_value">
+                                    <span>Picked: </span>
+                                    <field name="qty_picked"/>
+                                    <field name="product_uom"/>
                                 </div>
-                                <div class="row" t-if="record.origin_names.raw_value">
-                                    <div class="col-12">
-                                        <span>From: </span>
-                                        <field name="origin_names"/>
-                                    </div>
+                                <div t-if="record.has_weight.raw_value">
+                                    <span>Weight: </span>
+                                    <field name="recorded_weight"/>
+                                    <field name="product_uom"/>
+                                </div>
+                                <div t-if="record.lot_names.raw_value">
+                                    <span>Lots: </span>
+                                    <field name="lot_names"/>
+                                </div>
+                                <div t-if="record.origin_names.raw_value">
+                                    <span>From: </span>
+                                    <field name="origin_names"/>
                                 </div>
                             </div>
                             <div class="o_kanban_record_bottom">
@@ -111,7 +103,7 @@
         <field name="name">stock.move.weighing.tree</field>
         <field name="model">stock.move</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="picking_id"/>
                 <field name="product_id"/>
                 <field name="product_uom_qty"/>
@@ -124,7 +116,7 @@
                 <button name="action_weighing" type="object" string="Weigh"
                         icon="fa-balance-scale"
                         invisible="not has_weight"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -163,7 +155,7 @@
                     <notebook>
                         <page name="move_lines" string="Detailed Operations">
                             <field name="move_line_ids">
-                                <tree>
+                                <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="lot_id"/>
                                     <field name="quantity"/>
@@ -174,7 +166,7 @@
                                     <field name="location_dest_id"/>
                                     <button name="action_weighing" type="object" string="Weigh"
                                             icon="fa-balance-scale"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -186,10 +178,10 @@
     <record id="weighing_operation_action" model="ir.actions.act_window">
         <field name="name">Weighing Operations</field>
         <field name="res_model">stock.move</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('stock_move_weighing_kanban')}),
-            (0, 0, {'view_mode': 'tree', 'view_id': ref('stock_move_weighing_tree')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('stock_move_weighing_tree')}),
             (0, 0, {'view_mode': 'form', 'view_id': ref('stock_move_weighing_form')})]"/>
         <field name="context">{'default_weighing': True}</field>
         <field name="domain">[('state', 'in', ('assigned', 'confirmed', 'waiting'))]</field>

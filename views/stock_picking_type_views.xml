@@ -5,7 +5,7 @@
         <field name="model">stock.picking.type</field>
         <field name="inherit_id" ref="stock.view_picking_type_form"/>
         <field name="arch" type="xml">
-            <group name="additional_info" position="inside">
+            <group name="second" position="after">
                 <group name="weighing" string="Weighing">
                     <field name="weighing_operations"/>
                     <field name="print_weighing_label" invisible="not weighing_operations"/>

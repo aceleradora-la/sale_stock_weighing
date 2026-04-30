@@ -67,4 +67,4 @@ class SaleOrderLine(models.Model):
     def _onchange_product_id_weighing(self):
         if self.product_id.is_weighed_product:
             self.price_per_weight = self.price_unit
-            self.product_uom = self.product_id.uom_id
+            self.product_uom_id = self.product_id.uom_id

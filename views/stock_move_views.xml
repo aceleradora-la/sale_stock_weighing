@@ -25,7 +25,7 @@
                              colors='{"weighed": "success", "weighing": "warning", "to_weigh": "danger"}'/>
                 <templates>
                     <t t-name="card">
-                        <div class="oe_kanban_card" t-attf-style="border-left: 3px solid #{kanban_color(record.weighing_state_color.raw_value)}">
+                        <div class="oe_kanban_card" t-attf-class="o_kanban_record has_hover #{record.weighing_state_color.raw_value === 10 ? 'border-success' : record.weighing_state_color.raw_value === 3 ? 'border-warning' : 'border-danger'}" style="border-left: 4px solid #{record.weighing_state_color.raw_value === 10 ? '#28a745' : record.weighing_state_color.raw_value === 3 ? '#ffc107' : '#dc3545'}">
                             <div class="o_kanban_card_header">
                                 <div class="o_kanban_record_top">
                                     <strong class="o_kanban_record_title">

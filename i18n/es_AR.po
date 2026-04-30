@@ -1,10 +1,10 @@
-# Translation file for sale_stock_weighing
-# Language: es_AR (Spanish - Argentina)
 msgid ""
 msgstr ""
+"Project-Id-Version: 1.0\n"
 "Language: es_AR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-# pricelist fields
 msgid "Weighed Product Price"
 msgstr "Precio por peso"
 
@@ -19,10 +19,6 @@ msgstr "Precio por unidad de peso (ej: por kg) para productos pesables."
 
 msgid "Weight UoM"
 msgstr "UdM de peso"
-
-# sale order line fields
-msgid "Price per Weight Unit"
-msgstr "Precio por kg"
 
 msgid "Price per weight unit (e.g. per kg). Used when the product is sold by units but invoiced by weight."
 msgstr "Precio por unidad de peso (ej: por kg). Se usa cuando el producto se vende por unidades pero se factura por peso."
@@ -39,11 +35,9 @@ msgstr "Peso total entregado"
 msgid "Actual total weight delivered from stock moves."
 msgstr "Peso total real entregado desde los movimientos de stock."
 
-# wizard fields
 msgid "No move line selected"
 msgstr "No se seleccionó ninguna línea de movimiento"
 
-# picking type fields
 msgid "Weighing Operations"
 msgstr "Operaciones de pesaje"
 
@@ -53,14 +47,12 @@ msgstr "Imprimir automáticamente etiqueta de pesaje"
 msgid "Weighing Label Format"
 msgstr "Formato de etiqueta de pesaje"
 
-# stock move fields
 msgid "Weighing User"
 msgstr "Usuario de pesaje"
 
 msgid "User currently weighing this operation. Locks the operation for others."
 msgstr "Usuario que está pesando esta operación. Bloquea la operación para otros."
 
-# stock move line fields
 msgid "Has Recorded Weight"
 msgstr "Tiene peso registrado"
 

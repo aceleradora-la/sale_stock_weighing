@@ -8,27 +8,19 @@
             <field name="price" position="after">
                 <field name="is_weighed_price" string="Precio por peso"/>
             </field>
-            <xpath expr="//group[@name='price_discount']" position="after">
-                <group string="Weight Price" invisible="not is_weighed_price">
-                    <group>
-                        <field name="ppw_compute_price" required="is_weighed_price"/>
-                        <field name="price_per_weight" invisible="ppw_compute_price != 'fixed'" required="ppw_compute_price == 'fixed'"/>
-                        <label for="price_per_weight" string="Base Price" invisible="ppw_compute_price != 'formula'"/>
-                        <div class="o_row" invisible="ppw_compute_price != 'formula'">
-                            <field name="ppw_base"/>
-                            <span invisible="ppw_base != 'pricelist'">
-                                <field name="ppw_pricelist_id" class="oe_inline"/>
-                            </span>
-                        </div>
-                        <field name="ppw_percent_price" invisible="ppw_compute_price != 'formula'" string="Margin (%)"/>
-                        <field name="ppw_price_surcharge" invisible="ppw_compute_price != 'formula'" string="Extra Fee"/>
-                    </group>
-                    <group invisible="ppw_compute_price != 'formula'" string="Margins">
-                        <field name="ppw_price_min_margin"/>
-                        <field name="ppw_price_max_margin"/>
-                    </group>
-                </group>
-            </xpath>
+            <field name="price" position="attributes">
+                <attribute name="invisible">is_weighed_price</attribute>
+            </field>
+            <field name="is_weighed_price" position="after">
+                <field name="ppw_compute_price" invisible="not is_weighed_price" required="is_weighed_price"/>
+                <field name="price_per_weight" invisible="is_weighed_price == False or ppw_compute_price != 'fixed'" required="is_weighed_price == True and ppw_compute_price == 'fixed'" string="Precio por kg"/>
+                <field name="ppw_base" invisible="is_weighed_price == False or ppw_compute_price != 'formula'"/>
+                <field name="ppw_pricelist_id" invisible="is_weighed_price == False or ppw_compute_price != 'formula' or ppw_base != 'pricelist'" string="Based on Pricelist"/>
+                <field name="ppw_percent_price" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Margin (%)"/>
+                <field name="ppw_price_surcharge" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Extra Fee"/>
+                <field name="ppw_price_min_margin" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Min. Margin"/>
+                <field name="ppw_price_max_margin" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Max. Margin"/>
+            </field>
         </field>
     </record>
 

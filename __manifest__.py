@@ -1,6 +1,6 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.3.1.0",
+    "version": "19.0.4.0.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
@@ -24,6 +24,7 @@
         "views/stock_picking_views.xml",
         "views/stock_move_views.xml",
         "views/stock_move_line_views.xml",
+        "views/product_pricelist_views.xml",
         "wizards/weighing_wizard_views.xml",
         "report/weighing_label.xml",
     ],

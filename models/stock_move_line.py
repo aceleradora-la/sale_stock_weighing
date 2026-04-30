@@ -64,9 +64,7 @@ class StockMoveLine(models.Model):
         if picking_type.weighing_label_format == "zpl":
             report = self.env.ref("sale_stock_weighing.action_report_weighing_label_zpl")
         else:
-            report = picking_type.weighing_label_report_id or self.env.ref(
-                "sale_stock_weighing.action_report_weighing_label"
-            )
+            report = self.env.ref("sale_stock_weighing.action_report_weighing_label")
         return report.report_action(self)
 
     def action_reset_weights(self):

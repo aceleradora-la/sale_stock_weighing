@@ -61,10 +61,33 @@ class SaleOrderLine(models.Model):
                 self.total_delivered_weight,
                 self.product_id.weighing_uom_id.name,
             )
+            if self.product_id.weighing_uom_id:
+                res["product_uom_id"] = self.product_id.weighing_uom_id.id
         return res
+
+    def _get_price_per_weight_from_pricelist(self):
+        self.ensure_one()
+        if not self.product_id.is_weighed_product:
+            return 0.0
+        pricelist = self.order_id.pricelist_id
+        for item in pricelist.item_ids:
+            if item.product_id == self.product_id and item.applied_on == "0_product_variant":
+                return item.price_per_weight
+        for item in pricelist.item_ids:
+            if item.product_tmpl_id == self.product_id.product_tmpl_id and item.applied_on == "1_product":
+                return item.price_per_weight
+        for item in pricelist.item_ids:
+            if item.categ_id == self.product_id.categ_id and item.applied_on == "2_product_category":
+                return item.price_per_weight
+        return 0.0
 
     @api.onchange("product_id")
     def _onchange_product_id_weighing(self):
         if self.product_id.is_weighed_product:
-            self.price_per_weight = self.price_unit
+            price_from_pricelist = self._get_price_per_weight_from_pricelist()
+            if price_from_pricelist:
+                self.price_per_weight = price_from_pricelist
+                self.price_unit = 0.0
+            else:
+                self.price_per_weight = self.price_unit
             self.product_uom_id = self.product_id.uom_id

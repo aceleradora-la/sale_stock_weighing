@@ -13,14 +13,8 @@ class StockPickingType(models.Model):
         "Products with weight UoM will use the weighing flow.",
     )
     print_weighing_label = fields.Boolean(
-        string="Print Weighing Label",
+        string="Auto Print Weighing Label",
         help="Automatically print the weight label after recording weight",
-    )
-    weighing_label_report_id = fields.Many2one(
-        comodel_name="ir.actions.report",
-        string="Weighing Label Report",
-        domain="[('model', '=', 'stock.move.line')]",
-        help="Report template for weighing labels (PDF or ZPL)",
     )
     weighing_label_format = fields.Selection(
         selection=[
@@ -28,7 +22,7 @@ class StockPickingType(models.Model):
             ("zpl", "ZPL"),
         ],
         default="pdf",
-        string="Label Format",
+        string="Weighing Label Format",
     )
     weight_move_ids = fields.Many2many(
         comodel_name="stock.move",

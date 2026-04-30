@@ -41,10 +41,6 @@ class StockMove(models.Model):
     origin_names = fields.Char(
         compute="_compute_origin_names",
     )
-    weighing_label_report_id = fields.Many2one(
-        comodel_name="ir.actions.report",
-        related="picking_type_id.weighing_label_report_id",
-    )
     show_weighing_print_button = fields.Boolean(
         compute="_compute_show_weighing_print_button",
     )
@@ -130,11 +126,11 @@ class StockMove(models.Model):
         )
         locked_moves.is_weighing_operation_locked = True
 
-    @api.depends("quantity", "picking_type_id.weighing_label_report_id")
+    @api.depends("quantity", "picking_type_id.weighing_operations")
     def _compute_show_weighing_print_button(self):
         self.show_weighing_print_button = False
         self.filtered(
-            lambda x: x.quantity and x.picking_type_id.weighing_label_report_id
+            lambda x: x.quantity and x.picking_type_id.weighing_operations
         ).show_weighing_print_button = True
 
     def _compute_weighing_state_color(self):

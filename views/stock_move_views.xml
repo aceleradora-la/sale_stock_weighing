@@ -20,7 +20,6 @@
                 <field name="product_uom"/>
                 <field name="weighing_uom_name"/>
                 <field name="picking_id"/>
-                <field name="weighing_label_report_id"/>
                 <field name="show_weighing_print_button"/>
                 <progressbar field="weighing_state"
                              colors='{"weighed": "success", "weighing": "warning", "to_weigh": "danger"}'/>

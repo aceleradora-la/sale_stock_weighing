@@ -37,50 +37,7 @@ class PricelistItem(models.Model):
     )
     is_weighed_price = fields.Boolean(
         string="Weighed Product Price",
-        help="Use price per kg instead of fixed price per unit.",
-    )
-    ppw_compute_price = fields.Selection(
-        selection=[
-            ("fixed", "Fixed Price"),
-            ("formula", "Formula"),
-        ],
-        default="fixed",
-        string="Weight Price Computation",
-        help="How to compute the price per weight unit.",
-    )
-    ppw_base = fields.Selection(
-        selection=[
-            ("list_price", "Public Price"),
-            ("standard_price", "Cost"),
-            ("pricelist", "Other Pricelist"),
-        ],
-        default="list_price",
-        string="Weight Price Based On",
-        help="Base price for computing the weight price (Formula mode only).",
-    )
-    ppw_pricelist_id = fields.Many2one(
-        comodel_name="product.pricelist",
-        string="Based on Pricelist",
-        help="Other pricelist to use as base for weight price.",
-    )
-    ppw_percent_price = fields.Float(
-        string="Margin / Discount (%)",
-        help="Percentage to apply over the base price. "
-        "Positive = markup, negative = discount. "
-        "Result = base × (1 + percent/100).",
-    )
-    ppw_price_surcharge = fields.Float(
-        string="Extra Price (per weight)",
-        digits="Product Price",
-        help="Fixed surcharge added to the final price per weight unit.",
-    )
-    ppw_price_min_margin = fields.Float(
-        string="Min. Margin",
-        help="Minimum margin to guarantee on cost.",
-    )
-    ppw_price_max_margin = fields.Float(
-        string="Max. Margin",
-        help="Maximum margin allowed on cost.",
+        help="Apply pricing rules to price per kg instead of price per unit.",
     )
     weighing_uom_name = fields.Char(
         string="Weight UoM",
@@ -95,41 +52,50 @@ class PricelistItem(models.Model):
             else:
                 item.weighing_uom_name = "kg"
 
-    @api.onchange("ppw_compute_price")
-    def _onchange_ppw_compute_price(self):
-        if self.ppw_compute_price == "fixed":
-            self.ppw_base = False
-            self.ppw_pricelist_id = False
-            self.ppw_percent_price = 0
-            self.ppw_price_surcharge = 0
-            self.ppw_price_min_margin = 0
-            self.ppw_price_max_margin = 0
-        else:
-            self.ppw_base = "list_price"
-
     def compute_price_per_weight(self, product, quantity=1):
         self.ensure_one()
         if not self.is_weighed_price:
             return 0.0
-        if self.ppw_compute_price == "fixed":
-            return self.price_per_weight
-        result = self._compute_base_price_per_weight(product)
-        result = result * (1 + self.ppw_percent_price / 100)
-        result += self.ppw_price_surcharge
-        if self.ppw_price_min_margin:
-            cost = product.standard_price or 0.0
-            result = max(result, cost + self.ppw_price_min_margin)
-        if self.ppw_price_max_margin:
-            cost = product.standard_price or 0.0
-            result = min(result, cost + self.ppw_price_max_margin)
-        return result
 
-    def _compute_base_price_per_weight(self, product):
+        if self.compute_price == "fixed":
+            return self.price_per_weight
+
+        if self.compute_price == "discount":
+            base_price = self._compute_base_price_for_weight(product)
+            if base_price <= 0:
+                return 0.0
+            discount = self.price_discount if self.price_discount > 0 else 0
+            result = base_price * (1 - discount / 100)
+            result += self.price_surcharge
+            if self.price_min_margin:
+                cost = product.standard_price or 0.0
+                result = max(result, cost + self.price_min_margin)
+            if self.price_max_margin:
+                cost = product.standard_price or 0.0
+                result = min(result, cost + self.price_max_margin)
+            return result
+
+        if self.compute_price == "formula":
+            base_price = self._compute_base_price_for_weight(product)
+            margin = self.price_discount
+            result = base_price * (1 + margin / 100)
+            result += self.price_surcharge
+            if self.price_min_margin:
+                cost = product.standard_price or 0.0
+                result = max(result, cost + self.price_min_margin)
+            if self.price_max_margin:
+                cost = product.standard_price or 0.0
+                result = min(result, cost + self.price_max_margin)
+            return result
+
+        return 0.0
+
+    def _compute_base_price_for_weight(self, product):
         self.ensure_one()
-        if self.ppw_base == "list_price":
-            return product.list_price or 0.0
-        if self.ppw_base == "standard_price":
+        if self.base == "pricelist" and self.base_pricelist_id:
+            return self.base_pricelist_id._get_product_price(product, 1.0)
+        if self.base == "standard_price":
             return product.standard_price or 0.0
-        if self.ppw_base == "pricelist" and self.ppw_pricelist_id:
-            return self.ppw_pricelist_id._get_product_price(product, 1.0)
+        if self.base == "list_price":
+            return product.list_price or 0.0
         return 0.0

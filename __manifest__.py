@@ -1,6 +1,6 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.5.0.0",
+    "version": "19.0.6.0.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """

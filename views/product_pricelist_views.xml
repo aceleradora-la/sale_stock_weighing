@@ -5,22 +5,10 @@
         <field name="model">product.pricelist.item</field>
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
-            <field name="price" position="after">
-                <field name="is_weighed_price" string="Precio por peso"/>
-            </field>
-            <field name="price" position="attributes">
-                <attribute name="invisible">is_weighed_price</attribute>
-            </field>
-            <field name="is_weighed_price" position="after">
-                <field name="ppw_compute_price" invisible="not is_weighed_price" required="is_weighed_price"/>
-                <field name="price_per_weight" invisible="is_weighed_price == False or ppw_compute_price != 'fixed'" required="is_weighed_price == True and ppw_compute_price == 'fixed'" string="Precio por kg"/>
-                <field name="ppw_base" invisible="is_weighed_price == False or ppw_compute_price != 'formula'"/>
-                <field name="ppw_pricelist_id" invisible="is_weighed_price == False or ppw_compute_price != 'formula' or ppw_base != 'pricelist'" string="Based on Pricelist"/>
-                <field name="ppw_percent_price" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Margin (%)"/>
-                <field name="ppw_price_surcharge" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Extra Fee"/>
-                <field name="ppw_price_min_margin" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Min. Margin"/>
-                <field name="ppw_price_max_margin" invisible="is_weighed_price == False or ppw_compute_price != 'formula'" string="Max. Margin"/>
-            </field>
+            <xpath expr="//field[@name='price']" position="after">
+                <field name="is_weighed_price"/>
+                <field name="price_per_weight" invisible="not is_weighed_price"/>
+            </xpath>
         </field>
     </record>
 
@@ -31,7 +19,6 @@
         <field name="arch" type="xml">
             <field name="price" position="after">
                 <field name="is_weighed_price" string="Precio por peso" optional="hide"/>
-                <field name="ppw_compute_price" string="Mode" optional="hide"/>
                 <field name="price_per_weight" string="Precio/kg" optional="hide"/>
             </field>
         </field>

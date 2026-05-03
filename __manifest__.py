@@ -29,12 +29,6 @@
         "wizards/weighing_wizard_views.xml",
         "report/weighing_label.xml",
     ],
-    "assets": {
-        "web.assets_backend": [
-            "sale_stock_weighing/static/src/components/weighing_kanban/**/*",
-            "sale_stock_weighing/static/src/components/weighing_record/**/*",
-        ],
-    },
     "license": "LGPL-3",
     "installable": True,
     "auto_install": False,

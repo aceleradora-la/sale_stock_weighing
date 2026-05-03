@@ -108,7 +108,6 @@ class TestSaleStockWeighing(TransactionCase):
         self.assertTrue(move.has_weight)
         move_line = move.move_line_ids[0]
 
-        move_line.qty_picked = 0.980
         move_line.recorded_weight = 0.980
         move_line.has_recorded_weight = True
         move_line.weighing_user_id = self.env.user

@@ -14,7 +14,7 @@
                         <field name="remaining_count" string="Remaining"/>
                     </group>
                     <group>
-                        <field name="weight" class="oe_inline"
+                        <field name="weight" readonly="0" class="oe_inline"
                                style="font-size: 200%; font-weight: bold;"/>
                     </group>
                 </group>

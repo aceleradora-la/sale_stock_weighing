@@ -18,3 +18,28 @@ class AccountMoveLine(models.Model):
         string="Weight UoM Name",
         related="weight_uom_id.name",
     )
+
+
+class AccountMove(models.Model):
+    _inherit = "account.move"
+
+    def action_recompute_weight_lines(self):
+        for invoice in self:
+            if invoice.state != "draft":
+                continue
+            for inv_line in invoice.invoice_line_ids:
+                if not inv_line.sale_line_ids:
+                    continue
+                for sol in inv_line.sale_line_ids:
+                    if (
+                        sol.product_id.is_weighed_product
+                        and sol.total_delivered_weight > 0
+                    ):
+                        inv_line.write({
+                            "quantity": sol.total_delivered_weight,
+                            "price_unit": sol.price_per_weight,
+                            "product_uom_id": sol.product_id.weighing_uom_id.id,
+                            "recorded_weight": sol.total_delivered_weight,
+                            "weight_uom_id": sol.product_id.weighing_uom_id.id,
+                        })
+

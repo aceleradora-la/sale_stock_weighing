@@ -66,6 +66,32 @@ class SaleOrderLine(models.Model):
             )
         return res
 
+    def _recompute_invoice_lines_for_weight(self):
+        self.ensure_one()
+        if not self.product_id.is_weighed_product:
+            return
+        invoices = self.invoice_lines.move_id.filtered(
+            lambda m: m.move_type == "out_invoice" and m.state == "draft"
+        )
+        for invoice in invoices:
+            for inv_line in invoice.invoice_line_ids.filtered(
+                lambda l: l.product_id == self.product_id
+            ):
+                inv_line.write({
+                    "quantity": self.total_delivered_weight,
+                    "price_unit": self.price_per_weight,
+                    "product_uom_id": self.product_id.weighing_uom_id.id,
+                    "recorded_weight": self.total_delivered_weight,
+                    "weight_uom_id": self.product_id.weighing_uom_id.id,
+                    "name": "%s\n[%s] %s x %s %s" % (
+                        inv_line.name or "",
+                        self.product_id.default_code or "",
+                        self.product_id.display_name,
+                        self.total_delivered_weight,
+                        self.product_id.weighing_uom_id.name,
+                    ),
+                })
+
     def _get_price_per_weight_from_pricelist(self):
         self.ensure_one()
         if not self.product_id.is_weighed_product:

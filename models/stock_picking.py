@@ -63,5 +63,9 @@ class StockPicking(models.Model):
                         "res_id": wizard.id,
                         "target": "new",
                     }
+                # Sync recorded weight to quantity before validation
+                for line in weighed_lines:
+                    if line.recorded_weight != line.quantity:
+                        line.quantity = line.recorded_weight
 
         return super().button_validate()

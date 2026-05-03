@@ -18,7 +18,9 @@ class WeighingWizard(models.TransientModel):
         domain="[('id', 'in', available_lot_ids)]",
     )
     product_tracking = fields.Selection(
-        related="product_id.tracking",
+        selection=[("none", "No Tracking"), ("lot", "By Lots"), ("serial", "Unique Serial Number")],
+        compute="_compute_product_tracking",
+        store=True,
     )
     selected_move_line_id = fields.Many2one(
         comodel_name="stock.move.line",
@@ -40,6 +42,11 @@ class WeighingWizard(models.TransientModel):
     remaining_count = fields.Integer(
         compute="_compute_remaining_count",
     )
+
+    @api.depends("product_id")
+    def _compute_product_tracking(self):
+        for wiz in self:
+            wiz.product_tracking = wiz.product_id.tracking or "none"
 
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
@@ -85,14 +92,6 @@ class WeighingWizard(models.TransientModel):
                 if unweighed_lines:
                     record.selected_move_line_id = unweighed_lines[0]
         return records
-
-    def _lot_creation_constraints(self):
-        return [self.product_tracking != "none", not self.lot_id]
-
-    def _check_lot_creation(self):
-        self.ensure_one()
-        if all(self._lot_creation_constraints()):
-            raise Exception(_("You need to supply a Lot/Serial Number"))
 
     def record_weight(self):
         selected_line = self.selected_move_line_id

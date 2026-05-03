@@ -6,8 +6,10 @@ class WeighingWizard(models.TransientModel):
     _description = "Record weights over detailed operations"
 
     move_id = fields.Many2one(comodel_name="stock.move")
-    product_id = fields.Many2one(
-        comodel_name="product.product", related="move_id.product_id", store=True
+    product_id = fields.Many2one(comodel_name="product.product", readonly=True)
+    product_tracking = fields.Selection(
+        selection=[("none", "No Tracking"), ("lot", "By Lots"), ("serial", "Unique Serial Number")],
+        readonly=True,
     )
     available_lot_ids = fields.Many2many(
         comodel_name="stock.lot",
@@ -17,13 +19,9 @@ class WeighingWizard(models.TransientModel):
         comodel_name="stock.lot",
         domain="[('id', 'in', available_lot_ids)]",
     )
-    product_tracking = fields.Selection(
-        selection=[("none", "No Tracking"), ("lot", "By Lots"), ("serial", "Unique Serial Number")],
-        compute="_compute_product_tracking",
-        store=True,
-    )
     selected_move_line_id = fields.Many2one(
         comodel_name="stock.move.line",
+        readonly=True,
     )
     weight = fields.Float(
         string="Weight",
@@ -33,32 +31,24 @@ class WeighingWizard(models.TransientModel):
         string="Print Label",
         help="Print label after recording the weight",
     )
-    has_weight = fields.Boolean(
-        compute="_compute_has_weight",
-    )
-    weighing_uom_name = fields.Char(
-        compute="_compute_weighing_uom_name",
-    )
     remaining_count = fields.Integer(
         compute="_compute_remaining_count",
     )
 
-    @api.depends("product_id")
-    def _compute_product_tracking(self):
-        for wiz in self:
-            wiz.product_tracking = wiz.product_id.tracking or "none"
-
-    @api.depends("product_id.weighing_uom_id")
-    def _compute_weighing_uom_name(self):
-        for wiz in self:
-            wiz.weighing_uom_name = wiz.product_id.weighing_uom_id.name or "kg"
-
-    @api.depends("move_id.move_line_ids.has_recorded_weight")
-    def _compute_remaining_count(self):
-        for wiz in self:
-            wiz.remaining_count = len(
-                wiz.move_id.move_line_ids.filtered(lambda l: not l.has_recorded_weight)
-            )
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for record in records:
+            if record.move_id:
+                record.product_id = record.move_id.product_id
+                record.product_tracking = record.move_id.product_id.tracking or "none"
+                if not record.selected_move_line_id:
+                    unweighed = record.move_id.move_line_ids.filtered(
+                        lambda l: not l.has_recorded_weight
+                    )
+                    if unweighed:
+                        record.selected_move_line_id = unweighed[0]
+        return records
 
     @api.depends("product_id")
     def _compute_available_lot_ids(self):
@@ -69,44 +59,36 @@ class WeighingWizard(models.TransientModel):
                 order="create_date desc",
                 limit=5,
             )
-            default_lot_id = self.env.context.get("default_lot_id", False)
-            if default_lot_id:
-                wiz.available_lot_ids = wiz.available_lot_ids | self.env["stock.lot"].browse(default_lot_id)
 
-    @api.depends("move_id", "selected_move_line_id")
-    def _compute_has_weight(self):
-        self.has_weight = False
+    @api.depends("move_id.move_line_ids.has_recorded_weight")
+    def _compute_remaining_count(self):
         for wiz in self:
-            wiz.has_weight = (
-                wiz.move_id.has_weight or wiz.selected_move_line_id.has_weight
+            wiz.remaining_count = len(
+                wiz.move_id.move_line_ids.filtered(lambda l: not l.has_recorded_weight)
             )
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        records = super().create(vals_list)
-        for record in records:
-            if record.move_id and not record.selected_move_line_id:
-                unweighed_lines = record.move_id.move_line_ids.filtered(
-                    lambda l: not l.has_recorded_weight
-                )
-                if unweighed_lines:
-                    record.selected_move_line_id = unweighed_lines[0]
-        return records
 
     def record_weight(self):
         selected_line = self.selected_move_line_id
         if not selected_line:
             return {"type": "ir.actions.act_window_close"}
+        vals = {}
         if self.weight:
-            selected_line.recorded_weight = self.weight
-            selected_line.has_recorded_weight = True
-            selected_line.weighing_user_id = self.env.user
-            selected_line.weighing_date = fields.Datetime.now()
+            vals.update({
+                "recorded_weight": self.weight,
+                "has_recorded_weight": True,
+                "weighing_user_id": self.env.user,
+                "weighing_date": fields.Datetime.now(),
+            })
+            if self.lot_id:
+                vals["lot_id"] = self.lot_id.id
         else:
-            selected_line.recorded_weight = 0
-            selected_line.has_recorded_weight = False
-            selected_line.weighing_user_id = False
-            selected_line.weighing_date = False
+            vals.update({
+                "recorded_weight": 0,
+                "has_recorded_weight": False,
+                "weighing_user_id": False,
+                "weighing_date": False,
+            })
+        selected_line.write(vals)
 
         selected_line.move_id.action_unlock_weigh_operation()
         self.weight = 0.0

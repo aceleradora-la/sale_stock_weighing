@@ -52,18 +52,16 @@ class StockPicking(models.Model):
             for move in moves_with_weight:
                 weighed_lines = move.move_line_ids.filtered("has_recorded_weight")
                 if not weighed_lines:
+                    wizard = self.env["weighing.wizard"].create({
+                        "move_id": move.id,
+                    })
                     return {
                         "type": "ir.actions.act_window",
                         "name": _("Weighing Assistant"),
                         "res_model": "weighing.wizard",
                         "view_mode": "form",
+                        "res_id": wizard.id,
                         "target": "new",
-                        "context": {
-                            "default_picking_id": picking.id,
-                            "default_move_id": move.id,
-                            "active_id": picking.id,
-                            "active_model": "stock.picking",
-                        },
                     }
 
         return super().button_validate()

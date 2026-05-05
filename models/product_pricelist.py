@@ -1,24 +1,4 @@
-from odoo import _, api, fields, models
-from odoo.tools import float_round
-
-
-class AccountMoveLine(models.Model):
-    _inherit = "account.move.line"
-
-    recorded_weight = fields.Float(
-        string="Recorded Weight",
-        digits="Product Unit of Measure",
-        help="Actual weight delivered and invoiced.",
-    )
-    weight_uom_id = fields.Many2one(
-        comodel_name="uom.uom",
-        string="Weight UoM",
-        help="Unit of measure for the recorded weight.",
-    )
-    weight_uom_name = fields.Char(
-        string="Weight UoM Name",
-        related="weight_uom_id.name",
-    )
+from odoo import api, fields, models
 
 
 class Pricelist(models.Model):
@@ -43,12 +23,13 @@ class Pricelist(models.Model):
         )
         return items.sorted("min_quantity", reverse=True)
 
-    def _get_product_price(self, product, quantity=1):
+    def _get_product_price(self, product, quantity=1.0, *args, **kwargs):
         self.ensure_one()
-        result = self._get_matched_weighing_items(product)
-        if result:
-            return result[0].compute_price_per_weight(product, quantity)
-        return product.list_price or 0.0
+        if product.is_weighed_product:
+            matched = self._get_matched_weighing_items(product)
+            if matched:
+                return matched[0].compute_price_per_weight(product, quantity)
+        return super()._get_product_price(product, quantity, *args, **kwargs)
 
 
 class PricelistItem(models.Model):
@@ -71,47 +52,32 @@ class PricelistItem(models.Model):
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
         for item in self:
-            if item.product_id.weighing_uom_id:
-                item.weighing_uom_name = item.product_id.weighing_uom_id.name
-            else:
-                item.weighing_uom_name = "kg"
+            item.weighing_uom_name = (
+                item.product_id.weighing_uom_id.name
+                or item.product_tmpl_id.weighing_uom_id.name
+                or "kg"
+            )
 
     def compute_price_per_weight(self, product, quantity=1):
         self.ensure_one()
         if not self.is_weighed_price:
             return 0.0
-
         if self.compute_price == "fixed":
             return self.price_per_weight
-
-        if self.compute_price == "discount":
+        if self.compute_price in ("discount", "formula"):
             base_price = self._compute_base_price_for_weight(product)
-            if base_price <= 0:
+            if base_price <= 0 and self.compute_price == "discount":
                 return 0.0
-            discount = self.price_discount if self.price_discount > 0 else 0
-            result = base_price * (1 - discount / 100)
-            result += self.price_surcharge
+            # discount subtracts the percentage, formula adds it (markup).
+            sign = -1 if self.compute_price == "discount" else 1
+            result = base_price * (1 + sign * (self.price_discount or 0) / 100)
+            result += self.price_surcharge or 0.0
+            cost = product.standard_price or 0.0
             if self.price_min_margin:
-                cost = product.standard_price or 0.0
                 result = max(result, cost + self.price_min_margin)
             if self.price_max_margin:
-                cost = product.standard_price or 0.0
                 result = min(result, cost + self.price_max_margin)
             return result
-
-        if self.compute_price == "formula":
-            base_price = self._compute_base_price_for_weight(product)
-            margin = self.price_discount
-            result = base_price * (1 + margin / 100)
-            result += self.price_surcharge
-            if self.price_min_margin:
-                cost = product.standard_price or 0.0
-                result = max(result, cost + self.price_min_margin)
-            if self.price_max_margin:
-                cost = product.standard_price or 0.0
-                result = min(result, cost + self.price_max_margin)
-            return result
-
         return 0.0
 
     def _compute_base_price_for_weight(self, product):

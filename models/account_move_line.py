@@ -28,18 +28,10 @@ class AccountMove(models.Model):
             if invoice.state != "draft":
                 continue
             for inv_line in invoice.invoice_line_ids:
-                if not inv_line.sale_line_ids:
-                    continue
-                for sol in inv_line.sale_line_ids:
-                    if (
-                        sol.product_id.is_weighed_product
-                        and sol.total_delivered_weight > 0
-                    ):
-                        inv_line.write({
-                            "quantity": sol.total_delivered_weight,
-                            "price_unit": sol.price_per_weight,
-                            "product_uom_id": sol.product_id.weighing_uom_id.id,
-                            "recorded_weight": sol.total_delivered_weight,
-                            "weight_uom_id": sol.product_id.weighing_uom_id.id,
-                        })
-
+                sol = inv_line.sale_line_ids[:1]
+                if (
+                    sol
+                    and sol.product_id.is_weighed_product
+                    and sol.total_delivered_weight > 0
+                ):
+                    inv_line.write(sol._get_weighed_invoice_vals(name=inv_line.name))

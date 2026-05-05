@@ -45,6 +45,30 @@
         <field name="target">new</field>
     </record>
 
+    <record id="weighing_action_incoming" model="ir.actions.act_window">
+        <field name="name">Incoming Weighing</field>
+        <field name="res_model">stock.move</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[
+            ('state', 'in', ('assigned', 'confirmed', 'waiting')),
+            ('picking_type_id.code', '=', 'incoming'),
+            ('has_weight', '=', True),
+        ]</field>
+        <field name="context">{'group_by': ['picking_id']}</field>
+    </record>
+
+    <record id="weighing_action_outgoing" model="ir.actions.act_window">
+        <field name="name">Outgoing Weighing</field>
+        <field name="res_model">stock.move</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[
+            ('state', 'in', ('assigned', 'confirmed', 'waiting')),
+            ('picking_type_id.code', '=', 'outgoing'),
+            ('has_weight', '=', True),
+        ]</field>
+        <field name="context">{'group_by': ['picking_id']}</field>
+    </record>
+
     <menuitem id="menu_weighing_root"
               name="Weighing"
               parent="stock.menu_stock_root"
@@ -53,12 +77,12 @@
     <menuitem id="menu_weighing_incoming"
               name="Incoming Weighing"
               parent="menu_weighing_root"
-              action="weighing_operation_action"
+              action="weighing_action_incoming"
               sequence="10"/>
 
     <menuitem id="menu_weighing_outgoing"
               name="Outgoing Weighing"
               parent="menu_weighing_root"
-              action="weighing_operation_action"
+              action="weighing_action_outgoing"
               sequence="20"/>
 </odoo>

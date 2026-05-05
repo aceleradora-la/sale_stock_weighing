@@ -1,20 +1,29 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.7.0.0",
+    "version": "19.0.7.1.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
-    Allows selling products by unit (e.g. 2 cheese bars) but
-    delivering and invoicing by actual weight (kg).
+Sale Stock Weighing
+===================
 
-    Features:
-    - Configure products as weighed products
-    - Set sale UoM (units) and weighing UoM (kg)
-    - Weighing assistant for stock operations
-    - Invoice by actual delivered weight
-    - Weight label printing
-    """,
-    "author": "Custom",
+Allows selling products by unit (e.g. 2 cheese bars) but delivering and
+invoicing by actual weight (kg).
+
+Features
+--------
+- Configure products as weighed products.
+- Set sale UoM (units) and weighing UoM (kg).
+- Weighing assistant for stock operations (kanban + wizard).
+- Operation lock to avoid concurrent weighing.
+- Pricelist with three pricing modes for the price per weight unit:
+  fixed, discount over a base, or markup formula.
+- Invoice the actual delivered weight.
+- Weight label printing in PDF or ZPL format.
+""",
+    "author": "Aceleradora LA",
+    "website": "https://github.com/aceleradora-la/sale_stock_weighing",
+    "license": "LGPL-3",
     "depends": ["sale_stock", "account"],
     "data": [
         "security/ir.model.access.csv",
@@ -29,7 +38,6 @@
         "wizards/weighing_wizard_views.xml",
         "report/weighing_label.xml",
     ],
-    "license": "LGPL-3",
     "installable": True,
     "auto_install": False,
 }

@@ -1,4 +1,4 @@
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 
 
 class WeighingWizard(models.TransientModel):
@@ -8,7 +8,11 @@ class WeighingWizard(models.TransientModel):
     move_id = fields.Many2one(comodel_name="stock.move")
     product_id = fields.Many2one(comodel_name="product.product", readonly=True)
     product_tracking = fields.Selection(
-        selection=[("none", "No Tracking"), ("lot", "By Lots"), ("serial", "Unique Serial Number")],
+        selection=[
+            ("none", "No Tracking"),
+            ("lot", "By Lots"),
+            ("serial", "Unique Serial Number"),
+        ],
         readonly=True,
     )
     available_lot_ids = fields.Many2many(
@@ -39,25 +43,29 @@ class WeighingWizard(models.TransientModel):
     def create(self, vals_list):
         records = super().create(vals_list)
         for record in records:
-            if record.move_id:
-                record.product_id = record.move_id.product_id
-                record.product_tracking = record.move_id.product_id.tracking or "none"
-                if not record.selected_move_line_id:
-                    unweighed = record.move_id.move_line_ids.filtered(
-                        lambda l: not l.has_recorded_weight
-                    )
-                    if unweighed:
-                        record.selected_move_line_id = unweighed[0]
+            if not record.move_id:
+                continue
+            record.product_id = record.move_id.product_id
+            record.product_tracking = record.move_id.product_id.tracking or "none"
+            if not record.selected_move_line_id:
+                unweighed = record.move_id.move_line_ids.filtered(
+                    lambda l: not l.has_recorded_weight
+                )
+                if unweighed:
+                    record.selected_move_line_id = unweighed[:1]
         return records
 
     @api.depends("product_id")
     def _compute_available_lot_ids(self):
-        self.available_lot_ids = False
-        for wiz in self.filtered(lambda x: x.product_id.tracking != "none"):
-            wiz.available_lot_ids = self.env["stock.lot"].search(
+        StockLot = self.env["stock.lot"]
+        for wiz in self:
+            if wiz.product_id.tracking == "none" or not wiz.product_id:
+                wiz.available_lot_ids = False
+                continue
+            wiz.available_lot_ids = StockLot.search(
                 [("product_id", "=", wiz.product_id.id)],
                 order="create_date desc",
-                limit=5,
+                limit=50,
             )
 
     @api.depends("move_id.move_line_ids.has_recorded_weight")
@@ -68,28 +76,27 @@ class WeighingWizard(models.TransientModel):
             )
 
     def record_weight(self):
+        self.ensure_one()
         selected_line = self.selected_move_line_id
         if not selected_line:
             return {"type": "ir.actions.act_window_close"}
-        vals = {}
         if self.weight:
-            vals.update({
+            vals = {
                 "recorded_weight": self.weight,
                 "has_recorded_weight": True,
-                "weighing_user_id": self.env.user,
+                "weighing_user_id": self.env.user.id,
                 "weighing_date": fields.Datetime.now(),
-            })
+            }
             if self.lot_id:
                 vals["lot_id"] = self.lot_id.id
         else:
-            vals.update({
+            vals = {
                 "recorded_weight": 0,
                 "has_recorded_weight": False,
                 "weighing_user_id": False,
                 "weighing_date": False,
-            })
+            }
         selected_line.write(vals)
-
         selected_line.move_id.action_unlock_weigh_operation()
         self.weight = 0.0
         if self.print_label:
@@ -99,8 +106,13 @@ class WeighingWizard(models.TransientModel):
         return {"type": "ir.actions.act_window_close"}
 
     def action_close(self):
-        (self.move_id or self.selected_move_line_id.move_id).action_unlock_weigh_operation()
+        move = self.move_id or self.selected_move_line_id.move_id
+        if move:
+            move.action_unlock_weigh_operation()
 
     def unlink(self):
-        (self.move_id | self.selected_move_line_id.move_id).weighing_user_id = False
+        for wiz in self:
+            move = wiz.move_id or wiz.selected_move_line_id.move_id
+            if move:
+                move.weighing_user_id = False
         return super().unlink()

@@ -23,13 +23,13 @@ class ProductTemplate(models.Model):
             if kg_uom:
                 self.weighing_uom_id = kg_uom
 
-    @api.model
-    def _get_weight_category_xmlid(self):
-        return self.env.ref("uom.product_uom_categ_kgm").id
-
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
 
-    is_weighed_product = fields.Boolean(related="product_tmpl_id.is_weighed_product", store=True)
-    weighing_uom_id = fields.Many2one(related="product_tmpl_id.weighing_uom_id", store=True)
+    is_weighed_product = fields.Boolean(
+        related="product_tmpl_id.is_weighed_product", store=True
+    )
+    weighing_uom_id = fields.Many2one(
+        related="product_tmpl_id.weighing_uom_id", store=True
+    )

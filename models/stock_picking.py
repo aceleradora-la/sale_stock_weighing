@@ -1,6 +1,7 @@
 import ast
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class StockPicking(models.Model):
@@ -13,7 +14,7 @@ class StockPicking(models.Model):
         compute="_compute_has_weighing_operations",
     )
 
-    @api.depends("move_ids")
+    @api.depends("move_ids.has_weight")
     def _compute_has_weighing_operations(self):
         for picking in self:
             picking.has_weighing_operations = bool(
@@ -43,29 +44,33 @@ class StockPicking(models.Model):
         )
         return action
 
+    def _get_unweighed_moves(self):
+        """Return moves that need weighing but haven't been fully weighed yet."""
+        self.ensure_one()
+        moves_to_weigh = self.move_ids.filtered("has_weight")
+        return moves_to_weigh.filtered(
+            lambda m: not m.move_line_ids
+            or not all(m.move_line_ids.mapped("has_recorded_weight"))
+        )
+
     def button_validate(self):
         for picking in self:
-            moves_with_weight = picking.move_ids.filtered("has_weight")
-            if not moves_with_weight:
-                continue
-
-            for move in moves_with_weight:
-                weighed_lines = move.move_line_ids.filtered("has_recorded_weight")
-                if not weighed_lines:
-                    wizard = self.env["weighing.wizard"].create({
-                        "move_id": move.id,
-                    })
-                    return {
-                        "type": "ir.actions.act_window",
-                        "name": _("Weighing Assistant"),
-                        "res_model": "weighing.wizard",
-                        "view_mode": "form",
-                        "res_id": wizard.id,
-                        "target": "new",
-                    }
-                # Sync recorded weight to quantity before validation
-                for line in weighed_lines:
+            unweighed = picking._get_unweighed_moves()
+            if unweighed:
+                raise UserError(
+                    _(
+                        "The following operations still need to be weighed before "
+                        "validating %(picking)s:\n%(moves)s\n\n"
+                        "Please use the Weighing assistant to record the weights.",
+                        picking=picking.name,
+                        moves="\n".join(
+                            "- %s" % m.product_id.display_name for m in unweighed
+                        ),
+                    )
+                )
+            # Sync recorded weight to quantity before validation.
+            for move in picking.move_ids.filtered("has_weight"):
+                for line in move.move_line_ids.filtered("has_recorded_weight"):
                     if line.recorded_weight != line.quantity:
                         line.quantity = line.recorded_weight
-
         return super().button_validate()

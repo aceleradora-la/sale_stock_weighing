@@ -25,18 +25,21 @@ class StockMoveLine(models.Model):
     )
 
     def action_weighing(self):
-        self.move_id.action_lock_weighing_operation()
+        first = self[:1]
+        if not first:
+            return False
+        first.move_id.action_lock_weighing_operation()
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_wizard_action"
         )
-        action["name"] = self._get_action_weighing_name()
+        action["name"] = first._get_action_weighing_name()
         action["context"] = dict(
             self.env.context,
-            default_selected_move_line_id=self[0].id,
-            default_weight=self[0].recorded_weight or self[0].quantity,
+            default_selected_move_line_id=first.id,
+            default_weight=first.recorded_weight or first.quantity,
             default_move_line_ids=self.ids,
-            default_print_label=self.move_id._get_default_print_label(),
-            default_move_id=self.move_id.id,
+            default_print_label=first.move_id._get_default_print_label(),
+            default_move_id=first.move_id.id,
         )
         return action
 
@@ -53,17 +56,23 @@ class StockMoveLine(models.Model):
         return name
 
     def action_print_weight_record_label(self):
-        picking_type = self.move_id.picking_type_id
+        if not self:
+            return False
+        picking_type = self[:1].move_id.picking_type_id
         if picking_type.weighing_label_format == "zpl":
-            report = self.env.ref("sale_stock_weighing.action_report_weighing_label_zpl")
+            report = self.env.ref(
+                "sale_stock_weighing.action_report_weighing_label_zpl"
+            )
         else:
             report = self.env.ref("sale_stock_weighing.action_report_weighing_label")
         return report.report_action(self)
 
     def action_reset_weights(self):
-        self.write({
-            "recorded_weight": 0,
-            "has_recorded_weight": False,
-            "weighing_user_id": False,
-            "weighing_date": False,
-        })
+        self.write(
+            {
+                "recorded_weight": 0,
+                "has_recorded_weight": False,
+                "weighing_user_id": False,
+                "weighing_date": False,
+            }
+        )

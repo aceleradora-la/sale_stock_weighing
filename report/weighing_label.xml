@@ -18,8 +18,7 @@
                                 </div>
                                 <div class="col-6">
                                     <strong>Lot/Serial:</strong>
-                                    <p t-field="move_line.lot_id.name" t-if="move_line.lot_id"/>
-                                    <p t-else=""/>
+                                    <p t-if="move_line.lot_id" t-field="move_line.lot_id.name"/>
                                 </div>
                             </div>
                             <div class="row">

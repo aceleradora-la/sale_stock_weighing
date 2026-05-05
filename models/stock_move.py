@@ -2,8 +2,6 @@ import ast
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.osv import expression
-from odoo.tools import float_compare
 
 
 class StockMove(models.Model):
@@ -44,10 +42,6 @@ class StockMove(models.Model):
     show_weighing_print_button = fields.Boolean(
         compute="_compute_show_weighing_print_button",
     )
-    self_move_ids = fields.Many2many(
-        comodel_name="stock.move",
-        compute="_compute_self_move_ids",
-    )
     weighing_state_color = fields.Integer(
         compute="_compute_weighing_state_color",
     )
@@ -60,7 +54,7 @@ class StockMove(models.Model):
         for move in self:
             move.weighing_uom_name = move.product_id.weighing_uom_id.name or "kg"
 
-    @api.depends("move_line_ids.recorded_weight")
+    @api.depends("move_line_ids.recorded_weight", "move_line_ids.has_recorded_weight")
     def _compute_recorded_weight(self):
         for move in self:
             move.recorded_weight = sum(move.move_line_ids.mapped("recorded_weight"))
@@ -68,29 +62,34 @@ class StockMove(models.Model):
                 move.move_line_ids.mapped("has_recorded_weight")
             )
 
-    @api.depends("move_line_ids.recorded_weight", "state", "product_id")
+    @api.depends(
+        "move_line_ids.recorded_weight",
+        "move_line_ids.has_recorded_weight",
+        "state",
+        "product_id",
+    )
     def _compute_weighing_state(self):
         self.weighing_state = False
         for move in self.filtered("has_weight"):
             move_to_do = move.state not in {"draft", "cancel", "done"}
-            if move.move_lines_weighed and move_to_do:
+            if not move_to_do:
+                continue
+            if move.move_lines_weighed:
                 move.weighing_state = "weighed"
-            elif move.recorded_weight and move_to_do:
+            elif move.recorded_weight:
                 move.weighing_state = "weighing"
-            elif not move.recorded_weight and move_to_do:
+            else:
                 move.weighing_state = "to_weigh"
 
     @api.depends("move_line_ids.lot_id")
     def _compute_lot_names(self):
-        self.lot_names = False
         for move in self:
-            move.lot_names = ",".join(move.move_line_ids.lot_id.mapped("name"))
+            move.lot_names = ", ".join(move.move_line_ids.lot_id.mapped("name"))
 
     @api.depends("move_line_ids.location_id")
     def _compute_origin_names(self):
-        self.origin_names = False
         for move in self:
-            move.origin_names = ",".join(move.move_line_ids.location_id.mapped("name"))
+            move.origin_names = ", ".join(move.move_line_ids.location_id.mapped("name"))
 
     @api.depends("weighing_user_id", "state")
     def _compute_is_weighing_operation_locked(self):
@@ -104,31 +103,25 @@ class StockMove(models.Model):
 
     @api.depends("quantity", "picking_type_id.weighing_operations")
     def _compute_show_weighing_print_button(self):
-        self.show_weighing_print_button = False
-        self.filtered(
-            lambda x: x.quantity and x.picking_type_id.weighing_operations
-        ).show_weighing_print_button = True
+        for move in self:
+            move.show_weighing_print_button = bool(
+                move.quantity and move.picking_type_id.weighing_operations
+            )
 
+    @api.depends("weighing_state")
     def _compute_weighing_state_color(self):
         state_map = {"weighed": 10, "to_weigh": 1, "weighing": 3}
         for move in self:
             move.weighing_state_color = state_map.get(move.weighing_state, 0)
 
-    def _has_weigh_domain(self):
-        domain = super()._has_weigh_domain()
-        domain = expression.AND([domain, [("product_uom_qty", ">", 0)]])
-        return domain
-
-    def _search_has_weight(self, operator, value):
-        domain = super()._search_has_weight(operator, value)
-        domain = expression.AND([domain, [("product_uom_qty", ">", 0)]])
-        return domain
-
     def action_lock_weighing_operation(self):
         self.ensure_one()
         if self.weighing_user_id and self.weighing_user_id != self.env.user:
             raise UserError(
-                _("The user %(user)s is already weighing this operation", user=self.weighing_user_id.name)
+                _(
+                    "The user %(user)s is already weighing this operation",
+                    user=self.weighing_user_id.name,
+                )
             )
         self.weighing_user_id = self.env.user
 
@@ -145,13 +138,14 @@ class StockMove(models.Model):
             "sale_stock_weighing.weighing_wizard_action"
         )
         first_line = self.move_line_ids[:1]
-        action["name"] = first_line._get_action_weighing_name()
+        action["name"] = first_line._get_action_weighing_name() if first_line else action["name"]
         action["context"] = dict(
             self.env.context,
             default_selected_move_line_id=first_line.id if first_line else False,
             default_weight=self.recorded_weight or self.quantity,
             default_move_line_ids=self.move_line_ids.ids,
             default_print_label=self._get_default_print_label(),
+            default_move_id=self.id,
         )
         return action
 

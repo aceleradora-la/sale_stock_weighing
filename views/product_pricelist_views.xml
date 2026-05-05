@@ -7,7 +7,11 @@
         <field name="arch" type="xml">
             <field name="applied_on" position="before">
                 <field name="is_weighed_price"/>
-                <field name="price_per_weight" invisible="not is_weighed_price"/>
+                <field name="price_per_weight"
+                       invisible="not is_weighed_price or compute_price != 'fixed'"/>
+                <field name="weight_price_display"
+                       invisible="not is_weighed_price"
+                       readonly="1"/>
             </field>
         </field>
     </record>
@@ -20,6 +24,7 @@
             <field name="price" position="after">
                 <field name="is_weighed_price" optional="hide"/>
                 <field name="price_per_weight" optional="hide"/>
+                <field name="weight_price_display" optional="show"/>
             </field>
         </field>
     </record>

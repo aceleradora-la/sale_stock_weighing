@@ -1,5 +1,5 @@
 from odoo import fields
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -159,33 +159,84 @@ class TestSaleStockWeighing(TransactionCase):
         weighed_price = pricelist._get_product_price(self.product_cheese, 1.0)
         self.assertAlmostEqual(weighed_price, 9000.0, places=2)
 
+    def _make_base_weight_pricelist(self, price_per_kg=8000.0):
+        return self.env["product.pricelist"].create({
+            "name": "Base $/Kg",
+            "item_ids": [(0, 0, {
+                "applied_on": "3_global",
+                "compute_price": "fixed",
+                "is_weighed_price": True,
+                "price_per_weight": price_per_kg,
+            })],
+        })
+
     def test_pricelist_discount_mode(self):
+        base_pl = self._make_base_weight_pricelist(price_per_kg=10000.0)
         pricelist = self.env["product.pricelist"].create({
-            "name": "PL Discount",
+            "name": "PL Mayorista 10% off",
             "item_ids": [(0, 0, {
                 "applied_on": "3_global",
                 "compute_price": "discount",
-                "base": "list_price",
+                "base": "pricelist",
+                "base_pricelist_id": base_pl.id,
                 "is_weighed_price": True,
                 "price_discount": 10.0,
             })],
         })
         price = pricelist._get_product_price(self.product_cheese, 1.0)
-        self.assertAlmostEqual(price, 9.0, places=2)
+        self.assertAlmostEqual(price, 9000.0, places=2)
 
     def test_pricelist_formula_mode(self):
+        base_pl = self._make_base_weight_pricelist(price_per_kg=10000.0)
         pricelist = self.env["product.pricelist"].create({
-            "name": "PL Formula",
+            "name": "PL Markup 5%",
             "item_ids": [(0, 0, {
                 "applied_on": "3_global",
                 "compute_price": "formula",
-                "base": "standard_price",
+                "base": "pricelist",
+                "base_pricelist_id": base_pl.id,
                 "is_weighed_price": True,
-                "price_discount": 50.0,
+                "price_discount": 5.0,
             })],
         })
         price = pricelist._get_product_price(self.product_cheese, 1.0)
-        self.assertAlmostEqual(price, 6.0, places=2)
+        self.assertAlmostEqual(price, 10500.0, places=2)
+
+    def test_pricelist_weighed_discount_requires_base_pricelist(self):
+        """The constraint forbids list_price/standard_price as base for
+        weighed Discount/Formula items, since they would mix per-unit and
+        per-weight money."""
+        with self.assertRaises(ValidationError):
+            self.env["product.pricelist"].create({
+                "name": "Bad PL",
+                "item_ids": [(0, 0, {
+                    "applied_on": "3_global",
+                    "compute_price": "discount",
+                    "base": "list_price",
+                    "is_weighed_price": True,
+                    "price_discount": 10.0,
+                })],
+            })
+
+    def test_weight_price_display(self):
+        base_pl = self._make_base_weight_pricelist(price_per_kg=8000.0)
+        item = base_pl.item_ids[0]
+        self.assertIn("8000.00", item.weight_price_display)
+        self.assertIn("kg", item.weight_price_display)
+        derived = self.env["product.pricelist"].create({
+            "name": "Derived",
+            "item_ids": [(0, 0, {
+                "applied_on": "3_global",
+                "compute_price": "discount",
+                "base": "pricelist",
+                "base_pricelist_id": base_pl.id,
+                "is_weighed_price": True,
+                "price_discount": 10.0,
+            })],
+        })
+        derived_item = derived.item_ids[0]
+        self.assertIn("Base $/Kg", derived_item.weight_price_display)
+        self.assertIn("10.00%", derived_item.weight_price_display)
 
     def test_lock_concurrent_weighing(self):
         picking = self._make_outgoing_picking(self.product_cheese, 2.0)

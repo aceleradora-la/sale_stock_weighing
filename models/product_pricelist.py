@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class Pricelist(models.Model):
@@ -48,8 +49,17 @@ class PricelistItem(models.Model):
         string="Weight UoM",
         compute="_compute_weighing_uom_name",
     )
+    weight_price_display = fields.Char(
+        string="Weighed Price",
+        compute="_compute_weight_price_display",
+        help="Effective weighed price expressed as $/UoM, resolved from "
+        "the configured rule.",
+    )
 
-    @api.depends("product_id.weighing_uom_id")
+    @api.depends(
+        "product_id.weighing_uom_id",
+        "product_tmpl_id.weighing_uom_id",
+    )
     def _compute_weighing_uom_name(self):
         for item in self:
             item.weighing_uom_name = (
@@ -57,6 +67,78 @@ class PricelistItem(models.Model):
                 or item.product_tmpl_id.weighing_uom_id.name
                 or "kg"
             )
+
+    @api.depends(
+        "is_weighed_price",
+        "compute_price",
+        "price_per_weight",
+        "price_discount",
+        "price_surcharge",
+        "base",
+        "base_pricelist_id",
+        "weighing_uom_name",
+    )
+    def _compute_weight_price_display(self):
+        for item in self:
+            if not item.is_weighed_price:
+                item.weight_price_display = ""
+                continue
+            uom = item.weighing_uom_name or "kg"
+            if item.compute_price == "fixed":
+                item.weight_price_display = "%.2f / %s" % (
+                    item.price_per_weight or 0.0,
+                    uom,
+                )
+                continue
+            if item.compute_price in ("discount", "formula"):
+                base_label = (
+                    item.base_pricelist_id.display_name
+                    if item.base == "pricelist" and item.base_pricelist_id
+                    else (item.base or "")
+                )
+                pct = item.price_discount or 0.0
+                op = "−" if item.compute_price == "discount" else "+"
+                surcharge = (
+                    " + %.2f" % item.price_surcharge if item.price_surcharge else ""
+                )
+                item.weight_price_display = "%s × (1 %s %.2f%%)%s / %s" % (
+                    base_label,
+                    op,
+                    pct,
+                    surcharge,
+                    uom,
+                )
+                continue
+            item.weight_price_display = ""
+
+    @api.onchange("is_weighed_price", "compute_price")
+    def _onchange_is_weighed_price(self):
+        """For weighed pricing in Discount/Formula mode, the only sensible base
+        is another pricelist (so the formula operates on $/weight, not on the
+        product's per-unit list/standard price). Auto-set it on the form."""
+        if (
+            self.is_weighed_price
+            and self.compute_price in ("discount", "formula")
+            and self.base != "pricelist"
+        ):
+            self.base = "pricelist"
+
+    @api.constrains("is_weighed_price", "compute_price", "base", "base_pricelist_id")
+    def _check_weighed_base(self):
+        for item in self:
+            if not item.is_weighed_price:
+                continue
+            if item.compute_price in ("discount", "formula"):
+                if item.base != "pricelist" or not item.base_pricelist_id:
+                    raise ValidationError(
+                        _(
+                            "Weighed pricing in Discount or Formula mode must "
+                            "use 'Other Pricelist' as Base, with a base "
+                            "pricelist configured. This way the percentage is "
+                            "applied on a price per weight unit, not on the "
+                            "product's per-unit list/cost price."
+                        )
+                    )
 
     def compute_price_per_weight(self, product, quantity=1):
         self.ensure_one()
@@ -81,6 +163,11 @@ class PricelistItem(models.Model):
         return 0.0
 
     def _compute_base_price_for_weight(self, product):
+        """Resolve the base price for a weighed Discount/Formula rule.
+
+        For weighed pricing the base must be another pricelist whose own
+        weighed rule yields a $/weight value. For non-weighed cases we keep
+        the historical fall-backs (rarely useful but harmless)."""
         self.ensure_one()
         if self.base == "pricelist" and self.base_pricelist_id:
             return self.base_pricelist_id._get_product_price(product, 1.0)

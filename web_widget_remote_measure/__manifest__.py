@@ -30,7 +30,7 @@ Configuration
     "author": "Aceleradora LA",
     "website": "https://github.com/aceleradora-la/sale_stock_weighing",
     "license": "LGPL-3",
-    "depends": ["web", "uom"],
+    "depends": ["web", "uom", "stock", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "views/remote_measure_device_views.xml",

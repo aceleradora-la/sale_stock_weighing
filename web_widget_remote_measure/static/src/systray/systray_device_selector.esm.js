@@ -21,6 +21,8 @@ export class RemoteDeviceSelectorMenu extends Component {
     setup() {
         this.action = useService("action");
         this.state = useState({ visible: false, deviceName: "" });
+        // Cached res.users.settings record ID for the current user.
+        this._settingsId = false;
 
         onWillStart(async () => {
             // Check if user has stock access (group_stock_user).
@@ -38,12 +40,17 @@ export class RemoteDeviceSelectorMenu extends Component {
                 method: "search_read",
                 args: [[["user_id", "=", user.userId]]],
                 kwargs: {
-                    fields: ["remote_measure_device_id"],
+                    fields: ["id", "remote_measure_device_id"],
                     limit: 1,
                 },
             });
-            if (settings.length && settings[0].remote_measure_device_id) {
-                this.state.deviceName = settings[0].remote_measure_device_id[1] || "";
+            if (settings.length) {
+                // Cache the record ID so onClickSelectDevice can open the
+                // existing record instead of creating a new one.
+                this._settingsId = settings[0].id || false;
+                this.state.deviceName = settings[0].remote_measure_device_id
+                    ? settings[0].remote_measure_device_id[1] || ""
+                    : "";
             }
         } catch {
             // Ignore.
@@ -51,14 +58,16 @@ export class RemoteDeviceSelectorMenu extends Component {
     }
 
     async onClickSelectDevice() {
-        // Open the user's own res.users.settings record so they can pick a device.
+        // Open the user's existing res.users.settings record.
+        // We must pass res_id; without it Odoo opens a create-new form which
+        // will fail with a unique-constraint error on user_id.
         await this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "res.users.settings",
             view_mode: "form",
             views: [[false, "form"]],
             target: "new",
-            domain: [["user_id", "=", user.userId]],
+            res_id: this._settingsId || false,
         });
         // Refresh the displayed device name after the dialog closes.
         await this._loadCurrentDevice();

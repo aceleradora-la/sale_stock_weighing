@@ -1,30 +1,36 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.7.2.0",
+    "version": "19.0.7.3.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
 Sale Stock Weighing
 ===================
 
-Allows selling products by unit (e.g. 2 cheese bars) but delivering and
+Allows selling products by unit (e.g. 5 ham pieces) but delivering and
 invoicing by actual weight (kg).
 
 Features
 --------
-- Configure products as weighed products.
-- Set sale UoM (units) and weighing UoM (kg).
+- Configure products as weighed products with a separate weighing UoM.
+- Sales order line tracks piece count (x_piece_count) and estimated weight.
 - Weighing assistant for stock operations (kanban + wizard).
 - Operation lock to avoid concurrent weighing.
-- Pricelist with three pricing modes for the price per weight unit:
-  fixed, discount over a base, or markup formula.
-- Invoice the actual delivered weight.
-- Weight label printing in PDF or ZPL format.
+- Remote scale support via WebSocket/F501 (requires web_widget_remote_measure).
+- Pricelist with three pricing modes for $/weight: fixed, discount, formula.
+- Invoice generated using the actual delivered weight × price/kg.
+- Weight label printing in PDF or ZPL format, including piece price.
+- Cotización and factura reports show pieces + weight + price/kg columns.
+- Lot tracking: each lot = one physical piece; piece count derived automatically.
 """,
     "author": "Aceleradora LA",
     "website": "https://github.com/aceleradora-la/sale_stock_weighing",
     "license": "LGPL-3",
-    "depends": ["sale_stock", "account"],
+    "depends": [
+        "sale_stock",
+        "account",
+        "web_widget_remote_measure",
+    ],
     "data": [
         "security/ir.model.access.csv",
         "views/product_views.xml",
@@ -37,6 +43,8 @@ Features
         "views/product_pricelist_views.xml",
         "wizards/weighing_wizard_views.xml",
         "report/weighing_label.xml",
+        "report/sale_order_weighing.xml",
+        "report/account_invoice_weighing.xml",
     ],
     "installable": True,
     "auto_install": False,

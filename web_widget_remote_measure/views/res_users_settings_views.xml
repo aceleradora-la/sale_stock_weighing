@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add the default device to the user Preferences dialog -->
+    <record id="res_users_settings_view_form_remote_measure" model="ir.ui.view">
+        <field name="name">res.users.settings.form.remote.measure</field>
+        <field name="model">res.users.settings</field>
+        <field name="inherit_id" ref="mail.res_users_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('o_setting_box')]" position="after">
+                <div class="o_setting_box">
+                    <div class="o_setting_left_pane"/>
+                    <div class="o_setting_right_pane">
+                        <label for="remote_measure_device_id"/>
+                        <div class="text-muted">
+                            Default scale/device used by the weighing assistant
+                        </div>
+                        <field name="remote_measure_device_id"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

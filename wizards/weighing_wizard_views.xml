@@ -14,8 +14,15 @@
                         <field name="remaining_count" string="Remaining"/>
                     </group>
                     <group>
-                        <field name="weight" readonly="0" class="oe_inline"
+                        <!-- Remote measure widget: shows balance icon when a device
+                             is configured in user preferences. Falls back to plain
+                             numeric input when no device is set. -->
+                        <field name="weight"
+                               widget="remote_measure"
+                               options="{'default_user_device': true, 'uom_field': 'weight_uom_id'}"
+                               class="oe_inline"
                                style="font-size: 200%; font-weight: bold;"/>
+                        <field name="weight_uom_id" invisible="1"/>
                     </group>
                 </group>
                 <group>

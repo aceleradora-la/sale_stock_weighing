@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="web_widget_remote_measure.RemoteMeasureField">
+        <div class="o_field_remote_measure d-flex align-items-center gap-2">
+
+            <!-- Read-only mode: plain formatted value -->
+            <t t-if="props.readonly">
+                <span t-esc="formattedValue"/>
+            </t>
+
+            <!-- Edit mode -->
+            <t t-else="">
+
+                <!-- Standard float input (inherited from FloatField) -->
+                <input
+                    t-ref="input"
+                    class="o_input text-end"
+                    type="text"
+                    inputmode="decimal"
+                    t-att-placeholder="props.placeholder or ''"
+                    t-on-focus="onFocusIn"
+                    t-on-blur="onFocusOut"
+                    autocomplete="off"
+                />
+
+                <!-- Remote measure controls (only when a device is available) -->
+                <t t-if="measureState.device">
+
+                    <!-- Start measuring button -->
+                    <button t-if="measureState.stopped"
+                            class="btn btn-primary btn-sm ms-1"
+                            title="Start measuring from device"
+                            t-on-click.stop="onMeasure">
+                        <i class="fa fa-balance-scale"/>
+                    </button>
+
+                    <!-- Animated "measuring" button — click to stop/accept -->
+                    <button t-else=""
+                            class="btn btn-warning btn-sm ms-1"
+                            title="Reading from device — click to stop"
+                            t-on-click.stop="onStopMeasure">
+                        <i t-attf-class="fa #{currentIcon}"/>
+                    </button>
+
+                    <!-- Additive measure button (optional) -->
+                    <button t-if="props.allow_additive_measure and not measureState.stopped"
+                            class="btn btn-secondary btn-sm"
+                            title="Add this reading to the current value"
+                            t-on-click.stop="onMeasureAdd">
+                        <i class="fa fa-plus"/>
+                    </button>
+
+                </t>
+
+                <!-- No device configured — show neutral icon with tooltip -->
+                <t t-else="">
+                    <span class="text-muted ms-1"
+                          title="No remote device configured. Set one in Preferences.">
+                        <i class="fa fa-balance-scale"/>
+                    </span>
+                </t>
+
+            </t>
+        </div>
+    </t>
+
+</templates>

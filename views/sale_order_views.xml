@@ -6,9 +6,25 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
-                <field name="price_per_weight" optional="show" invisible="not product_id.is_weighed_product"/>
-                <field name="total_planned_weight" optional="show" invisible="not product_id.is_weighed_product"/>
-                <field name="total_delivered_weight" optional="show" invisible="not product_id.is_weighed_product"/>
+                <field name="price_per_weight"
+                       optional="show"
+                       invisible="not product_id.is_weighed_product"/>
+                <field name="x_piece_count"
+                       optional="show"
+                       invisible="not product_id.is_weighed_product"
+                       string="Pieces"/>
+                <field name="total_planned_weight"
+                       optional="show"
+                       invisible="not product_id.is_weighed_product"
+                       string="Est. Weight"/>
+                <field name="total_delivered_weight"
+                       optional="show"
+                       invisible="not product_id.is_weighed_product"
+                       string="Del. Weight"/>
+                <field name="delivered_piece_count"
+                       optional="hide"
+                       invisible="not product_id.is_weighed_product"
+                       string="Del. Pieces"/>
             </xpath>
         </field>
     </record>

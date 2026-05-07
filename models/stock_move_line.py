@@ -1,4 +1,4 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 
 
 class StockMoveLine(models.Model):
@@ -23,6 +23,33 @@ class StockMoveLine(models.Model):
         string="Weighing Date",
         readonly=True,
     )
+    piece_price = fields.Float(
+        string="Piece Price",
+        compute="_compute_piece_price",
+        digits="Product Price",
+        help="Price of this piece: recorded weight × price per weight unit from the sale order.",
+    )
+    piece_price_currency_symbol = fields.Char(
+        compute="_compute_piece_price",
+        help="Currency symbol for the piece price.",
+    )
+
+    @api.depends(
+        "recorded_weight",
+        "move_id.sale_line_id.price_per_weight",
+        "move_id.sale_line_id.order_id.currency_id",
+    )
+    def _compute_piece_price(self):
+        for line in self:
+            sale_line = line.move_id.sale_line_id
+            if sale_line and sale_line.price_per_weight and line.recorded_weight:
+                line.piece_price = line.recorded_weight * sale_line.price_per_weight
+                line.piece_price_currency_symbol = (
+                    sale_line.order_id.currency_id.symbol or ""
+                )
+            else:
+                line.piece_price = 0.0
+                line.piece_price_currency_symbol = ""
 
     def action_weighing(self):
         first = self[:1]

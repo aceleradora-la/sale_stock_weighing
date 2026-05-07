@@ -18,6 +18,10 @@ class AccountMoveLine(models.Model):
         string="Weight UoM Name",
         related="weight_uom_id.name",
     )
+    x_delivered_piece_count = fields.Integer(
+        string="Delivered Pieces",
+        help="Number of pieces (units) delivered, for display on the invoice.",
+    )
 
 
 class AccountMove(models.Model):

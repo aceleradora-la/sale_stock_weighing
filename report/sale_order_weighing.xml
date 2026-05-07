@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherit the standard sale order report to show weighed-product columns:
+        Pieces (x_piece_count), Estimated Weight, and Price/Weight Unit.
+
+        Only shows the extra columns when at least one line has is_weighed_product.
+    -->
+    <template id="sale_order_weighing_columns"
+              inherit_id="sale.report_saleorder_document">
+
+        <!-- Add header columns before the Subtotal header -->
+        <xpath expr="//th[@name='th_subtotal']" position="before">
+            <t t-if="any(l.product_id.is_weighed_product for l in doc.order_line)">
+                <th class="text-end">Piezas</th>
+                <th class="text-end">Peso Est. (kg)</th>
+                <th class="text-end">Precio / kg</th>
+            </t>
+        </xpath>
+
+        <!-- Add data cells before the Subtotal cell in each line -->
+        <xpath expr="//td[@name='td_subtotal']" position="before">
+            <t t-if="line.product_id.is_weighed_product">
+                <td class="text-end">
+                    <span t-esc="line.x_piece_count or int(line.product_uom_qty)"/>
+                </td>
+                <td class="text-end">
+                    <span t-esc="'%.3f' % line.total_planned_weight"/>
+                    <span t-if="line.product_id.weighing_uom_id">
+                        <t t-field="line.product_id.weighing_uom_id.name"/>
+                    </span>
+                </td>
+                <td class="text-end">
+                    <t t-if="line.price_per_weight">
+                        <span t-esc="'%.2f' % line.price_per_weight"/>
+                        <span t-if="doc.currency_id">
+                            <t t-field="doc.currency_id.symbol"/>
+                        </span>
+                        <span t-if="line.product_id.weighing_uom_id">
+                            / <t t-field="line.product_id.weighing_uom_id.name"/>
+                        </span>
+                    </t>
+                </td>
+            </t>
+            <t t-else="">
+                <t t-if="any(l.product_id.is_weighed_product for l in doc.order_line)">
+                    <td/><td/><td/>
+                </t>
+            </t>
+        </xpath>
+
+    </template>
+</odoo>

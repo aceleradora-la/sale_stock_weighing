@@ -9,23 +9,35 @@ class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
     price_per_weight = fields.Float(
-        string="Price per Weight Unit",
+        string="Price / Weight Unit",
         digits="Product Price",
         help="Price per weight unit (e.g. per kg). "
         "Used when the product is sold by units but invoiced by weight.",
     )
+    x_piece_count = fields.Integer(
+        string="Pieces",
+        help="Number of pieces (units) to be delivered. "
+        "Informational — used in printed reports alongside weight.",
+    )
     total_planned_weight = fields.Float(
-        string="Total Planned Weight",
+        string="Est. Weight",
         compute="_compute_total_planned_weight",
         digits="Product Unit of Measure",
-        help="Planned total weight based on order quantity and standard weight.",
+        help="Planned total weight based on order quantity and standard weight per unit.",
     )
     total_delivered_weight = fields.Float(
-        string="Total Delivered Weight",
+        string="Delivered Weight",
         compute="_compute_total_delivered_weight",
         digits="Product Unit of Measure",
         store=True,
         help="Actual total weight delivered from stock moves.",
+    )
+    delivered_piece_count = fields.Integer(
+        string="Delivered Pieces",
+        compute="_compute_delivered_piece_count",
+        store=True,
+        help="Number of pieces delivered, determined by distinct lots in done moves. "
+        "Falls back to weighed move lines when lot tracking is not enabled.",
     )
 
     @api.depends(
@@ -47,9 +59,8 @@ class SaleOrderLine(models.Model):
                         product.weight, product.weighing_uom_id
                     )
                 else:
-                    # UoMs in different categories: fall back to raw weight.
                     _logger.debug(
-                        "Product %s has UoM %s and weighing UoM %s in different "
+                        "Product %s: UoM %s and weighing UoM %s are in different "
                         "categories; using product.weight as-is.",
                         product.display_name,
                         product.uom_id.name,
@@ -70,19 +81,41 @@ class SaleOrderLine(models.Model):
                 .mapped("recorded_weight")
             )
 
+    @api.depends(
+        "move_ids.state",
+        "move_ids.move_line_ids.lot_id",
+        "move_ids.move_line_ids.has_recorded_weight",
+    )
+    def _compute_delivered_piece_count(self):
+        for line in self:
+            if not line.product_id.is_weighed_product:
+                line.delivered_piece_count = 0
+                continue
+            done_moves = line.move_ids.filtered(lambda m: m.state == "done")
+            weighed_lines = done_moves.move_line_ids.filtered("has_recorded_weight")
+            # Prefer counting distinct lots (= physical pieces);
+            # fall back to number of weighed move lines when lot tracking is off.
+            lots = weighed_lines.filtered("lot_id").lot_id
+            line.delivered_piece_count = len(lots) if lots else len(weighed_lines)
+
     def _get_weighed_invoice_vals(self, name=None):
         """Return values to write on an account.move.line for a weighed product."""
         self.ensure_one()
         product = self.product_id
         base_name = name if name is not None else self.name or ""
+        piece_info = ""
+        if self.delivered_piece_count:
+            piece_info = " (%d pcs)" % self.delivered_piece_count
         return {
             "quantity": self.total_delivered_weight,
             "price_unit": self.price_per_weight,
             "product_uom_id": product.weighing_uom_id.id,
             "recorded_weight": self.total_delivered_weight,
             "weight_uom_id": product.weighing_uom_id.id,
-            "name": "%s\n[%s] %s x %s %s" % (
+            "x_delivered_piece_count": self.delivered_piece_count,
+            "name": "%s%s\n[%s] %s × %s %s" % (
                 base_name,
+                piece_info,
                 product.default_code or "",
                 product.display_name,
                 self.total_delivered_weight,

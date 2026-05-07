@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="remote_measure_device_form" model="ir.ui.view">
+        <field name="name">remote.measure.device.form</field>
+        <field name="model">remote.measure.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_test_connection" type="object"
+                            string="Test Connection"
+                            invisible="not host or not port"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Device">
+                            <field name="name"/>
+                            <field name="host"/>
+                            <field name="port"/>
+                            <field name="connection_mode"/>
+                            <field name="protocol"/>
+                            <field name="uom_id"/>
+                        </group>
+                        <group string="Read Behaviour">
+                            <field name="read_instantly"/>
+                            <field name="non_stop_read"/>
+                            <field name="read_interval" invisible="not non_stop_read"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="remote_measure_device_list" model="ir.ui.view">
+        <field name="name">remote.measure.device.list</field>
+        <field name="model">remote.measure.device</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="host"/>
+                <field name="port"/>
+                <field name="protocol"/>
+                <field name="connection_mode"/>
+                <field name="uom_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_remote_measure_device" model="ir.actions.act_window">
+        <field name="name">Remote Devices</field>
+        <field name="res_model">remote.measure.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_remote_measure_device"
+              name="Remote Devices"
+              parent="stock.menu_stock_config_settings"
+              action="action_remote_measure_device"
+              sequence="90"/>
+</odoo>

@@ -31,6 +31,12 @@ class WeighingWizard(models.TransientModel):
         string="Weight",
         digits="Product Unit of Measure",
     )
+    weight_uom_id = fields.Many2one(
+        comodel_name="uom.uom",
+        compute="_compute_weight_uom_id",
+        string="Weight UoM",
+        help="Weight unit of measure — used by the remote measure widget for unit conversion.",
+    )
     print_label = fields.Boolean(
         string="Print Label",
         help="Print label after recording the weight",
@@ -38,6 +44,11 @@ class WeighingWizard(models.TransientModel):
     remaining_count = fields.Integer(
         compute="_compute_remaining_count",
     )
+
+    @api.depends("move_id.product_id.weighing_uom_id")
+    def _compute_weight_uom_id(self):
+        for wiz in self:
+            wiz.weight_uom_id = wiz.move_id.product_id.weighing_uom_id
 
     @api.model_create_multi
     def create(self, vals_list):

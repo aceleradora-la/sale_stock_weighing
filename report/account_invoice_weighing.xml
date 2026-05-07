@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherit the standard invoice report to show weighed-product columns:
+        Delivered Pieces and Price/Weight Unit.
+
+        The quantity column already shows the delivered weight (kg) because
+        _prepare_invoice_line sets quantity = total_delivered_weight and
+        product_uom_id = weighing_uom_id. We add Pieces and Price/kg.
+    -->
+    <template id="account_invoice_weighing_columns"
+              inherit_id="account.report_invoice_document">
+
+        <!-- Add header columns before the Subtotal header -->
+        <xpath expr="//th[@name='price_subtotal']" position="before">
+            <t t-if="any(
+                    il.sale_line_ids and il.sale_line_ids[:1].product_id.is_weighed_product
+                    for il in invoice_lines
+                )">
+                <th class="text-end">Piezas</th>
+                <th class="text-end">Precio / kg</th>
+            </t>
+        </xpath>
+
+        <!-- Add data cells before the Subtotal cell in each line -->
+        <xpath expr="//td[@name='price_subtotal']" position="before">
+            <t t-set="sol" t-value="line.sale_line_ids[:1]"/>
+            <t t-if="sol and sol.product_id.is_weighed_product">
+                <td class="text-end">
+                    <span t-esc="line.x_delivered_piece_count or sol.delivered_piece_count or ''"/>
+                </td>
+                <td class="text-end">
+                    <t t-if="sol.price_per_weight">
+                        <span t-esc="'%.2f' % sol.price_per_weight"/>
+                        <span t-if="line.currency_id">
+                            <t t-field="line.currency_id.symbol"/>
+                        </span>
+                        <span t-if="sol.product_id.weighing_uom_id">
+                            / <t t-field="sol.product_id.weighing_uom_id.name"/>
+                        </span>
+                    </t>
+                </td>
+            </t>
+            <t t-else="">
+                <t t-if="any(
+                        il.sale_line_ids and il.sale_line_ids[:1].product_id.is_weighed_product
+                        for il in invoice_lines
+                    )">
+                    <td/><td/>
+                </t>
+            </t>
+        </xpath>
+
+    </template>
+</odoo>

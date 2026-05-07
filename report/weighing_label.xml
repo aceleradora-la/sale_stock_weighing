@@ -3,57 +3,86 @@
     <template id="report_weighing_label_document">
         <t t-call="web.external_layout">
             <div class="page">
-                <div class="row">
-                    <div class="col-12 text-center">
-                        <h2>Weighing Label</h2>
-                    </div>
-                </div>
                 <t t-foreach="docs" t-as="move_line">
-                    <div class="row" style="border: 1px solid #000; padding: 15px; margin: 10px 0;">
+                    <t t-set="weighing_uom"
+                       t-value="move_line.product_id.weighing_uom_id.name or 'kg'"/>
+                    <t t-set="sale_line"
+                       t-value="move_line.move_id.sale_line_id"/>
+                    <t t-set="price_per_weight"
+                       t-value="sale_line.price_per_weight if sale_line else 0.0"/>
+                    <t t-set="piece_price"
+                       t-value="move_line.recorded_weight * price_per_weight if price_per_weight else 0.0"/>
+                    <t t-set="currency_symbol"
+                       t-value="sale_line.order_id.currency_id.symbol if sale_line else ''"/>
+
+                    <div class="row" style="border: 1px solid #000; padding: 15px; margin: 10px 0; page-break-inside: avoid;">
+                        <!-- Row 1: Product + Lot -->
                         <div class="col-12">
-                            <div class="row">
-                                <div class="col-6">
+                            <div class="row mb-2">
+                                <div class="col-7">
                                     <strong>Product:</strong>
-                                    <p t-field="move_line.product_id.display_name"/>
+                                    <p class="mb-0" t-field="move_line.product_id.display_name"/>
                                 </div>
-                                <div class="col-6">
-                                    <strong>Lot/Serial:</strong>
-                                    <p t-if="move_line.lot_id" t-field="move_line.lot_id.name"/>
+                                <div class="col-5">
+                                    <strong>Lot / Serial:</strong>
+                                    <p class="mb-0" t-if="move_line.lot_id" t-field="move_line.lot_id.name"/>
                                 </div>
                             </div>
-                            <div class="row">
+
+                            <!-- Row 2: Weight + Units + Date -->
+                            <div class="row mb-2">
                                 <div class="col-4">
                                     <strong>Weight:</strong>
-                                    <p>
-                                        <span t-esc="'%.3f' % move_line.recorded_weight"/>
-                                        <t t-if="move_line.product_id.weighing_uom_id">
-                                            <span t-field="move_line.product_id.weighing_uom_id.name"/>
-                                        </t>
-                                        <t t-else="">
-                                            <span>kg</span>
-                                        </t>
+                                    <p class="mb-0">
+                                        <span style="font-size: 1.4em; font-weight: bold;"
+                                              t-esc="'%.3f' % move_line.recorded_weight"/>
+                                        <span class="ms-1" t-esc="weighing_uom"/>
                                     </p>
                                 </div>
                                 <div class="col-4">
                                     <strong>Units:</strong>
-                                    <p>
-                                        <span class="text-muted" t-esc="'%.0f' % move_line.move_id.product_uom_qty"/>
-                                        <span class="text-muted" t-field="move_line.product_uom_id.name"/>
+                                    <p class="mb-0">
+                                        <span t-esc="'%.0f' % move_line.move_id.product_uom_qty"/>
+                                        <span class="ms-1" t-field="move_line.product_uom_id.name"/>
                                     </p>
                                 </div>
                                 <div class="col-4">
                                     <strong>Date:</strong>
-                                    <p t-field="move_line.weighing_date"/>
+                                    <p class="mb-0" t-field="move_line.weighing_date"/>
                                 </div>
                             </div>
+
+                            <!-- Row 3: Price/kg + Piece Total (solo si viene de venta) -->
+                            <t t-if="price_per_weight">
+                                <div class="row mb-2" style="background: #f5f5f5; padding: 6px 0; border-radius: 4px;">
+                                    <div class="col-6">
+                                        <strong>Price /
+                                            <t t-esc="weighing_uom"/>:
+                                        </strong>
+                                        <p class="mb-0">
+                                            <span t-esc="'%.2f' % price_per_weight"/>
+                                            <span class="ms-1" t-esc="currency_symbol"/>
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Piece Total:</strong>
+                                        <p class="mb-0" style="font-size: 1.2em; font-weight: bold;">
+                                            <span t-esc="'%.2f' % piece_price"/>
+                                            <span class="ms-1" t-esc="currency_symbol"/>
+                                        </p>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Row 4: Operator + Picking -->
                             <div class="row">
                                 <div class="col-6">
-                                    <strong>User:</strong>
-                                    <p t-field="move_line.weighing_user_id.name"/>
+                                    <strong>Operator:</strong>
+                                    <p class="mb-0" t-field="move_line.weighing_user_id.name"/>
                                 </div>
                                 <div class="col-6">
                                     <strong>Picking:</strong>
-                                    <p t-field="move_line.picking_id.name"/>
+                                    <p class="mb-0" t-field="move_line.picking_id.name"/>
                                 </div>
                             </div>
                         </div>
@@ -71,22 +100,22 @@
 
     <template id="report_weighing_label_zpl">
         <t t-foreach="docs" t-as="move_line">
-            <t t-set="weight_uom" t-value="move_line.product_id.weighing_uom_id.name if move_line.product_id.weighing_uom_id else 'kg'"/>
-            <t t-set="zpl_data" t-value="{
-                'product': move_line.product_id.display_name,
-                'lot': move_line.lot_id.name if move_line.lot_id else '',
-                'weight': '%.3f' % move_line.recorded_weight,
-                'w_uom': weight_uom,
-                'units': '%.0f' % move_line.move_id.product_uom_qty,
-                'u_uom': move_line.product_uom_id.name,
-                'date': move_line.weighing_date.strftime('%d/%m/%Y %H:%M:%S') if move_line.weighing_date else '',
-                'user': move_line.weighing_user_id.name if move_line.weighing_user_id else '',
-                'picking': move_line.picking_id.name,
-            }"/>
-            <t t-raw="'^XA^FO50,50^A0N,40,40^FDWeighing Label^FS^FO50,100^A0N,30,30^FDProduct: %s^FS^FO50,150^A0N,30,30^FDLot/Serial: %s^FS^FO50,200^A0N,30,30^FDWeight: %s %s^FS^FO50,250^A0N,30,30^FDUnits: %s %s^FS^FO50,300^A0N,30,30^FDDate: %s^FS^FO50,350^A0N,30,30^FDUser: %s^FS^FO50,400^A0N,30,30^FDPicking: %s^FS^XZ' % (
-                zpl_data['product'], zpl_data['lot'], zpl_data['weight'], zpl_data['w_uom'],
-                zpl_data['units'], zpl_data['u_uom'], zpl_data['date'], zpl_data['user'],
-                zpl_data['picking']
+            <t t-set="weight_uom"
+               t-value="move_line.product_id.weighing_uom_id.name if move_line.product_id.weighing_uom_id else 'kg'"/>
+            <t t-set="sale_line" t-value="move_line.move_id.sale_line_id"/>
+            <t t-set="price_per_weight" t-value="sale_line.price_per_weight if sale_line else 0.0"/>
+            <t t-set="piece_price"
+               t-value="move_line.recorded_weight * price_per_weight if price_per_weight else 0.0"/>
+            <t t-set="currency" t-value="sale_line.order_id.currency_id.symbol if sale_line else ''"/>
+            <t t-raw="'^XA^FO50,50^A0N,40,40^FDWeighing Label^FS^FO50,100^A0N,30,30^FDProduct: %s^FS^FO50,150^A0N,30,30^FDLot: %s^FS^FO50,200^A0N,30,30^FDWeight: %s %s^FS^FO50,250^A0N,30,30^FDUnits: %s %s^FS^FO50,300^A0N,30,30^FDPrice/%s: %s %s^FS^FO50,350^A0N,35,35^FDTotal: %s %s^FS^FO50,410^A0N,30,30^FDDate: %s^FS^FO50,460^A0N,30,30^FDPicking: %s^FS^XZ' % (
+                move_line.product_id.display_name,
+                move_line.lot_id.name if move_line.lot_id else '-',
+                '%.3f' % move_line.recorded_weight, weight_uom,
+                '%.0f' % move_line.move_id.product_uom_qty, move_line.product_uom_id.name,
+                weight_uom, '%.2f' % price_per_weight, currency,
+                '%.2f' % piece_price, currency,
+                move_line.weighing_date.strftime('%d/%m/%Y %H:%M') if move_line.weighing_date else '-',
+                move_line.picking_id.name,
             )"/>
         </t>
     </template>

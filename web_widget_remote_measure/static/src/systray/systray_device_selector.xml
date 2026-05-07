@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="web_widget_remote_measure.RemoteDeviceSelectorButton">
+        <div t-if="state.visible"
+             class="o_menu_systray_item o_remote_device_selector d-flex align-items-center">
+            <a class="o_nav_entry d-flex align-items-center gap-1 cursor-pointer"
+               t-on-click="onClickSelectDevice"
+               t-att-title="state.deviceName
+                   ? 'Device: ' + state.deviceName + ' — click to change'
+                   : 'No device set — click to configure'">
+                <i class="fa fa-balance-scale"/>
+                <span t-if="state.deviceName"
+                      class="d-none d-md-inline small text-truncate"
+                      style="max-width: 120px;"
+                      t-esc="state.deviceName"/>
+            </a>
+        </div>
+    </t>
+
+</templates>

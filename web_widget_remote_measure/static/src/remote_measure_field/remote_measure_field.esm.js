@@ -148,6 +148,35 @@ export class RemoteMeasureField extends FloatField {
     }
 
     // ----------------------------------------------------------------
+    // Input handling
+    // ----------------------------------------------------------------
+
+    onInput(ev) {
+        // El template usa t-on-input="onInput", pero FloatField de Odoo 19 no
+        // siempre expone este método. Lo definimos aquí para:
+        //  1. Evitar el error OWL "Invalid handler: undefined"
+        //  2. Garantizar que el valor tipeado esté en record.data ANTES de que
+        //     el click en el botón dispare el save() del formulario (race condition
+        //     con onFocusOut async).
+        //
+        // Actualizamos el estado interno si existe (compatibilidad Odoo 17+):
+        if (this.state) {
+            this.state.value = ev.target.value;
+        }
+        if ("isDirty" in this) {
+            this.isDirty = true;
+        }
+        // Forzar el valor en record.data de forma inmediata (sin await).
+        // La parte sincrónica de record.update() escribe en record.data al
+        // instante, por lo que el form save posterior leerá el valor correcto.
+        const raw = ev.target.value.replace(",", ".");
+        const parsed = parseFloat(raw);
+        if (!isNaN(parsed) && parsed >= 0) {
+            this.props.record.update({ [this.props.name]: parsed });
+        }
+    }
+
+    // ----------------------------------------------------------------
     // User actions
     // ----------------------------------------------------------------
 

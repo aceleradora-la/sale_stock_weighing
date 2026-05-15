@@ -52,4 +52,26 @@
         </xpath>
 
     </template>
+
+    <!--
+        Suprimir el display secundario de cantidad en UdM nativa del producto
+        para líneas de productos pesables.
+
+        Odoo muestra automáticamente la cantidad convertida a la UdM del producto
+        cuando invoice_line.product_uom_id (kg) != product.uom_id (Unidades).
+        Si ambas UdM tienen un factor de conversión definido (aunque sea en
+        categorías distintas), la conversión puede dar valores incorrectos,
+        ej: 3.45 kg → 3.450 Unidades si "Unidades" tiene factor 0.001 (= 1g).
+
+        Se modifica el t-if del span para excluir líneas de productos pesables.
+    -->
+    <template id="account_invoice_weighing_hide_secondary_uom"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//span[@class='text-muted small'][@t-if]" position="attributes">
+            <attribute name="t-if">
+                line.product_uom_id != line.product_id.uom_id
+                and not (line.sale_line_ids and line.sale_line_ids[:1].product_id.is_weighed_product)
+            </attribute>
+        </xpath>
+    </template>
 </odoo>

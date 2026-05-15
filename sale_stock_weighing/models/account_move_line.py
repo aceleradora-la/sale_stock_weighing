@@ -23,6 +23,21 @@ class AccountMoveLine(models.Model):
         help="Cantidad de piezas (unidades) entregadas, para mostrar en la factura.",
     )
 
+    def _compute_product_uom_qty(self):
+        """Para productos pesables, muestra el conteo de piezas entregadas en lugar
+        de la conversión automática kg→UdM nativa (que puede dar valores erróneos
+        cuando las UdM pertenecen a categorías distintas, ej: 3.45 kg → 3450 Unidades
+        si Unidades tiene factor 0.001 respecto al kg)."""
+        super()._compute_product_uom_qty()
+        for line in self:
+            sol = line.sale_line_ids[:1]
+            if (
+                sol
+                and sol.product_id.is_weighed_product
+                and sol.delivered_piece_count
+            ):
+                line.product_uom_qty = float(sol.delivered_piece_count)
+
 
 class AccountMove(models.Model):
     _inherit = "account.move"

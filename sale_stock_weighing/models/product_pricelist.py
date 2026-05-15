@@ -37,23 +37,22 @@ class PricelistItem(models.Model):
     _inherit = "product.pricelist.item"
 
     price_per_weight = fields.Float(
-        string="Price per Weight Unit",
+        string="Precio por Unidad de Peso",
         digits="Product Price",
-        help="Price per weight unit (e.g. per kg) for weighed products.",
+        help="Precio por unidad de peso (ej: por kg) para productos pesables.",
     )
     is_weighed_price = fields.Boolean(
-        string="Weighed Product Price",
-        help="Apply pricing rules to price per kg instead of price per unit.",
+        string="Precio por Peso",
+        help="Aplica las reglas de precio sobre el precio por kg, en lugar del precio por unidad.",
     )
     weighing_uom_name = fields.Char(
-        string="Weight UoM",
+        string="UdM de Pesaje",
         compute="_compute_weighing_uom_name",
     )
     weight_price_display = fields.Char(
-        string="Weighed Price",
+        string="Precio por Peso",
         compute="_compute_weight_price_display",
-        help="Effective weighed price expressed as $/UoM, resolved from "
-        "the configured rule.",
+        help="Precio por peso efectivo expresado en $/UdM, calculado según la regla configurada.",
     )
 
     @api.depends(
@@ -132,11 +131,7 @@ class PricelistItem(models.Model):
                 if item.base != "pricelist" or not item.base_pricelist_id:
                     raise ValidationError(
                         _(
-                            "Weighed pricing in Discount or Formula mode must "
-                            "use 'Other Pricelist' as Base, with a base "
-                            "pricelist configured. This way the percentage is "
-                            "applied on a price per weight unit, not on the "
-                            "product's per-unit list/cost price."
+                            "El precio por peso en modo Descuento o Fórmula debe usar 'Otra Lista de Precios' como base, con una lista configurada. De este modo el porcentaje se aplica sobre un precio por unidad de peso y no sobre el precio por unidad del producto."
                         )
                     )
 

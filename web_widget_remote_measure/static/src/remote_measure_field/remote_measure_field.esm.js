@@ -155,7 +155,7 @@ export class RemoteMeasureField extends FloatField {
         if (!this.measureState.device) {
             this.notification.add(
                 _t(
-                    "No remote device configured. Go to Preferences and set a default device."
+                    "No hay balanza configurada. Andá a Preferencias y configurá una por defecto."
                 ),
                 { type: "warning" }
             );
@@ -168,7 +168,7 @@ export class RemoteMeasureField extends FloatField {
             this._connectWebSocket();
         } else {
             this.notification.add(
-                _t("Connection mode '%(mode)s' is not yet supported.", { mode }),
+                _t("El modo de conexión '%(mode)s' no está soportado aún.", { mode }),
                 { type: "warning" }
             );
             this.measureState.stopped = true;
@@ -227,7 +227,7 @@ export class RemoteMeasureField extends FloatField {
 
     _onConnectionError(deviceName) {
         this.notification.add(
-            _t("Could not connect to device: %(device)s", { device: deviceName }),
+            _t("No se pudo conectar a la balanza: %(device)s", { device: deviceName }),
             { type: "danger" }
         );
         this.measureState.stopped = true;
@@ -340,22 +340,22 @@ registry.category("fields").add("remote_measure", {
     component: RemoteMeasureField,
     supportedOptions: [
         {
-            label: _t("Remote Device Field"),
+            label: _t("Campo del Dispositivo"),
             name: "remote_device_field",
             type: "string",
         },
         {
-            label: _t("UoM Field"),
+            label: _t("Campo de UdM"),
             name: "uom_field",
             type: "string",
         },
         {
-            label: _t("Use Default User Device"),
+            label: _t("Usar Balanza por Defecto del Usuario"),
             name: "default_user_device",
             type: "boolean",
         },
         {
-            label: _t("Allow Additive Measure"),
+            label: _t("Permitir Medición Acumulativa"),
             name: "allow_additive_measure",
             type: "boolean",
         },

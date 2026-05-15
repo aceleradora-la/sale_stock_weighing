@@ -20,11 +20,11 @@
                         <div class="col-12">
                             <div class="row mb-2">
                                 <div class="col-7">
-                                    <strong>Product:</strong>
+                                    <strong>Producto:</strong>
                                     <p class="mb-0" t-field="move_line.product_id.display_name"/>
                                 </div>
                                 <div class="col-5">
-                                    <strong>Lot / Serial:</strong>
+                                    <strong>Lote / N° Serie:</strong>
                                     <p class="mb-0" t-if="move_line.lot_id" t-field="move_line.lot_id.name"/>
                                 </div>
                             </div>
@@ -32,7 +32,7 @@
                             <!-- Row 2: Weight + Units + Date -->
                             <div class="row mb-2">
                                 <div class="col-4">
-                                    <strong>Weight:</strong>
+                                    <strong>Peso:</strong>
                                     <p class="mb-0">
                                         <span style="font-size: 1.4em; font-weight: bold;"
                                               t-esc="'%.3f' % move_line.recorded_weight"/>
@@ -40,14 +40,14 @@
                                     </p>
                                 </div>
                                 <div class="col-4">
-                                    <strong>Units:</strong>
+                                    <strong>Unidades:</strong>
                                     <p class="mb-0">
                                         <span t-esc="'%.0f' % move_line.move_id.product_uom_qty"/>
                                         <span class="ms-1" t-field="move_line.product_uom_id.name"/>
                                     </p>
                                 </div>
                                 <div class="col-4">
-                                    <strong>Date:</strong>
+                                    <strong>Fecha:</strong>
                                     <p class="mb-0" t-field="move_line.weighing_date"/>
                                 </div>
                             </div>
@@ -56,7 +56,7 @@
                             <t t-if="price_per_weight">
                                 <div class="row mb-2" style="background: #f5f5f5; padding: 6px 0; border-radius: 4px;">
                                     <div class="col-6">
-                                        <strong>Price /
+                                        <strong>Precio /
                                             <t t-esc="weighing_uom"/>:
                                         </strong>
                                         <p class="mb-0">
@@ -65,7 +65,7 @@
                                         </p>
                                     </div>
                                     <div class="col-6">
-                                        <strong>Piece Total:</strong>
+                                        <strong>Total Pieza:</strong>
                                         <p class="mb-0" style="font-size: 1.2em; font-weight: bold;">
                                             <span t-esc="'%.2f' % piece_price"/>
                                             <span class="ms-1" t-esc="currency_symbol"/>
@@ -77,11 +77,11 @@
                             <!-- Row 4: Operator + Picking -->
                             <div class="row">
                                 <div class="col-6">
-                                    <strong>Operator:</strong>
+                                    <strong>Operador:</strong>
                                     <p class="mb-0" t-field="move_line.weighing_user_id.name"/>
                                 </div>
                                 <div class="col-6">
-                                    <strong>Picking:</strong>
+                                    <strong>Remito:</strong>
                                     <p class="mb-0" t-field="move_line.picking_id.name"/>
                                 </div>
                             </div>
@@ -107,7 +107,7 @@
             <t t-set="piece_price"
                t-value="move_line.recorded_weight * price_per_weight if price_per_weight else 0.0"/>
             <t t-set="currency" t-value="sale_line.order_id.currency_id.symbol if sale_line else ''"/>
-            <t t-raw="'^XA^FO50,50^A0N,40,40^FDWeighing Label^FS^FO50,100^A0N,30,30^FDProduct: %s^FS^FO50,150^A0N,30,30^FDLot: %s^FS^FO50,200^A0N,30,30^FDWeight: %s %s^FS^FO50,250^A0N,30,30^FDUnits: %s %s^FS^FO50,300^A0N,30,30^FDPrice/%s: %s %s^FS^FO50,350^A0N,35,35^FDTotal: %s %s^FS^FO50,410^A0N,30,30^FDDate: %s^FS^FO50,460^A0N,30,30^FDPicking: %s^FS^XZ' % (
+            <t t-raw="'^XA^FO50,50^A0N,40,40^FDEtiqueta Pesaje^FS^FO50,100^A0N,30,30^FDProducto: %s^FS^FO50,150^A0N,30,30^FDLote: %s^FS^FO50,200^A0N,30,30^FDPeso: %s %s^FS^FO50,250^A0N,30,30^FDUnidades: %s %s^FS^FO50,300^A0N,30,30^FDPrecio/%s: %s %s^FS^FO50,350^A0N,35,35^FDTotal: %s %s^FS^FO50,410^A0N,30,30^FDFecha: %s^FS^FO50,460^A0N,30,30^FDRemito: %s^FS^XZ' % (
                 move_line.product_id.display_name,
                 move_line.lot_id.name if move_line.lot_id else '-',
                 '%.3f' % move_line.recorded_weight, weight_uom,
@@ -121,20 +121,20 @@
     </template>
 
     <record id="action_report_weighing_label" model="ir.actions.report">
-        <field name="name">Weighing Label</field>
+        <field name="name">Etiqueta de Pesaje</field>
         <field name="model">stock.move.line</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">sale_stock_weighing.report_weighing_label</field>
         <field name="report_file">sale_stock_weighing.report_weighing_label</field>
-        <field name="print_report_name">'Weighing Label - %s' % (object.product_id.display_name)</field>
+        <field name="print_report_name">'Etiqueta de Pesaje - %s' % (object.product_id.display_name)</field>
     </record>
 
     <record id="action_report_weighing_label_zpl" model="ir.actions.report">
-        <field name="name">Weighing Label (ZPL)</field>
+        <field name="name">Etiqueta de Pesaje (ZPL)</field>
         <field name="model">stock.move.line</field>
         <field name="report_type">qweb-text</field>
         <field name="report_name">sale_stock_weighing.report_weighing_label_zpl</field>
         <field name="report_file">sale_stock_weighing.report_weighing_label_zpl</field>
-        <field name="print_report_name">'ZPL-Label-%s' % (object.product_id.display_name)</field>
+        <field name="print_report_name">'Etiqueta-ZPL-%s' % (object.product_id.display_name)</field>
     </record>
 </odoo>

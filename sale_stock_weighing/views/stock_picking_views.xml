@@ -10,7 +10,7 @@
                         class="oe_stat_button" icon="fa-balance-scale"
                         invisible="not weighing_operations">
                     <div class="o_form_field o_stat_info">
-                        <span class="o_stat_text">Weighing</span>
+                        <span class="o_stat_text">Pesaje</span>
                     </div>
                 </button>
             </xpath>

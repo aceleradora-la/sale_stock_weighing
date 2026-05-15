@@ -9,10 +9,10 @@
             <!-- In Odoo 19 the user settings form has a named group instead
                  of o_setting_box divs. We append our field after it. -->
             <xpath expr="//group[@name='discuss_user_settings']" position="after">
-                <group string="Remote Devices">
+                <group string="Balanza Remota">
                     <field name="remote_measure_device_id"
-                           string="Default Scale Device"
-                           help="Default device used by the weighing assistant for this user."/>
+                           string="Balanza por Defecto"
+                           help="Balanza por defecto usada por el asistente de pesaje"/>
                 </group>
             </xpath>
         </field>

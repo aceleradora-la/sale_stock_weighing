@@ -5,15 +5,15 @@ class ProductTemplate(models.Model):
     _inherit = "product.template"
 
     is_weighed_product = fields.Boolean(
-        string="Weighed Product",
-        help="If checked, this product will use the weighing flow. "
-        "Sale by units, deliver and invoice by weight.",
+        string="Producto Pesable",
+        help="Si está marcado, este producto usa el flujo de pesaje. "
+        "Se vende por unidades, se entrega y factura por peso.",
     )
     weighing_uom_id = fields.Many2one(
         comodel_name="uom.uom",
-        string="Weighing UoM",
-        help="Unit of measure used for weighing (e.g. kg). "
-        "Price is per this unit.",
+        string="UdM de Pesaje",
+        help="Unidad de medida usada para el pesaje (ej: kg). "
+        "El precio se calcula por esta unidad.",
     )
 
     @api.onchange("is_weighed_product")

@@ -7,8 +7,8 @@
             <a class="o_nav_entry d-flex align-items-center gap-1 cursor-pointer"
                t-on-click="onClickSelectDevice"
                t-att-title="state.deviceName
-                   ? 'Device: ' + state.deviceName + ' — click to change'
-                   : 'No device set — click to configure'">
+                   ? 'Balanza: ' + state.deviceName + ' — clic para cambiar'
+                   : 'Sin balanza — clic para configurar'">
                 <i class="fa fa-balance-scale"/>
                 <span t-if="state.deviceName"
                       class="d-none d-md-inline small text-truncate"

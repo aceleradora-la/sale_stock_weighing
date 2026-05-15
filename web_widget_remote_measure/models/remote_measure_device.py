@@ -5,30 +5,30 @@ from odoo import _, fields, models
 
 class RemoteMeasureDevice(models.Model):
     _name = "remote.measure.device"
-    _description = "Remote Measure Device"
+    _description = "Balanza Remota"
 
     name = fields.Char(string="Name", required=True)
     host = fields.Char(
         string="Host",
-        help="IP address or hostname of the remote device.",
+        help="Dirección IP o nombre de host del dispositivo.",
     )
     port = fields.Integer(
-        string="Port",
+        string="Puerto",
         default=5000,
-        help="TCP/WebSocket port exposed by the device.",
+        help="Puerto TCP/WebSocket expuesto por el dispositivo.",
     )
     connection_mode = fields.Selection(
         selection=[
-            ("websocket", "Web Sockets"),
-            ("webservice", "Web Services"),
+            ("websocket", "WebSocket"),
+            ("webservice", "Web Service"),
         ],
-        string="Connection Mode",
+        string="Modo de Conexión",
         default="websocket",
         required=True,
     )
     protocol = fields.Selection(
         selection=[
-            ("f501", "F501 Scale (continuous stream)"),
+            ("f501", "Balanza F501 (lectura continua)"),
         ],
         string="Protocol",
         default="f501",
@@ -36,23 +36,23 @@ class RemoteMeasureDevice(models.Model):
     )
     uom_id = fields.Many2one(
         comodel_name="uom.uom",
-        string="Device Unit of Measure",
-        help="Unit in which the device reports values (e.g. kg). "
-        "Odoo will convert to the field's UoM automatically.",
+        string="UdM del Dispositivo",
+        help="Unidad en que el dispositivo reporta los valores (ej: kg). "
+        "Odoo convierte automáticamente a la UdM del campo.",
     )
     read_instantly = fields.Boolean(
-        string="Read Instantly",
+        string="Leer Inmediatamente",
         default=True,
-        help="Accept the first stable reading without waiting for user confirmation.",
+        help="Acepta la primera lectura estable sin esperar confirmación del usuario.",
     )
     non_stop_read = fields.Boolean(
-        string="Non-stop Read",
-        help="Keep reading and updating the field until the user stops the session.",
+        string="Lectura Continua",
+        help="Sigue leyendo y actualizando el campo hasta que el usuario detenga la sesión.",
     )
     read_interval = fields.Float(
-        string="Read Interval (s)",
+        string="Intervalo de Lectura (s)",
         default=1.0,
-        help="Minimum seconds between successive readings in non-stop mode.",
+        help="Segundos mínimos entre lecturas sucesivas en modo continuo.",
     )
 
     def test_tcp_connection(self):
@@ -74,8 +74,8 @@ class RemoteMeasureDevice(models.Model):
                 "type": "ir.actions.client",
                 "tag": "display_notification",
                 "params": {
-                    "title": _("Connection successful"),
-                    "message": _("%(name)s (%(host)s:%(port)s) is reachable.", name=self.name, host=self.host, port=self.port),
+                    "title": _("Conexión exitosa"),
+                    "message": _("%(name)s (%(host)s:%(port)s) responde correctamente.", name=self.name, host=self.host, port=self.port),
                     "type": "success",
                     "sticky": False,
                 },
@@ -84,8 +84,8 @@ class RemoteMeasureDevice(models.Model):
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": _("Connection failed"),
-                "message": _("Could not reach %(host)s:%(port)s. Check the IP, port, and firewall rules.", host=self.host, port=self.port),
+                "title": _("Falló la conexión"),
+                "message": _("No se pudo conectar a %(host)s:%(port)s. Verificá la IP, el puerto y el firewall.", host=self.host, port=self.port),
                 "type": "danger",
                 "sticky": False,
             },

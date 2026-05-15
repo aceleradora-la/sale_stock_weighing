@@ -41,24 +41,24 @@
                             </div>
                             <div class="o_kanban_record_body">
                                 <div>
-                                    <span>Planned: </span>
+                                    <span>Planificado: </span>
                                     <field name="product_uom_qty"/>
                                     <field name="product_uom"/>
                                 </div>
                                 <div>
-                                    <span>Done: </span>
+                                    <span>Realizado: </span>
                                     <field name="quantity"/>
                                     <field name="product_uom"/>
                                 </div>
                                 <div t-if="record.has_weight.raw_value and record.recorded_weight.raw_value">
-                                    <span>Weight: </span>
+                                    <span>Peso: </span>
                                     <field name="recorded_weight"/>
                                     <t t-if="record.weighing_uom_name.raw_value">
                                         <t t-esc="record.weighing_uom_name.raw_value"/>
                                     </t>
                                 </div>
                                 <div t-if="record.lot_names.raw_value">
-                                    <span>Lots: </span>
+                                    <span>Lotes: </span>
                                     <field name="lot_names"/>
                                 </div>
                             </div>
@@ -67,7 +67,7 @@
                                     <button name="action_weighing" type="object"
                                             class="btn btn-primary btn-sm"
                                             t-if="!record.is_weighing_operation_locked.raw_value">
-                                        <i class="fa fa-balance-scale"/> Weigh
+                                        <i class="fa fa-balance-scale"/> Pesar
                                     </button>
                                 </div>
                                 <div class="oe_kanban_bottom_right">
@@ -103,7 +103,7 @@
                 <field name="has_weight" optional="hide"/>
                 <field name="weighing_state"/>
                 <field name="recorded_weight"/>
-                <button name="action_weighing" type="object" string="Weigh"
+                <button name="action_weighing" type="object" string="Pesar"
                         icon="fa-balance-scale"
                         invisible="not has_weight"/>
             </list>
@@ -119,10 +119,10 @@
                     <div class="oe_button_box" name="button_box">
                         <button name="action_weighing" type="object"
                                 class="oe_stat_button" icon="fa-balance-scale"
-                                string="Weigh"/>
+                                string="Pesar"/>
                         <button name="action_print_weight_record_label" type="object"
                                 class="oe_stat_button" icon="fa-print"
-                                string="Print Label"
+                                string="Imprimir Etiqueta"
                                 invisible="not show_weighing_print_button"/>
                     </div>
                     <group>
@@ -142,7 +142,7 @@
                         </group>
                     </group>
                     <notebook>
-                        <page name="move_lines" string="Detailed Operations">
+                        <page name="move_lines" string="Operaciones Detalladas">
                             <field name="move_line_ids">
                                 <list editable="bottom">
                                     <field name="product_id"/>
@@ -152,7 +152,7 @@
                                     <field name="has_recorded_weight"/>
                                     <field name="location_id"/>
                                     <field name="location_dest_id"/>
-                                    <button name="action_weighing" type="object" string="Weigh"
+                                    <button name="action_weighing" type="object" string="Pesar"
                                             icon="fa-balance-scale"/>
                                 </list>
                             </field>
@@ -164,7 +164,7 @@
     </record>
 
     <record id="weighing_operation_action" model="ir.actions.act_window">
-        <field name="name">Weighing Operations</field>
+        <field name="name">Operaciones de Pesaje</field>
         <field name="res_model">stock.move</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="view_ids" eval="[(5, 0, 0),

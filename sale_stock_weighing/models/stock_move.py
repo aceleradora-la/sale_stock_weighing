@@ -9,7 +9,7 @@ class StockMove(models.Model):
     _inherit = ["stock.move", "weighing.mixin"]
 
     recorded_weight = fields.Float(
-        string="Recorded Weight",
+        string="Peso Registrado",
         compute="_compute_recorded_weight",
         digits="Product Unit of Measure",
     )
@@ -27,8 +27,8 @@ class StockMove(models.Model):
     )
     weighing_user_id = fields.Many2one(
         comodel_name="res.users",
-        string="Weighing User",
-        help="User currently weighing this operation. Locks the operation for others.",
+        string="Usuario de Pesaje",
+        help="Usuario que está pesando esta operación. Bloquea la operación para otros usuarios.",
     )
     is_weighing_operation_locked = fields.Boolean(
         compute="_compute_is_weighing_operation_locked",
@@ -119,7 +119,7 @@ class StockMove(models.Model):
         if self.weighing_user_id and self.weighing_user_id != self.env.user:
             raise UserError(
                 _(
-                    "The user %(user)s is already weighing this operation",
+                    "El usuario %(user)s ya está pesando esta operación",
                     user=self.weighing_user_id.name,
                 )
             )
@@ -154,7 +154,7 @@ class StockMove(models.Model):
             "sale_stock_weighing.weighing_operation_action"
         )
         action["display_name"] = _(
-            "Detailed operations for %(name)s", name=self.name
+            "Operaciones detalladas de %(name)s", name=self.name
         )
         action["domain"] = [("id", "=", self.id)]
         action["view_mode"] = "form"

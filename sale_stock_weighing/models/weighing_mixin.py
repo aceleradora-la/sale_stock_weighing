@@ -3,7 +3,7 @@ from odoo import api, fields, models
 
 class WeighingMixin(models.AbstractModel):
     _name = "weighing.mixin"
-    _description = "Mixin for weighed stock operations"
+    _description = "Mixin para operaciones de pesaje"
 
     has_weight = fields.Boolean(
         compute="_compute_has_weight",

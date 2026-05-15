@@ -7,12 +7,12 @@
             <form>
                 <header>
                     <button name="action_test_connection" type="object"
-                            string="Test Connection"
+                            string="Probar Conexión"
                             invisible="not host or not port"/>
                 </header>
                 <sheet>
                     <group>
-                        <group string="Device">
+                        <group string="Dispositivo">
                             <field name="name"/>
                             <field name="host"/>
                             <field name="port"/>
@@ -20,7 +20,7 @@
                             <field name="protocol"/>
                             <field name="uom_id"/>
                         </group>
-                        <group string="Read Behaviour">
+                        <group string="Comportamiento de Lectura">
                             <field name="read_instantly"/>
                             <field name="non_stop_read"/>
                             <field name="read_interval" invisible="not non_stop_read"/>
@@ -47,13 +47,13 @@
     </record>
 
     <record id="action_remote_measure_device" model="ir.actions.act_window">
-        <field name="name">Remote Devices</field>
+        <field name="name">Balanzas Remotas</field>
         <field name="res_model">remote.measure.device</field>
         <field name="view_mode">list,form</field>
     </record>
 
     <menuitem id="menu_remote_measure_device"
-              name="Remote Devices"
+              name="Balanzas Remotas"
               parent="stock.menu_stock_config_settings"
               action="action_remote_measure_device"
               sequence="90"/>

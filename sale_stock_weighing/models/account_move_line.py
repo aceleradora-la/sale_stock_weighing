@@ -5,22 +5,22 @@ class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
     recorded_weight = fields.Float(
-        string="Recorded Weight",
+        string="Peso Registrado",
         digits="Product Unit of Measure",
-        help="Actual weight delivered and invoiced.",
+        help="Peso real entregado y facturado.",
     )
     weight_uom_id = fields.Many2one(
         comodel_name="uom.uom",
-        string="Weight UoM",
-        help="Unit of measure for the recorded weight.",
+        string="UdM de Pesaje",
+        help="Unidad de medida del peso registrado.",
     )
     weight_uom_name = fields.Char(
-        string="Weight UoM Name",
+        string="Nombre UdM de Pesaje",
         related="weight_uom_id.name",
     )
     x_delivered_piece_count = fields.Integer(
-        string="Delivered Pieces",
-        help="Number of pieces (units) delivered, for display on the invoice.",
+        string="Piezas Entregadas",
+        help="Cantidad de piezas (unidades) entregadas, para mostrar en la factura.",
     )
 
 

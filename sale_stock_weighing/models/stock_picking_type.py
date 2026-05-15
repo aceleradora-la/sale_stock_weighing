@@ -8,13 +8,13 @@ class StockPickingType(models.Model):
     _inherit = "stock.picking.type"
 
     weighing_operations = fields.Boolean(
-        string="Weighing Operations",
-        help="Enable weighing assistant for operations of this type. "
-        "Products with weight UoM will use the weighing flow.",
+        string="Operaciones de Pesaje",
+        help="Habilita el asistente de pesaje para operaciones de este tipo. "
+        "Los productos con UdM de pesaje usarán el flujo de pesaje.",
     )
     print_weighing_label = fields.Boolean(
-        string="Auto Print Weighing Label",
-        help="Automatically print the weight label after recording weight",
+        string="Imprimir Etiqueta Automáticamente",
+        help="Imprime automáticamente la etiqueta de pesaje al registrar el peso",
     )
     weighing_label_format = fields.Selection(
         selection=[
@@ -22,7 +22,7 @@ class StockPickingType(models.Model):
             ("zpl", "ZPL"),
         ],
         default="pdf",
-        string="Weighing Label Format",
+        string="Formato de Etiqueta",
     )
     weight_move_ids = fields.Many2many(
         comodel_name="stock.move",
@@ -58,7 +58,7 @@ class StockPickingType(models.Model):
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
         )
-        action["name"] = _("%(name)s Weighing operations", name=self.name)
+        action["name"] = _("Pesaje de %(name)s", name=self.name)
         action["domain"] = [("id", "in", self.weight_move_ids.ids)]
         action["context"] = dict(
             self.env.context,

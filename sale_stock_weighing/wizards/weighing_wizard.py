@@ -3,7 +3,7 @@ from odoo import api, fields, models
 
 class WeighingWizard(models.TransientModel):
     _name = "weighing.wizard"
-    _description = "Record weights over detailed operations"
+    _description = "Registrar pesos en operaciones detalladas"
 
     move_id = fields.Many2one(comodel_name="stock.move")
     product_id = fields.Many2one(comodel_name="product.product", readonly=True)
@@ -34,12 +34,12 @@ class WeighingWizard(models.TransientModel):
     weight_uom_id = fields.Many2one(
         comodel_name="uom.uom",
         compute="_compute_weight_uom_id",
-        string="Weight UoM",
-        help="Weight unit of measure — used by the remote measure widget for unit conversion.",
+        string="UdM de Pesaje",
+        help="Unidad de medida del peso — usada por el widget de balanza remota para la conversión de unidades.",
     )
     print_label = fields.Boolean(
-        string="Print Label",
-        help="Print label after recording the weight",
+        string="Imprimir Etiqueta",
+        help="Imprimir la etiqueta al registrar el peso",
     )
     remaining_count = fields.Integer(
         compute="_compute_remaining_count",

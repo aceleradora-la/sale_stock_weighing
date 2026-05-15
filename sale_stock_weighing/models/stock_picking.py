@@ -35,7 +35,7 @@ class StockPicking(models.Model):
             if any_operation_actions
             else self.move_ids.filtered("has_weight")
         )
-        action["name"] = _("Weighing operations for %(name)s", name=self.name)
+        action["name"] = _("Operaciones de pesaje de %(name)s", name=self.name)
         action["domain"] = [("id", "in", weight_moves.ids)]
         action["context"] = dict(
             self.env.context,
@@ -59,9 +59,8 @@ class StockPicking(models.Model):
             if unweighed:
                 raise UserError(
                     _(
-                        "The following operations still need to be weighed before "
-                        "validating %(picking)s:\n%(moves)s\n\n"
-                        "Please use the Weighing assistant to record the weights.",
+                        "Las siguientes operaciones deben pesarse antes de validar %(picking)s:\n%(moves)s\n\n"
+                        "Usá el asistente de pesaje para registrar los pesos.",
                         picking=picking.name,
                         moves="\n".join(
                             "- %s" % m.product_id.display_name for m in unweighed

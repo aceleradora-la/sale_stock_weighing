@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <group name="inventory" position="inside">
-                <group name="weighing" string="Weighing">
+                <group name="weighing" string="Pesaje">
                     <field name="is_weighed_product"/>
                     <field name="weighing_uom_id" invisible="not is_weighed_product" required="is_weighed_product"/>
                 </group>

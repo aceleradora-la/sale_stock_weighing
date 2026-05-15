@@ -6,32 +6,32 @@ class StockMoveLine(models.Model):
     _inherit = ["stock.move.line", "weighing.mixin"]
 
     has_recorded_weight = fields.Boolean(
-        string="Has Recorded Weight",
-        help="The weight was set from the weighing wizard",
+        string="Tiene Peso Registrado",
+        help="El peso fue registrado desde el asistente de pesaje",
     )
     recorded_weight = fields.Float(
-        string="Recorded Weight",
+        string="Peso Registrado",
         digits="Product Unit of Measure",
-        help="Actual weight recorded during weighing operation",
+        help="Peso real registrado durante la operación de pesaje",
     )
     weighing_user_id = fields.Many2one(
         comodel_name="res.users",
-        string="Weighing User",
+        string="Usuario de Pesaje",
         readonly=True,
     )
     weighing_date = fields.Datetime(
-        string="Weighing Date",
+        string="Fecha de Pesaje",
         readonly=True,
     )
     piece_price = fields.Float(
-        string="Piece Price",
+        string="Precio por Pieza",
         compute="_compute_piece_price",
         digits="Product Price",
-        help="Price of this piece: recorded weight × price per weight unit from the sale order.",
+        help="Precio de esta pieza: peso registrado × precio por unidad de peso del pedido de venta.",
     )
     piece_price_currency_symbol = fields.Char(
         compute="_compute_piece_price",
-        help="Currency symbol for the piece price.",
+        help="Símbolo de moneda para el precio por pieza.",
     )
 
     @api.depends(
@@ -73,7 +73,7 @@ class StockMoveLine(models.Model):
     def _get_action_weighing_name(self):
         self.ensure_one()
         name = _(
-            "Weigh %(quantity)s %(uom)s of %(product)s",
+            "Pesar %(quantity)s %(uom)s de %(product)s",
             quantity=self.quantity,
             uom=self.product_uom_id.name,
             product=self.product_id.name,

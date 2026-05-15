@@ -20,11 +20,11 @@
                 <field name="total_delivered_weight"
                        optional="show"
                        invisible="not product_id.is_weighed_product"
-                       string="Del. Weight"/>
+                       string="Peso Entregado"/>
                 <field name="delivered_piece_count"
                        optional="hide"
                        invisible="not product_id.is_weighed_product"
-                       string="Del. Pieces"/>
+                       string="Piezas Entregadas"/>
             </xpath>
         </field>
     </record>

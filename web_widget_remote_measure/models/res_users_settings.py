@@ -6,6 +6,6 @@ class ResUsersSettings(models.Model):
 
     remote_measure_device_id = fields.Many2one(
         comodel_name="remote.measure.device",
-        string="Default Remote Measure Device",
-        help="Default device used by the remote_measure widget for this user.",
+        string="Balanza por Defecto",
+        help="Balanza por defecto usada por el asistente de pesaje para este usuario.",
     )

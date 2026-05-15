@@ -9,35 +9,35 @@ class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
     price_per_weight = fields.Float(
-        string="Price / Weight Unit",
+        string="Precio / Unidad de Peso",
         digits="Product Price",
-        help="Price per weight unit (e.g. per kg). "
-        "Used when the product is sold by units but invoiced by weight.",
+        help="Precio por unidad de peso (ej: por kg). "
+        "Se usa cuando el producto se vende por unidades pero se factura por peso.",
     )
     x_piece_count = fields.Integer(
-        string="Pieces",
-        help="Number of pieces (units) to be delivered. "
-        "Informational — used in printed reports alongside weight.",
+        string="Piezas",
+        help="Cantidad de piezas (unidades) a entregar. "
+        "Informativo — aparece en los reportes junto al peso.",
     )
     total_planned_weight = fields.Float(
         string="Est. Weight",
         compute="_compute_total_planned_weight",
         digits="Product Unit of Measure",
-        help="Planned total weight based on order quantity and standard weight per unit.",
+        help="Peso total planificado según la cantidad del pedido y el peso estándar por unidad.",
     )
     total_delivered_weight = fields.Float(
-        string="Delivered Weight",
+        string="Peso Entregado",
         compute="_compute_total_delivered_weight",
         digits="Product Unit of Measure",
         store=True,
-        help="Actual total weight delivered from stock moves.",
+        help="Peso total real entregado desde los movimientos de stock.",
     )
     delivered_piece_count = fields.Integer(
-        string="Delivered Pieces",
+        string="Piezas Entregadas",
         compute="_compute_delivered_piece_count",
         store=True,
-        help="Number of pieces delivered, determined by distinct lots in done moves. "
-        "Falls back to weighed move lines when lot tracking is not enabled.",
+        help="Cantidad de piezas entregadas, determinado por los lotes distintos en movimientos realizados. "
+        "Si no hay seguimiento por lotes, cuenta las líneas de movimiento pesadas.",
     )
 
     @api.depends(
@@ -105,7 +105,7 @@ class SaleOrderLine(models.Model):
         base_name = name if name is not None else self.name or ""
         piece_info = ""
         if self.delivered_piece_count:
-            piece_info = " (%d pcs)" % self.delivered_piece_count
+            piece_info = " (%d pzas)" % self.delivered_piece_count
         return {
             "quantity": self.total_delivered_weight,
             "price_unit": self.price_per_weight,

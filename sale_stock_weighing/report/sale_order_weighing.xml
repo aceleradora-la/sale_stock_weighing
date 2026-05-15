@@ -27,17 +27,17 @@
                 <td class="text-end">
                     <span t-esc="'%.3f' % line.total_planned_weight"/>
                     <span t-if="line.product_id.weighing_uom_id">
-                        <t t-field="line.product_id.weighing_uom_id.name"/>
+                        <t t-esc="line.product_id.weighing_uom_id.name"/>
                     </span>
                 </td>
                 <td class="text-end">
                     <t t-if="line.price_per_weight">
                         <span t-esc="'%.2f' % line.price_per_weight"/>
                         <span t-if="doc.currency_id">
-                            <t t-field="doc.currency_id.symbol"/>
+                            <t t-esc="doc.currency_id.symbol"/>
                         </span>
                         <span t-if="line.product_id.weighing_uom_id">
-                            / <t t-field="line.product_id.weighing_uom_id.name"/>
+                            / <t t-esc="line.product_id.weighing_uom_id.name"/>
                         </span>
                     </t>
                 </td>

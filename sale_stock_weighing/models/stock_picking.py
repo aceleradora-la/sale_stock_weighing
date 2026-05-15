@@ -67,9 +67,4 @@ class StockPicking(models.Model):
                         ),
                     )
                 )
-            # Sync recorded weight to quantity before validation.
-            for move in picking.move_ids.filtered("has_weight"):
-                for line in move.move_line_ids.filtered("has_recorded_weight"):
-                    if line.recorded_weight != line.quantity:
-                        line.quantity = line.recorded_weight
         return super().button_validate()

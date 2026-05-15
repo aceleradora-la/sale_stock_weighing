@@ -33,10 +33,10 @@
                     <t t-if="sol.price_per_weight">
                         <span t-esc="'%.2f' % sol.price_per_weight"/>
                         <span t-if="line.currency_id">
-                            <t t-field="line.currency_id.symbol"/>
+                            <t t-esc="line.currency_id.symbol"/>
                         </span>
                         <span t-if="sol.product_id.weighing_uom_id">
-                            / <t t-field="sol.product_id.weighing_uom_id.name"/>
+                            / <t t-esc="sol.product_id.weighing_uom_id.name"/>
                         </span>
                     </t>
                 </td>

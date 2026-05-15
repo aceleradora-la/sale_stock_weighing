@@ -45,6 +45,7 @@ Features
         "report/weighing_label.xml",
         "report/sale_order_weighing.xml",
         "report/account_invoice_weighing.xml",
+        "report/stock_picking_weighing.xml",
     ],
     "installable": True,
     "auto_install": False,

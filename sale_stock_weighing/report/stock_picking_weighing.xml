@@ -4,13 +4,13 @@
         Agrega un bloque de resumen de pesaje al final del remito de entrega
         cuando el picking tiene operaciones pesadas.
 
-        Se usa position="inside" sobre //div[hasclass('page')] que es el contenedor
-        estándar de página en todos los reportes de Odoo.
+        En Odoo 19, el template stock.report_delivery_document usa 'o' como
+        variable principal (el stock.picking), no 'doc'.
     -->
     <template id="stock_picking_weighing_section"
               inherit_id="stock.report_delivery_document">
         <xpath expr="//div[@name='signature']" position="before">
-            <t t-if="any(ml.has_recorded_weight for ml in doc.move_line_ids)">
+            <t t-if="any(ml.has_recorded_weight for ml in o.move_line_ids)">
                 <div class="mt-4 page-break-inside-avoid">
                     <h5>Detalle de Pesaje</h5>
                     <table class="table table-sm table-bordered">
@@ -18,12 +18,12 @@
                             <tr>
                                 <th>Producto</th>
                                 <th>Lote / N° Serie</th>
-                                <th class="text-end">Unidades</th>
+                                <th class="text-end">Cantidad</th>
                                 <th class="text-end">Peso</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="doc.move_line_ids.filtered(lambda ml: ml.has_recorded_weight)" t-as="ml">
+                            <t t-foreach="o.move_line_ids.filtered(lambda ml: ml.has_recorded_weight)" t-as="ml">
                                 <tr>
                                     <td>
                                         <span t-esc="ml.product_id.display_name"/>
@@ -46,7 +46,7 @@
                             <tr class="fw-bold">
                                 <td colspan="3" class="text-end">Peso total:</td>
                                 <td class="text-end">
-                                    <span t-esc="'%.3f' % sum(doc.move_line_ids.filtered(lambda ml: ml.has_recorded_weight).mapped('recorded_weight'))"/>
+                                    <span t-esc="'%.3f' % sum(o.move_line_ids.filtered(lambda ml: ml.has_recorded_weight).mapped('recorded_weight'))"/>
                                     <span class="ms-1">kg</span>
                                 </td>
                             </tr>

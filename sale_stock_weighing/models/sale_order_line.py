@@ -113,7 +113,8 @@ class SaleOrderLine(models.Model):
         base_name = name if name is not None else self.name or ""
         piece_info = ""
         if self.delivered_piece_count:
-            piece_info = " (%d pzas)" % self.delivered_piece_count
+            uom_name = (self.product_uom_id or product.uom_id).name or "u"
+            piece_info = " (%d %s)" % (self.delivered_piece_count, uom_name)
         # base_name ya incluye la referencia y nombre del producto (ej: "[103] Bondiola A/V").
         # Solo agregamos la info de piezas y el peso entregado, sin repetir el producto.
         return {

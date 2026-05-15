@@ -18,7 +18,7 @@
                     class="o_input text-end"
                     type="text"
                     inputmode="decimal"
-                    t-att-placeholder="props.placeholder or ''"
+                    t-att-placeholder="props.placeholder || ''"
                     t-on-focus="onFocusIn"
                     t-on-blur="onFocusOut"
                     autocomplete="off"
@@ -44,7 +44,7 @@
                     </button>
 
                     <!-- Additive measure button (optional) -->
-                    <button t-if="props.allow_additive_measure and not measureState.stopped"
+                    <button t-if="props.allow_additive_measure &amp;&amp; !measureState.stopped"
                             class="btn btn-secondary btn-sm"
                             title="Agregar lectura al valor actual"
                             t-on-click.stop="onMeasureAdd">

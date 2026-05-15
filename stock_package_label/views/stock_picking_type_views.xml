@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Agrega el campo "Formato de Etiqueta de Bulto" al formulario de
+         configuración del tipo de operación. -->
+    <record id="stock_picking_type_form_inherit_package_label" model="ir.ui.view">
+        <field name="name">stock.picking.type.form.package.label</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.view_picking_type_form"/>
+        <field name="arch" type="xml">
+            <!-- Se ubica debajo de las opciones de etiqueta de paquete existentes -->
+            <xpath expr="//field[@name='package_label_to_print']" position="after">
+                <label for="package_label_format" string="Etiqueta de Bulto (Despacho)"/>
+                <field name="package_label_format"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

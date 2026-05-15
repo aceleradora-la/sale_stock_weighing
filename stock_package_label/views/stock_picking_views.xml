@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_picking_form_inherit_package_label" model="ir.ui.view">
+        <field name="name">stock.picking.form.package.label</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Botón "Imprimir Etiquetas de Bultos" junto a Validate -->
+            <xpath expr="//button[@name='button_validate'][1]" position="before">
+                <button name="action_print_package_labels"
+                        type="object"
+                        string="Etiquetas de Bultos"
+                        class="btn-secondary"
+                        icon="fa-tag"
+                        invisible="number_of_packages == 0 or state in ('draft', 'cancel')"
+                        title="Imprimir una etiqueta por cada bulto"/>
+            </xpath>
+
+            <!-- Campo "Número de Bultos" en el área de información adicional
+                 (junto a peso, si está disponible stock_delivery; si no,
+                 en el bloque de información general). -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="number_of_packages"
+                       string="Bultos"
+                       invisible="picking_type_code == 'incoming'"
+                       widget="integer"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

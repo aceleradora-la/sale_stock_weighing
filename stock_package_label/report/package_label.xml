@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         ETIQUETA DE BULTO — PDF
+         Genera una etiqueta por cada bulto (1/N, 2/N, …, N/N).
+         Modelo: stock.picking
+    ============================================================ -->
+
+    <template id="report_package_label_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <t t-foreach="docs" t-as="picking">
+
+                    <t t-set="total" t-value="picking.number_of_packages"/>
+                    <t t-set="sale"  t-value="picking.sale_id"/>
+                    <t t-set="partner" t-value="picking.partner_id"/>
+
+                    <!-- Determinar peso de envío (shipping_weight si existe, sino weight_bulk) -->
+                    <t t-set="ship_weight"
+                       t-value="picking.shipping_weight if hasattr(picking, 'shipping_weight') and picking.shipping_weight else (picking.weight_bulk if hasattr(picking, 'weight_bulk') else 0.0)"/>
+                    <t t-set="weight_uom"
+                       t-value="picking.weight_uom_name if hasattr(picking, 'weight_uom_name') else 'kg'"/>
+
+                    <t t-set="packages" t-value="picking.move_line_ids.result_package_id"/>
+
+                    <!-- Una etiqueta por bulto -->
+                    <t t-foreach="range(1, total + 1)" t-as="n">
+                        <t t-set="package" t-value="packages[n - 1] if packages and n &lt;= len(packages) else False"/>
+
+                        <div style="
+                            border: 2px solid #222;
+                            border-radius: 6px;
+                            padding: 20px 24px;
+                            margin-bottom: 20px;
+                            page-break-inside: avoid;
+                            page-break-after: always;
+                            font-family: Arial, sans-serif;
+                        ">
+                            <!-- Encabezado: número de bulto -->
+                            <div class="row mb-3">
+                                <div class="col-8">
+                                    <span style="font-size: 3em; font-weight: 900; letter-spacing: 2px;">
+                                        Bulto
+                                        <t t-esc="n"/>/<t t-esc="total"/>
+                                    </span>
+                                </div>
+                                <div class="col-4 text-end" style="font-size: 0.85em; color: #555;">
+                                    <div t-if="picking.scheduled_date">
+                                        <strong>Fecha entrega:</strong><br/>
+                                        <t t-esc="picking.scheduled_date.strftime('%d/%m/%Y')"/>
+                                    </div>
+                                    <div t-if="not picking.scheduled_date and picking.date_done">
+                                        <strong>Fecha:</strong><br/>
+                                        <t t-esc="picking.date_done.strftime('%d/%m/%Y')"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style="border-color: #222; margin: 8px 0 16px 0;"/>
+
+                            <!-- Datos del cliente -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div style="font-size: 0.75em; color: #666; text-transform: uppercase; letter-spacing: 1px;">Cliente</div>
+                                    <div style="font-size: 1.4em; font-weight: 700;">
+                                        <t t-esc="partner.name or ''"/>
+                                    </div>
+                                    <t t-if="partner.street">
+                                        <div style="font-size: 0.95em; color: #333;">
+                                            <t t-esc="partner.street"/>
+                                            <t t-if="partner.street2">, <t t-esc="partner.street2"/></t>
+                                        </div>
+                                    </t>
+                                    <t t-if="partner.city or partner.state_id">
+                                        <div style="font-size: 0.95em; color: #333;">
+                                            <t t-if="partner.zip"><t t-esc="partner.zip"/> — </t>
+                                            <t t-esc="partner.city or ''"/>
+                                            <t t-if="partner.state_id">, <t t-esc="partner.state_id.name"/></t>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Datos del despacho -->
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <div style="font-size: 0.75em; color: #666; text-transform: uppercase;">Remito</div>
+                                    <div style="font-size: 1.1em; font-weight: 600;">
+                                        <t t-esc="picking.name"/>
+                                    </div>
+                                </div>
+                                <div class="col-6" t-if="sale">
+                                    <div style="font-size: 0.75em; color: #666; text-transform: uppercase;">Orden de Venta</div>
+                                    <div style="font-size: 1.1em; font-weight: 600;">
+                                        <t t-esc="sale.name"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Peso e info del paquete -->
+                            <div class="row mt-2">
+                                <div class="col-6" t-if="ship_weight">
+                                    <div style="font-size: 0.75em; color: #666; text-transform: uppercase;">Peso Total Despacho</div>
+                                    <div style="font-size: 1.1em; font-weight: 600;">
+                                        <t t-esc="'%.3f' % ship_weight"/>
+                                        <span class="ms-1" t-esc="weight_uom"/>
+                                    </div>
+                                </div>
+                                <div class="col-6" t-if="package and package.name">
+                                    <div style="font-size: 0.75em; color: #666; text-transform: uppercase;">Paquete</div>
+                                    <div style="font-size: 1.0em; font-weight: 600;">
+                                        <t t-esc="package.name"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pie: empresa -->
+                            <div class="row mt-3">
+                                <div class="col-12" style="font-size: 0.75em; color: #888; border-top: 1px solid #ddd; padding-top: 8px;">
+                                    <t t-esc="picking.company_id.name"/>
+                                    <t t-if="picking.company_id.phone"> · <t t-esc="picking.company_id.phone"/></t>
+                                    <t t-if="picking.company_id.email"> · <t t-esc="picking.company_id.email"/></t>
+                                </div>
+                            </div>
+
+                        </div>
+                    </t>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_package_label">
+        <t t-call="web.html_container">
+            <t t-call="stock_package_label.report_package_label_document"/>
+        </t>
+    </template>
+
+    <!-- ============================================================
+         ETIQUETA DE BULTO — ZPL
+         Formato para impresoras Zebra. Etiqueta 4"×6" (812×1218 dots a 203 DPI).
+         Una etiqueta ZPL por bulto, separadas por ^XZ^XA.
+    ============================================================ -->
+
+    <template id="report_package_label_zpl">
+        <t t-foreach="docs" t-as="picking">
+            <t t-set="total"   t-value="picking.number_of_packages"/>
+            <t t-set="sale"    t-value="picking.sale_id"/>
+            <t t-set="partner" t-value="picking.partner_id"/>
+
+            <t t-set="ship_weight"
+               t-value="picking.shipping_weight if hasattr(picking, 'shipping_weight') and picking.shipping_weight else (picking.weight_bulk if hasattr(picking, 'weight_bulk') else 0.0)"/>
+            <t t-set="weight_uom"
+               t-value="picking.weight_uom_name if hasattr(picking, 'weight_uom_name') else 'kg'"/>
+
+            <t t-set="packages" t-value="picking.move_line_ids.result_package_id"/>
+
+            <!-- Fecha -->
+            <t t-set="fecha"
+               t-value="(picking.date_done or picking.scheduled_date or picking.create_date).strftime('%d/%m/%Y') if (picking.date_done or picking.scheduled_date or picking.create_date) else ''"/>
+
+            <!-- Truncar textos largos para ZPL (evitar desborde) -->
+            <t t-set="cliente"    t-value="(partner.name or '')[:35]"/>
+            <t t-set="direccion"  t-value="((partner.street or '') + (' ' + (partner.city or '') if partner.city else ''))[:40]"/>
+            <t t-set="sale_name"  t-value="(sale.name if sale else '-')[:25]"/>
+            <t t-set="remito"     t-value="(picking.name or '')[:25]"/>
+            <t t-set="peso_str"   t-value="('%.3f %s' % (ship_weight, weight_uom)) if ship_weight else ''"/>
+
+            <t t-foreach="range(1, total + 1)" t-as="n">
+                <t t-set="package" t-value="packages[n - 1] if packages and n &lt;= len(packages) else False"/>
+                <!-- ^XA — inicio de etiqueta
+                     ^PW812  — ancho 812 dots (4" a 203 dpi)
+                     ^LL1218 — largo 1218 dots (6" a 203 dpi)
+                     ^CI28   — encoding UTF-8
+                     ^LH0,0  — inicio lógico en 0,0
+                -->
+                <t t-raw="'^XA\n^PW812\n^LL1218\n^CI28\n^LH0,0\n'"/>
+
+                <!-- Número de bulto: grande, arriba -->
+                <t t-raw="'^FO50,40^A0N,120,120^FD'"/>
+                <t t-esc="'Bulto %d/%d' % (n, total)"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Línea divisoria -->
+                <t t-raw="'^FO30,185^GB752,4,4^FS\n'"/>
+
+                <!-- Etiqueta: Cliente -->
+                <t t-raw="'^FO30,205^A0N,28,28^FDCliente:^FS\n'"/>
+                <t t-raw="'^FO30,240^A0N,40,40^FD'"/>
+                <t t-esc="cliente"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Dirección -->
+                <t t-if="direccion">
+                    <t t-raw="'^FO30,290^A0N,28,28^FD'"/>
+                    <t t-esc="direccion"/>
+                    <t t-raw="'^FS\n'"/>
+                </t>
+
+                <!-- Línea divisoria -->
+                <t t-raw="'^FO30,335^GB752,2,2^FS\n'"/>
+
+                <!-- Orden de Venta -->
+                <t t-raw="'^FO30,355^A0N,25,25^FDOrden de Venta:^FS\n'"/>
+                <t t-raw="'^FO30,385^A0N,38,38^FD'"/>
+                <t t-esc="sale_name"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Remito -->
+                <t t-raw="'^FO430,355^A0N,25,25^FDRemito:^FS\n'"/>
+                <t t-raw="'^FO430,385^A0N,38,38^FD'"/>
+                <t t-esc="remito"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Fecha -->
+                <t t-raw="'^FO30,440^A0N,25,25^FDFecha: '"/>
+                <t t-esc="fecha"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Peso total -->
+                <t t-if="peso_str">
+                    <t t-raw="'^FO430,440^A0N,25,25^FDPeso: '"/>
+                    <t t-esc="peso_str"/>
+                    <t t-raw="'^FS\n'"/>
+                </t>
+
+                <!-- Línea divisoria -->
+                <t t-raw="'^FO30,490^GB752,2,2^FS\n'"/>
+
+                <!-- Código de barras con nombre del remito -->
+                <t t-raw="'^FO100,520^BY2^BCN,80,Y,N,N^FD'"/>
+                <t t-esc="picking.name"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Empresa (pie de etiqueta) -->
+                <t t-raw="'^FO30,660^A0N,22,22^FD'"/>
+                <t t-esc="(picking.company_id.name or '')[:40]"/>
+                <t t-raw="'^FS\n'"/>
+
+                <!-- Fin de etiqueta -->
+                <t t-raw="'^XZ\n'"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================
+         Acciones de reporte
+    ============================================================ -->
+
+    <record id="action_report_package_label_pdf" model="ir.actions.report">
+        <field name="name">Etiqueta de Bulto (PDF)</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">stock_package_label.report_package_label</field>
+        <field name="report_file">stock_package_label.report_package_label</field>
+        <field name="print_report_name">'Etiquetas-Bultos-%s' % (object.name)</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_package_label_zpl" model="ir.actions.report">
+        <field name="name">Etiqueta de Bulto (ZPL)</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-text</field>
+        <field name="report_name">stock_package_label.report_package_label_zpl</field>
+        <field name="report_file">stock_package_label.report_package_label_zpl</field>
+        <field name="print_report_name">'Etiquetas-Bultos-ZPL-%s' % (object.name)</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

@@ -20,7 +20,7 @@ class SaleOrderLine(models.Model):
         "Informativo — aparece en los reportes junto al peso.",
     )
     total_planned_weight = fields.Float(
-        string="Est. Weight",
+        string="Peso Estimado",
         compute="_compute_total_planned_weight",
         digits="Product Unit of Measure",
         help="Peso total planificado según la cantidad del pedido y el peso estándar por unidad.",
@@ -174,3 +174,12 @@ class SaleOrderLine(models.Model):
         else:
             self.price_per_weight = self.price_unit
         self.product_uom_id = self.product_id.uom_id
+        # Sincronizar piezas con la cantidad al elegir el producto
+        if not self.x_piece_count:
+            self.x_piece_count = int(self.product_uom_qty)
+
+    @api.onchange("product_uom_qty")
+    def _onchange_product_uom_qty_weighing(self):
+        """Sincroniza x_piece_count con la cantidad cuando el producto se vende por peso."""
+        if self.product_id.is_weighed_product:
+            self.x_piece_count = int(self.product_uom_qty)

@@ -12,11 +12,11 @@
                 <field name="x_piece_count"
                        optional="show"
                        invisible="not product_id.is_weighed_product"
-                       string="Pieces"/>
+                       string="Piezas"/>
                 <field name="total_planned_weight"
                        optional="show"
                        invisible="not product_id.is_weighed_product"
-                       string="Est. Weight"/>
+                       string="Peso Estimado"/>
                 <field name="total_delivered_weight"
                        optional="show"
                        invisible="not product_id.is_weighed_product"

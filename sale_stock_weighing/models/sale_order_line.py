@@ -42,10 +42,8 @@ class SaleOrderLine(models.Model):
 
     @api.depends(
         "product_id.weighing_uom_id",
-        "product_id.weighing_uom_id.category_id",
         "product_id.weight",
         "product_id.uom_id",
-        "product_id.uom_id.category_id",
         "product_uom_qty",
     )
     def _compute_total_planned_weight(self):
@@ -59,25 +57,17 @@ class SaleOrderLine(models.Model):
             weighing_uom = product.weighing_uom_id
             if uom and uom != weighing_uom:
                 try:
-                    uom_cat = uom.category_id
-                    weighing_cat = weighing_uom.category_id
-                    if uom_cat and weighing_cat and uom_cat == weighing_cat:
-                        standard_weight = uom._compute_quantity(
-                            product.weight, weighing_uom
-                        )
-                    else:
-                        _logger.debug(
-                            "Product %s: UoM %s and weighing UoM %s are in different "
-                            "categories; using product.weight as-is.",
-                            product.display_name,
-                            uom.name,
-                            weighing_uom.name,
-                        )
+                    # _compute_quantity raises UserError if UoMs are incompatible
+                    standard_weight = uom._compute_quantity(
+                        product.weight, weighing_uom
+                    )
                 except Exception:
                     _logger.debug(
-                        "Product %s: could not compare UoM categories; "
-                        "using product.weight as-is.",
+                        "Product %s: UoM %s y UdM de pesaje %s son incompatibles; "
+                        "se usa product.weight sin conversión.",
                         product.display_name,
+                        uom.name,
+                        weighing_uom.name,
                     )
             line.total_planned_weight = line.product_uom_qty * standard_weight
 

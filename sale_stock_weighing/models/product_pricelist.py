@@ -6,7 +6,20 @@ class Pricelist(models.Model):
     _inherit = "product.pricelist"
 
     def _get_matched_weighing_items(self, product):
+        """Devuelve los ítems de precio por peso que aplican para el producto.
+
+        Acepta tanto product.product como product.template — el reporte de
+        lista de precios de Odoo pasa el template directamente.
+        """
         self.ensure_one()
+        # Normalizar: obtener template y variante sin importar cuál se recibió.
+        if product._name == "product.template":
+            product_tmpl = product
+            product_variant = product.product_variant_id  # primera variante
+        else:
+            product_tmpl = product.product_tmpl_id
+            product_variant = product
+
         category_ids = set()
         cat = product.categ_id
         while cat:
@@ -16,8 +29,8 @@ class Pricelist(models.Model):
         items = self.item_ids.filtered(
             lambda i: i.is_weighed_price
             and (
-                (i.applied_on == "0_product_variant" and i.product_id == product)
-                or (i.applied_on == "1_product" and i.product_tmpl_id == product.product_tmpl_id)
+                (i.applied_on == "0_product_variant" and i.product_id == product_variant)
+                or (i.applied_on == "1_product" and i.product_tmpl_id == product_tmpl)
                 or (i.applied_on == "2_product_category" and i.categ_id.id in category_ids)
                 or i.applied_on == "3_global"
             )

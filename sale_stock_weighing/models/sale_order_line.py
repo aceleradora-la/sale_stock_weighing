@@ -88,6 +88,7 @@ class SaleOrderLine(models.Model):
         "move_ids.state",
         "move_ids.move_line_ids.lot_id",
         "move_ids.move_line_ids.has_recorded_weight",
+        "move_ids.move_line_ids.quantity",
     )
     def _compute_delivered_piece_count(self):
         for line in self:
@@ -96,10 +97,14 @@ class SaleOrderLine(models.Model):
                 continue
             done_moves = line.move_ids.filtered(lambda m: m.state == "done")
             weighed_lines = done_moves.move_line_ids.filtered("has_recorded_weight")
-            # Prefer counting distinct lots (= physical pieces);
-            # fall back to number of weighed move lines when lot tracking is off.
+            # Prefer counting distinct lots (= physical pieces).
+            # When lot tracking is off, sum the quantities on the weighed lines
+            # (quantity is in pieces since we no longer sync it with recorded_weight).
             lots = weighed_lines.filtered("lot_id").lot_id
-            line.delivered_piece_count = len(lots) if lots else len(weighed_lines)
+            if lots:
+                line.delivered_piece_count = len(lots)
+            else:
+                line.delivered_piece_count = int(sum(weighed_lines.mapped("quantity")))
 
     def _get_weighed_invoice_vals(self, name=None):
         """Return values to write on an account.move.line for a weighed product."""
@@ -109,6 +114,8 @@ class SaleOrderLine(models.Model):
         piece_info = ""
         if self.delivered_piece_count:
             piece_info = " (%d pzas)" % self.delivered_piece_count
+        # base_name ya incluye la referencia y nombre del producto (ej: "[103] Bondiola A/V").
+        # Solo agregamos la info de piezas y el peso entregado, sin repetir el producto.
         return {
             "quantity": self.total_delivered_weight,
             "price_unit": self.price_per_weight,
@@ -116,11 +123,9 @@ class SaleOrderLine(models.Model):
             "recorded_weight": self.total_delivered_weight,
             "weight_uom_id": product.weighing_uom_id.id,
             "x_delivered_piece_count": self.delivered_piece_count,
-            "name": "%s%s\n[%s] %s × %s %s" % (
+            "name": "%s%s\nEntregado: %s %s" % (
                 base_name,
                 piece_info,
-                product.default_code or "",
-                product.display_name,
                 self.total_delivered_weight,
                 product.weighing_uom_id.name,
             ),

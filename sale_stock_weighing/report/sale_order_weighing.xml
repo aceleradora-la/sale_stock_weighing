@@ -19,7 +19,7 @@
         </xpath>
 
         <!-- Add data cells before the Subtotal cell in each line -->
-        <xpath expr="//td[@name='td_subtotal']" position="before">
+        <xpath expr="//td[@name='td_product_subtotal']" position="before">
             <t t-if="line.product_id.is_weighed_product">
                 <td class="text-end">
                     <span t-esc="line.x_piece_count or int(line.product_uom_qty)"/>

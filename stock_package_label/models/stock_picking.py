@@ -14,18 +14,11 @@ class StockPicking(models.Model):
              "pero puede ajustarse manualmente.",
     )
 
-    @api.depends(
-        "move_line_ids.result_package_id",
-        "package_level_ids",
-    )
+    @api.depends("move_line_ids.result_package_id")
     def _compute_number_of_packages(self):
         for picking in self:
             # Contar paquetes destino (resultado de la operación).
-            pkg_count = len(picking.move_line_ids.result_package_id)
-            if not pkg_count:
-                # Fallback: paquetes de origen movidos en bloque.
-                pkg_count = len(picking.package_level_ids)
-            picking.number_of_packages = pkg_count
+            picking.number_of_packages = len(picking.move_line_ids.result_package_id)
 
     def action_print_package_labels(self):
         """Imprime etiquetas de bultos en el formato configurado en el tipo de operación."""

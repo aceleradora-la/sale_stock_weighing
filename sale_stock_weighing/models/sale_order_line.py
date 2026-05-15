@@ -110,7 +110,12 @@ class SaleOrderLine(models.Model):
         """Return values to write on an account.move.line for a weighed product."""
         self.ensure_one()
         product = self.product_id
-        base_name = name if name is not None else self.name or ""
+        # Tomar solo la primera línea para evitar duplicar piezas/peso si
+        # _get_weighed_invoice_vals es llamado sobre un nombre que ya fue
+        # enriquecido (ej: cuando Odoo procesa varias SOL del mismo producto
+        # y pasa el nombre acumulado de la línea anterior como base_name).
+        raw_name = name if name is not None else self.name or ""
+        base_name = raw_name.split("\n")[0]
         uom_name = (self.product_uom_id or product.uom_id).name or "u"
 
         # Construir el nombre de la línea de factura:

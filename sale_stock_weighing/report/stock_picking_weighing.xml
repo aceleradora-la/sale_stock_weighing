@@ -8,8 +8,8 @@
         estándar de página en todos los reportes de Odoo.
     -->
     <template id="stock_picking_weighing_section"
-              inherit_id="stock.report_deliveryslip_document">
-        <xpath expr="//div[hasclass('page')]" position="inside">
+              inherit_id="stock.report_delivery_document">
+        <xpath expr="//div[@name='signature']" position="before">
             <t t-if="any(ml.has_recorded_weight for ml in doc.move_line_ids)">
                 <div class="mt-4 page-break-inside-avoid">
                     <h5>Detalle de Pesaje</h5>

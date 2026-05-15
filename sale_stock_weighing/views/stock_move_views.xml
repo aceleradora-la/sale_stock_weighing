@@ -113,6 +113,8 @@
     <record id="stock_move_weighing_form" model="ir.ui.view">
         <field name="name">stock.move.weighing.form</field>
         <field name="model">stock.move</field>
+        <!-- Alta prioridad para que el action use esta vista y no la estándar de Odoo -->
+        <field name="priority">200</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
@@ -167,6 +169,8 @@
         <field name="name">Operaciones de Pesaje</field>
         <field name="res_model">stock.move</field>
         <field name="view_mode">kanban,list,form</field>
+        <!-- view_id fuerza el formulario de pesaje al abrir un registro -->
+        <field name="view_id" ref="stock_move_weighing_form"/>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('stock_move_weighing_kanban')}),
             (0, 0, {'view_mode': 'list', 'view_id': ref('stock_move_weighing_tree')}),

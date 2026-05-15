@@ -111,26 +111,40 @@ class SaleOrderLine(models.Model):
         self.ensure_one()
         product = self.product_id
         base_name = name if name is not None else self.name or ""
-        piece_info = ""
+        uom_name = (self.product_uom_id or product.uom_id).name or "u"
+
+        # Construir el nombre de la línea de factura:
+        #   Línea 1: descripción estándar del producto (base_name, ya incluye ref y nombre)
+        #   Línea 2: cantidad de piezas entregadas (si aplica)
+        #   Línea 3: peso total entregado
+        name_parts = [base_name]
         if self.delivered_piece_count:
-            uom_name = (self.product_uom_id or product.uom_id).name or "u"
-            piece_info = " (%d %s)" % (self.delivered_piece_count, uom_name)
-        # base_name ya incluye la referencia y nombre del producto (ej: "[103] Bondiola A/V").
-        # Solo agregamos la info de piezas y el peso entregado, sin repetir el producto.
-        return {
+            name_parts.append("%d %s" % (self.delivered_piece_count, uom_name))
+        name_parts.append(
+            "Entregado: %s %s" % (self.total_delivered_weight, product.weighing_uom_id.name)
+        )
+
+        vals = {
             "quantity": self.total_delivered_weight,
             "price_unit": self.price_per_weight,
             "product_uom_id": product.weighing_uom_id.id,
             "recorded_weight": self.total_delivered_weight,
             "weight_uom_id": product.weighing_uom_id.id,
             "x_delivered_piece_count": self.delivered_piece_count,
-            "name": "%s%s\nEntregado: %s %s" % (
-                base_name,
-                piece_info,
-                self.total_delivered_weight,
-                product.weighing_uom_id.name,
-            ),
+            "name": "\n".join(name_parts),
         }
+
+        # Odoo muestra una cantidad "secundaria" en la UdM del producto cuando
+        # product_uom_id (kg) difiere de product_id.uom_id (Unidades). Si el sistema
+        # tiene un factor de conversión incorrecto entre ambas UdM, esa cantidad
+        # secundaria resulta errónea (ej: 3.45 kg → 3450 Unidades en lugar de 2).
+        # Escribimos product_uom_qty explícitamente con el conteo de piezas si el
+        # campo existe en account.move.line (lo agrega el módulo sale en Odoo 17+).
+        AML = self.env["account.move.line"]
+        if "product_uom_qty" in AML._fields:
+            vals["product_uom_qty"] = float(self.delivered_piece_count)
+
+        return vals
 
     def _prepare_invoice_line(self, **optional_values):
         res = super()._prepare_invoice_line(**optional_values)

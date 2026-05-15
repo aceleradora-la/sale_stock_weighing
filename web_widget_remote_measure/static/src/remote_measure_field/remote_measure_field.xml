@@ -20,6 +20,7 @@
                     inputmode="decimal"
                     t-att-placeholder="props.placeholder || ''"
                     t-on-focus="onFocusIn"
+                    t-on-input="onInput"
                     t-on-blur="onFocusOut"
                     t-on-change="onFocusOut"
                     autocomplete="off"

@@ -21,6 +21,7 @@
                     t-att-placeholder="props.placeholder || ''"
                     t-on-focus="onFocusIn"
                     t-on-blur="onFocusOut"
+                    t-on-change="onFocusOut"
                     autocomplete="off"
                 />
 

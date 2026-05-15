@@ -63,7 +63,7 @@ class StockMoveLine(models.Model):
         action["context"] = dict(
             self.env.context,
             default_selected_move_line_id=first.id,
-            default_weight=first.recorded_weight or first.quantity,
+            default_weight=first.recorded_weight or 0.0,
             default_move_line_ids=self.ids,
             default_print_label=first.move_id._get_default_print_label(),
             default_move_id=first.move_id.id,

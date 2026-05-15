@@ -142,7 +142,7 @@ class StockMove(models.Model):
         action["context"] = dict(
             self.env.context,
             default_selected_move_line_id=first_line.id if first_line else False,
-            default_weight=self.recorded_weight or self.quantity,
+            default_weight=self.recorded_weight or 0.0,
             default_move_line_ids=self.move_line_ids.ids,
             default_print_label=self._get_default_print_label(),
             default_move_id=self.id,

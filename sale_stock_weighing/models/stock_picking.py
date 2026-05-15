@@ -21,6 +21,80 @@ class StockPicking(models.Model):
                 picking.move_ids.filtered("has_weight")
             )
 
+    # ------------------------------------------------------------------
+    # Bulk weight override
+    # ------------------------------------------------------------------
+    # Odoo core (_compute_bulk_weight en stock.picking) calcula el peso
+    # como product.weight × quantity para todas las líneas sin paquete.
+    # Para productos pesables usamos el peso real registrado (recorded_weight),
+    # ya que product.weight refleja el peso estándar estimado, no el real.
+    # Para productos no pesables se mantiene el cálculo estándar.
+    # ------------------------------------------------------------------
+
+    @api.depends(
+        "move_line_ids",
+        "move_line_ids.result_package_id",
+        "move_line_ids.product_id",
+        "move_line_ids.product_uom_id",
+        "move_line_ids.quantity",
+        "move_line_ids.recorded_weight",
+        "move_line_ids.has_recorded_weight",
+    )
+    def _compute_bulk_weight(self):
+        """Para productos pesables usa el peso real registrado (recorded_weight).
+        Para productos sin pesaje usa el cálculo estándar (product.weight × qty)."""
+        for picking in self:
+            weight = 0.0
+            bulk_lines = picking.move_line_ids.filtered(
+                lambda ml: ml.product_id and not ml.result_package_id
+            )
+            for ml in bulk_lines:
+                if ml.has_recorded_weight:
+                    weight += ml.recorded_weight
+                else:
+                    weight += (
+                        ml.product_uom_id._compute_quantity(
+                            ml.quantity, ml.product_id.uom_id
+                        )
+                        * ml.product_id.weight
+                    )
+            picking.weight_bulk = weight
+
+    @api.depends(
+        "move_line_ids.result_package_id",
+        "move_line_ids.result_package_id.shipping_weight",
+        "move_line_ids.recorded_weight",
+        "move_line_ids.has_recorded_weight",
+        "weight_bulk",
+    )
+    def _compute_shipping_weight(self):
+        """Extiende el cálculo estándar para que los paquetes con productos pesables
+        usen la suma de recorded_weight en lugar del peso estimado del maestro."""
+        for picking in self:
+            total = picking.weight_bulk
+            for package in picking.move_line_ids.result_package_id:
+                if package.shipping_weight:
+                    # Peso configurado manualmente en el paquete → prioridad.
+                    total += package.shipping_weight
+                else:
+                    pkg_lines = picking.move_line_ids.filtered(
+                        lambda ml, p=package: ml.result_package_id == p
+                    )
+                    weighed = pkg_lines.filtered("has_recorded_weight")
+                    if weighed:
+                        # Paquete con productos pesados: peso real registrado.
+                        total += sum(weighed.mapped("recorded_weight"))
+                    else:
+                        # Sin pesaje: cálculo estándar (product.weight × qty).
+                        for ml in pkg_lines:
+                            total += (
+                                ml.product_uom_id._compute_quantity(
+                                    ml.quantity, ml.product_id.uom_id
+                                )
+                                * ml.product_id.weight
+                            )
+            picking.shipping_weight = total
+
     def action_weighing_operations(self):
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
@@ -67,4 +141,24 @@ class StockPicking(models.Model):
                         ),
                     )
                 )
-        return super().button_validate()
+        result = super().button_validate()
+        # Actualizar shipping_weight en los paquetes que contienen productos
+        # pesables, para que el reporte de entrega muestre el peso real en
+        # lugar del peso estimado calculado desde el maestro del producto.
+        self._update_weighed_package_shipping_weight()
+        return result
+
+    def _update_weighed_package_shipping_weight(self):
+        """Escribe el peso registrado real en stock.quant.package.shipping_weight
+        para los paquetes que contienen al menos una línea con peso registrado."""
+        for picking in self:
+            for package in picking.move_line_ids.result_package_id:
+                pkg_lines = picking.move_line_ids.filtered(
+                    lambda ml, p=package: ml.result_package_id == p
+                )
+                weighed = pkg_lines.filtered("has_recorded_weight")
+                if weighed and not package.shipping_weight:
+                    # Solo actualizar si no fue configurado manualmente.
+                    package.sudo().shipping_weight = sum(
+                        weighed.mapped("recorded_weight")
+                    )

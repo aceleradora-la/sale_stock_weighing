@@ -13,7 +13,7 @@
 
         <!-- Add header columns before the Subtotal header -->
         <xpath expr="//th[@name='th_subtotal']" position="before">
-            <t t-if="any(
+            <t t-if="invoice_lines and any(
                     il.sale_line_ids and il.sale_line_ids[:1].product_id.is_weighed_product
                     for il in invoice_lines
                 )">
@@ -42,7 +42,7 @@
                 </td>
             </t>
             <t t-else="">
-                <t t-if="any(
+                <t t-if="invoice_lines and any(
                         il.sale_line_ids and il.sale_line_ids[:1].product_id.is_weighed_product
                         for il in invoice_lines
                     )">

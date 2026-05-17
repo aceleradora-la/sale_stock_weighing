@@ -21,6 +21,13 @@
                         <t t-set="cols"    t-value="(data or {}).get('columns', 2)"/>
                         <t t-set="col_cls" t-value="'col-%d' % (12 // max(1, cols))"/>
 
+                        <!-- DEBUG TEMPORAL: borrar después de diagnosticar -->
+                        <div style="background:#ffe066; border:2px solid #c00; padding:8px; margin-bottom:10px; font-size:14pt;">
+                            Picking: <strong><t t-esc="picking.name"/></strong> |
+                            Bultos: <strong><t t-esc="total"/></strong> |
+                            Cols: <strong><t t-esc="cols"/></strong>
+                        </div>
+
                         <div class="row">
                             <t t-foreach="range(total)" t-as="i">
                                 <div t-att-class="col_cls" style="margin-bottom: 10px; page-break-inside: avoid;">

@@ -5,16 +5,11 @@
         <field name="model">stock.picking.type</field>
         <field name="inherit_id" ref="stock.view_picking_type_form"/>
         <field name="arch" type="xml">
+            <!-- Ubica el campo debajo de las opciones de etiqueta de paquete existentes -->
             <xpath expr="//field[@name='package_label_to_print']" position="after">
                 <label for="package_label_format"
                        string="Etiqueta de Bulto (Despacho)"/>
                 <field name="package_label_format"/>
-                <label for="package_label_printer_address"
-                       string="IP Impresora Zebra"
-                       invisible="package_label_format != 'zpl'"/>
-                <field name="package_label_printer_address"
-                       invisible="package_label_format != 'zpl'"
-                       placeholder="192.168.1.50:9100"/>
             </xpath>
         </field>
     </record>

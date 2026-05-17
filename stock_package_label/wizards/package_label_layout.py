@@ -1,16 +1,14 @@
-import socket
-
 from odoo import api, fields, models
-from odoo.exceptions import UserError
 
 
 class PackageLabelLayout(models.TransientModel):
     """Wizard para configurar e imprimir etiquetas de bultos.
 
-    Permite elegir:
-    - Formato: PDF (con grilla de columnas) o ZPL (Zebra)
-    - Columnas por fila y filas por página  (solo PDF)
-    - Dirección IP:puerto de la impresora Zebra (solo ZPL, envío TCP directo)
+    Para PDF: permite elegir columnas y filas por hoja.
+    Para ZPL: delega en el módulo IoT de Odoo el ruteo a la impresora.
+              Si el reporte tiene una impresora configurada en
+              IoT → Dispositivos → Informes de la impresora, imprime directo.
+              Si no, Odoo muestra el selector de impresoras.
     """
 
     _name = "stock.package.label.layout"
@@ -47,13 +45,6 @@ class PackageLabelLayout(models.TransientModel):
         help="Filas de etiquetas por página A4.\n"
              "Con 2 columnas × 3 filas → 6 etiquetas por hoja.",
     )
-    # ── Opciones ZPL ────────────────────────────────────────────────
-    printer_address = fields.Char(
-        string="Impresora Zebra (IP:Puerto)",
-        help="Dirección de la impresora en red. Ejemplo: 192.168.1.50:9100\n"
-             "Las impresoras Zebra aceptan ZPL crudo por TCP/9100 sin drivers.\n"
-             "Si se deja vacío, se descarga el archivo ZPL para imprimir manualmente.",
-    )
 
     @api.model
     def default_get(self, fields_list):
@@ -61,24 +52,24 @@ class PackageLabelLayout(models.TransientModel):
         picking_id = self.env.context.get("default_picking_id")
         if picking_id:
             picking = self.env["stock.picking"].browse(picking_id)
-            ptype = picking.picking_type_id
-            res["label_format"] = ptype.package_label_format or "pdf"
-            res["printer_address"] = ptype.package_label_printer_address or ""
+            res["label_format"] = picking.picking_type_id.package_label_format or "pdf"
         return res
-
-    # ── Acción principal ─────────────────────────────────────────────
 
     def action_print(self):
         """Genera o envía las etiquetas según el formato elegido."""
         self.ensure_one()
         picking = self.picking_id
+
         if self.label_format == "zpl":
-            return self._print_zpl(picking)
-        return self._print_pdf(picking)
+            # El módulo IoT intercepta report_action automáticamente:
+            # - Si hay impresora configurada en IoT → imprime directo.
+            # - Si no → muestra el selector de impresoras en el navegador.
+            report = self.env.ref(
+                "stock_package_label.action_report_package_label_zpl"
+            )
+            return report.report_action(picking)
 
-    # ── PDF con grilla ───────────────────────────────────────────────
-
-    def _print_pdf(self, picking):
+        # PDF con distribución en grilla.
         report = self.env.ref(
             "stock_package_label.action_report_package_label_pdf"
         )
@@ -89,47 +80,3 @@ class PackageLabelLayout(models.TransientModel):
                 "rows_per_page": max(1, self.rows_per_page),
             },
         )
-
-    # ── ZPL directo o descarga ───────────────────────────────────────
-
-    def _print_zpl(self, picking):
-        report = self.env.ref(
-            "stock_package_label.action_report_package_label_zpl"
-        )
-        addr = (self.printer_address or "").strip()
-        if addr:
-            return self._send_tcp(report, picking, addr)
-        # Sin dirección: descarga del .txt ZPL.
-        return report.report_action(picking)
-
-    def _send_tcp(self, report, picking, address):
-        """Envía el ZPL directamente a la impresora por TCP/IP.
-
-        Las Zebra aceptan ZPL crudo en el puerto 9100 por defecto.
-        Formato address: "192.168.1.50" o "192.168.1.50:9100"
-        """
-        host, _, port_str = address.partition(":")
-        try:
-            port = int(port_str) if port_str else 9100
-        except ValueError:
-            raise UserError(
-                "El puerto de la impresora no es válido. "
-                "Use el formato IP:Puerto, ej: 192.168.1.50:9100"
-            )
-
-        zpl_bytes, _ = report._render(report.report_name, picking.ids)
-
-        try:
-            with socket.create_connection((host.strip(), port), timeout=8) as sock:
-                sock.sendall(zpl_bytes)
-        except OSError as e:
-            raise UserError(
-                "No se pudo conectar a la impresora %s:%s.\n"
-                "Verificá que:\n"
-                "- La impresora esté encendida y en la red.\n"
-                "- La IP y el puerto sean correctos.\n"
-                "- El puerto 9100 esté habilitado en la impresora.\n\n"
-                "Error técnico: %s" % (host, port, e)
-            )
-
-        return {"type": "ir.actions.act_window_close"}

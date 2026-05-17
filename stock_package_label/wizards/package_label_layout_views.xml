@@ -19,29 +19,28 @@
                 <!-- Opciones PDF: columnas × filas -->
                 <group string="Distribución en hoja"
                        invisible="label_format != 'pdf'">
-                    <field name="columns"
-                           string="Columnas por fila"/>
-                    <field name="rows_per_page"
-                           string="Filas por hoja"/>
-                    <field name="columns" invisible="1"/>
-                    <!-- Nota informativa -->
+                    <field name="columns" string="Columnas por fila"/>
+                    <field name="rows_per_page" string="Filas por hoja"/>
                     <label string="" for="columns"/>
                     <div class="text-muted small">
-                        <i class="fa fa-info-circle"/> Ejemplo: 2 columnas × 3 filas → 6 etiquetas por hoja A4
+                        <i class="fa fa-info-circle"/>
+                        Ejemplo: 2 columnas × 3 filas → 6 etiquetas por hoja A4
                     </div>
                 </group>
 
-                <!-- Opciones ZPL: IP impresora -->
+                <!-- Info ZPL: impresora configurada via IoT -->
                 <group string="Impresora Zebra"
                        invisible="label_format != 'zpl'">
-                    <field name="printer_address"
-                           string="IP:Puerto"
-                           placeholder="192.168.1.50:9100"/>
-                    <label string="" for="printer_address"/>
-                    <div class="text-muted small">
-                        <i class="fa fa-info-circle"/>
-                        Si se deja vacío, se descarga el archivo ZPL para imprimir manualmente.
-                        La impresora debe estar en la misma red y aceptar ZPL por TCP/9100.
+                    <label string="" for="label_format"/>
+                    <div class="text-muted">
+                        <i class="fa fa-info-circle text-info me-1"/>
+                        <strong>Impresora configurada vía IoT de Odoo.</strong><br/>
+                        Si hay una impresora Zebra asignada al reporte
+                        <em>Etiqueta de Bulto (ZPL)</em>, se enviará directo al imprimir.<br/>
+                        Si no hay ninguna configurada, Odoo mostrará el selector de impresoras.<br/>
+                        <br/>
+                        Para configurar la impresora por defecto:<br/>
+                        <strong>IoT → Dispositivos → [impresora Zebra] → Informes de la impresora → agregar "Etiqueta de Bulto (ZPL)"</strong>
                     </div>
                 </group>
 

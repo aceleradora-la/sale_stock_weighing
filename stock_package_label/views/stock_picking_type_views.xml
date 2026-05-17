@@ -5,12 +5,12 @@
         <field name="model">stock.picking.type</field>
         <field name="inherit_id" ref="stock.view_picking_type_form"/>
         <field name="arch" type="xml">
-            <!-- Ubica el campo debajo de las opciones de etiqueta de paquete existentes -->
-            <xpath expr="//field[@name='package_label_to_print']" position="after">
-                <label for="package_label_format"
-                       string="Etiqueta de Bulto (Despacho)"/>
-                <field name="package_label_format"/>
-            </xpath>
+            <!-- Agrega grupo debajo de los grupos estándar (anchor siempre presente en stock) -->
+            <group name="second" position="after">
+                <group name="package_label" string="Etiqueta de Bulto">
+                    <field name="package_label_format"/>
+                </group>
+            </group>
         </field>
     </record>
 </odoo>

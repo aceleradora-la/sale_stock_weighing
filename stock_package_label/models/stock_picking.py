@@ -6,12 +6,9 @@ class StockPicking(models.Model):
 
     number_of_packages = fields.Integer(
         string="Número de Bultos",
-        compute="_compute_number_of_packages",
-        store=True,
-        readonly=False,
+        default=0,
         help="Cantidad de bultos (cajas, bolsas, etc.) que componen este despacho.\n"
-             "Se calcula automáticamente desde los paquetes de Odoo, "
-             "pero puede ajustarse manualmente.",
+             "Se ingresa manualmente antes de imprimir las etiquetas.",
     )
     package_label_weight = fields.Float(
         string="Peso para Etiqueta de Bulto",
@@ -24,11 +21,6 @@ class StockPicking(models.Model):
         string="UdM Peso Etiqueta",
         compute="_compute_package_label_weight",
     )
-
-    @api.depends("move_line_ids.result_package_id")
-    def _compute_number_of_packages(self):
-        for picking in self:
-            picking.number_of_packages = len(picking.move_line_ids.result_package_id)
 
     @api.depends(
         "move_line_ids.recorded_weight",

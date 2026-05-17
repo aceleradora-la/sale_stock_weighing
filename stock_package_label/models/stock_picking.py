@@ -37,13 +37,11 @@ class StockPicking(models.Model):
     def _compute_package_label_weight(self):
         """Determina el peso y la UdM a mostrar en la etiqueta de bulto,
         compatible con y sin el módulo stock_delivery instalado."""
-        # Detectar campos disponibles una sola vez (nivel de clase, no de registro).
         has_shipping_weight = "shipping_weight" in self._fields
         has_weight_bulk = "weight_bulk" in self._fields
         has_weight_uom_name = "weight_uom_name" in self._fields
 
         for picking in self:
-            # Peso: prioridad shipping_weight > weight_bulk > suma recorded_weight
             if has_shipping_weight and picking.shipping_weight:
                 weight = picking.shipping_weight
             elif has_weight_bulk and picking.weight_bulk:
@@ -55,23 +53,51 @@ class StockPicking(models.Model):
                     .mapped("recorded_weight")
                 )
             picking.package_label_weight = weight
-
-            # UdM
-            if has_weight_uom_name and picking.weight_uom_name:
-                picking.package_label_weight_uom = picking.weight_uom_name
-            else:
-                picking.package_label_weight_uom = "kg"
+            picking.package_label_weight_uom = (
+                picking.weight_uom_name if has_weight_uom_name and picking.weight_uom_name
+                else "kg"
+            )
 
     def action_print_package_labels(self):
-        """Imprime etiquetas de bultos en el formato configurado en el tipo de operación."""
+        """Abre el wizard de configuración de etiquetas de bultos."""
         self.ensure_one()
-        fmt = self.picking_type_id.package_label_format or "pdf"
-        if fmt == "zpl":
-            report = self.env.ref(
-                "stock_package_label.action_report_package_label_zpl"
-            )
-        else:
-            report = self.env.ref(
-                "stock_package_label.action_report_package_label_pdf"
-            )
-        return report.report_action(self)
+        return {
+            "name": "Imprimir Etiquetas de Bultos",
+            "type": "ir.actions.act_window",
+            "res_model": "stock.package.label.layout",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_picking_id": self.id,
+                "default_label_format": (
+                    self.picking_type_id.package_label_format or "pdf"
+                ),
+            },
+        }
+
+    def _get_package_label_pages(self, columns=2, rows_per_page=3):
+        """Devuelve los datos de etiquetas agrupados en páginas para impresión PDF.
+
+        Cada página es una lista de dicts con:
+          - number  : número de bulto (1-based)
+          - total   : total de bultos
+          - package : stock.quant.package o False
+        """
+        self.ensure_one()
+        total = self.number_of_packages
+        pkgs = self.move_line_ids.result_package_id
+        labels_per_page = max(1, columns * rows_per_page)
+
+        all_labels = [
+            {
+                "number": n,
+                "total": total,
+                "package": pkgs[n - 1] if pkgs and n <= len(pkgs) else False,
+            }
+            for n in range(1, total + 1)
+        ]
+
+        return [
+            all_labels[i: i + labels_per_page]
+            for i in range(0, len(all_labels), labels_per_page)
+        ]

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_package_label_layout_form" model="ir.ui.view">
+        <field name="name">stock.package.label.layout.form</field>
+        <field name="model">stock.package.label.layout</field>
+        <field name="arch" type="xml">
+            <form string="Imprimir Etiquetas de Bultos">
+                <group>
+                    <group string="Despacho">
+                        <field name="picking_id" readonly="1"/>
+                        <field name="number_of_packages" readonly="1"/>
+                    </group>
+                    <group string="Formato">
+                        <field name="label_format" widget="radio"
+                               options="{'horizontal': true}"/>
+                    </group>
+                </group>
+
+                <!-- Opciones PDF: columnas × filas -->
+                <group string="Distribución en hoja"
+                       invisible="label_format != 'pdf'">
+                    <field name="columns"
+                           string="Columnas por fila"/>
+                    <field name="rows_per_page"
+                           string="Filas por hoja"/>
+                    <field name="columns" invisible="1"/>
+                    <!-- Nota informativa -->
+                    <label string="" for="columns"/>
+                    <div class="text-muted small">
+                        <i class="fa fa-info-circle"/> Ejemplo: 2 columnas × 3 filas → 6 etiquetas por hoja A4
+                    </div>
+                </group>
+
+                <!-- Opciones ZPL: IP impresora -->
+                <group string="Impresora Zebra"
+                       invisible="label_format != 'zpl'">
+                    <field name="printer_address"
+                           string="IP:Puerto"
+                           placeholder="192.168.1.50:9100"/>
+                    <label string="" for="printer_address"/>
+                    <div class="text-muted small">
+                        <i class="fa fa-info-circle"/>
+                        Si se deja vacío, se descarga el archivo ZPL para imprimir manualmente.
+                        La impresora debe estar en la misma red y aceptar ZPL por TCP/9100.
+                    </div>
+                </group>
+
+                <footer>
+                    <button name="action_print" type="object"
+                            string="Imprimir" class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

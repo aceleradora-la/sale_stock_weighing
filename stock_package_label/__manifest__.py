@@ -37,8 +37,10 @@ Datos en la etiqueta
         "sale_stock",
     ],
     "data": [
+        "security/ir.model.access.csv",
         "views/stock_picking_type_views.xml",
         "views/stock_picking_views.xml",
+        "wizards/package_label_layout_views.xml",
         "report/package_label.xml",
     ],
     "installable": True,

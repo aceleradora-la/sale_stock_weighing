@@ -67,29 +67,3 @@ class StockPicking(models.Model):
             },
         }
 
-    def get_package_label_pages(self, columns=2, rows_per_page=3):
-        """Devuelve los datos de etiquetas agrupados en páginas para impresión PDF.
-
-        Cada página es una lista de dicts con:
-          - number  : número de bulto (1-based)
-          - total   : total de bultos
-          - package : stock.quant.package o False
-        """
-        self.ensure_one()
-        total = self.number_of_packages
-        pkgs = self.move_line_ids.result_package_id
-        labels_per_page = max(1, columns * rows_per_page)
-
-        all_labels = [
-            {
-                "number": n,
-                "total": total,
-                "package": pkgs[n - 1] if pkgs and n <= len(pkgs) else False,
-            }
-            for n in range(1, total + 1)
-        ]
-
-        return [
-            all_labels[i: i + labels_per_page]
-            for i in range(0, len(all_labels), labels_per_page)
-        ]

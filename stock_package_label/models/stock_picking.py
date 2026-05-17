@@ -67,7 +67,7 @@ class StockPicking(models.Model):
             },
         }
 
-    def _get_package_label_pages(self, columns=2, rows_per_page=3):
+    def get_package_label_pages(self, columns=2, rows_per_page=3):
         """Devuelve los datos de etiquetas agrupados en páginas para impresión PDF.
 
         Cada página es una lista de dicts con:

@@ -117,7 +117,7 @@
                     <t t-set="col_cls"  t-value="'col-%d' % (12 // max(1, cols))"/>
 
                     <!-- Páginas: lista de listas de dicts de etiquetas -->
-                    <t t-set="pages"    t-value="picking._get_package_label_pages(cols, rpp)"/>
+                    <t t-set="pages"    t-value="picking.get_package_label_pages(cols, rpp)"/>
 
                     <t t-foreach="pages" t-as="page">
                         <!-- Cada página = una fila flex que se llena de columnas.

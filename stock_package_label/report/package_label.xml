@@ -16,8 +16,8 @@
                 <t t-set="wuom"    t-value="picking.package_label_weight_uom"/>
                 <t t-set="cols"    t-value="int((data or {}).get('columns', 2))"/>
                 <t t-set="rpp"     t-value="int((data or {}).get('rows_per_page', 3))"/>
-                <t t-set="pages"   t-value="picking.get_package_label_pages(cols, rpp)"/>
-                <t t-set="col_pct" t-value="'%.4f%%' % (100.0 / cols)"/>
+                <t t-set="pages"  t-value="picking.get_package_label_pages(cols, rpp)"/>
+                <t t-set="col_w"  t-value="str(round(100.0 / cols, 4)) + '%'"/>
 
                 <t t-foreach="pages" t-as="page">
                     <t t-call="web.external_layout">
@@ -27,7 +27,7 @@
                                 <t t-foreach="page" t-as="row">
                                     <tr style="page-break-inside:avoid;">
                                         <t t-foreach="row" t-as="label">
-                                            <td t-att-style="'width:%s; vertical-align:top; padding:4px;' % col_pct">
+                                            <td t-attf-style="width:#{col_w}; vertical-align:top; padding:4px;">
                                                 <div style="
                                                     border: 2px solid #222;
                                                     border-radius: 5px;
@@ -112,7 +112,7 @@
                                         </t>
                                         <!-- Celdas vacías para completar la última fila -->
                                         <t t-foreach="range(cols - len(row))" t-as="empty">
-                                            <td t-att-style="'width:%s;' % col_pct"/>
+                                            <td t-attf-style="width:#{col_w};"/>
                                         </t>
                                     </tr>
                                 </t>

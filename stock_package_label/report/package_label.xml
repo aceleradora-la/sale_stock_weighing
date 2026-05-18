@@ -10,10 +10,6 @@
 
     <template id="report_package_label">
         <t t-call="web.html_container">
-            <!-- DEBUG FUERA DEL LOOP: siempre debe aparecer -->
-            <div style="background:red; color:white; padding:10px; font-size:18pt; font-family:Arial;">
-                DEBUG — docs count: <t t-esc="len(docs)"/> | data: <t t-esc="str(data)"/>
-            </div>
             <t t-foreach="docs" t-as="picking">
                 <t t-call="web.external_layout">
                     <div class="page">
@@ -22,14 +18,8 @@
                         <t t-set="partner" t-value="picking.partner_id"/>
                         <t t-set="weight"  t-value="picking.package_label_weight"/>
                         <t t-set="wuom"    t-value="picking.package_label_weight_uom"/>
-                        <t t-set="cols"    t-value="(data or {}).get('columns', 2)"/>
+                        <t t-set="cols"    t-value="int((data or {}).get('columns', 2))"/>
                         <t t-set="col_cls" t-value="'col-%d' % (12 // max(1, cols))"/>
-
-                        <!-- DEBUG DENTRO DEL LOOP -->
-                        <div style="background:#ffe066; border:2px solid #c00; padding:8px; margin-bottom:10px; font-size:14pt;">
-                            Picking: <strong><t t-esc="picking.name"/></strong> |
-                            Bultos: <strong><t t-esc="total"/></strong>
-                        </div>
 
                         <div class="row">
                             <t t-foreach="range(total)" t-as="i">

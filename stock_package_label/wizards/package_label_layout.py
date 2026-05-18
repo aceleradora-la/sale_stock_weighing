@@ -1,3 +1,6 @@
+import json
+from urllib.parse import quote
+
 from odoo import api, fields, models
 
 
@@ -69,14 +72,19 @@ class PackageLabelLayout(models.TransientModel):
             )
             return report.report_action(picking)
 
-        # PDF con distribución en grilla.
-        report = self.env.ref(
-            "stock_package_label.action_report_package_label_pdf"
+        # PDF: construimos la URL directamente para asegurar que el ID
+        # del picking llegue al template. report_action() en Odoo 19
+        # no propaga los IDs correctamente cuando se invoca desde un
+        # dialog TransientModel (docs queda vacío).
+        options = quote(json.dumps({
+            "columns": max(1, self.columns),
+            "rows_per_page": max(1, self.rows_per_page),
+        }))
+        url = "/report/pdf/stock_package_label.report_package_label/{}?options={}".format(
+            picking.id, options
         )
-        return report.report_action(
-            picking,
-            data={
-                "columns": max(1, self.columns),
-                "rows_per_page": max(1, self.rows_per_page),
-            },
-        )
+        return {
+            "type": "ir.actions.act_url",
+            "url": url,
+            "target": "new",
+        }

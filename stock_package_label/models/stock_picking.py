@@ -50,6 +50,33 @@ class StockPicking(models.Model):
                 else "kg"
             )
 
+    def get_package_label_pages(self, columns=2, rows_per_page=3):
+        """Agrupa las etiquetas en páginas y filas para el reporte PDF.
+
+        Retorna lista de páginas; cada página es una lista de filas;
+        cada fila es una lista de dicts {'number': N, 'total': T}.
+
+        Ejemplo con 5 bultos, columns=2, rows_per_page=2:
+          Página 1: [[lbl1, lbl2], [lbl3, lbl4]]
+          Página 2: [[lbl5]]
+        """
+        self.ensure_one()
+        total = self.number_of_packages
+        columns = max(1, int(columns))
+        rows_per_page = max(1, int(rows_per_page))
+        labels_per_page = columns * rows_per_page
+
+        all_labels = [{"number": n, "total": total} for n in range(1, total + 1)]
+
+        pages = []
+        for page_start in range(0, len(all_labels), labels_per_page):
+            page_labels = all_labels[page_start: page_start + labels_per_page]
+            rows = []
+            for row_start in range(0, len(page_labels), columns):
+                rows.append(page_labels[row_start: row_start + columns])
+            pages.append(rows)
+        return pages
+
     def action_print_package_labels(self):
         """Abre el wizard de configuración de etiquetas de bultos."""
         self.ensure_one()

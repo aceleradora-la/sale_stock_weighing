@@ -137,8 +137,9 @@
             <!-- Dirección (evita coma inicial cuando no hay calle) -->
             <t t-set="zpl_street" t-value="partner.street or ''"/>
             <t t-set="zpl_city"   t-value="partner.city or ''"/>
-            <t t-set="direccion"
-               t-value="(zpl_street + (', ' + zpl_city if zpl_city else ''))[:38] if zpl_street else zpl_city[:38]"/>
+            <!-- Dirección: línea 1 = calle · línea 2 = CP - Ciudad, Provincia -->
+            <t t-set="zpl_line1" t-value="zpl_street[:38]"/>
+            <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:49]"/>
 
             <!-- Truncar textos para ZPL — etiqueta 10 cm × 6 cm (800 × 490 dots @ 203 DPI) -->
             <!-- cliente:   máx 25 chars — X=10, w=28 → 25×28+10=710 < 800 ✓ -->
@@ -170,41 +171,47 @@
                 <t t-esc="cliente"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- Dirección -->
-                <t t-if="direccion">
+                <!-- Dirección: calle -->
+                <t t-if="zpl_line1">
                     <t t-raw="'^FO10,178^A0N,20,20^FD'"/>
-                    <t t-esc="direccion"/>
+                    <t t-esc="zpl_line1"/>
+                    <t t-raw="'^FS\n'"/>
+                </t>
+                <!-- Dirección: CP - Ciudad, Provincia (máx 49 chars, w=16 → 49×16+10=794 < 800) -->
+                <t t-if="zpl_l2">
+                    <t t-raw="'^FO10,201^A0N,18,16^FD'"/>
+                    <t t-esc="zpl_l2"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO10,203^GB780,2,2^FS\n'"/>
+                <t t-raw="'^FO10,224^GB780,2,2^FS\n'"/>
 
                 <!-- Orden de Venta + Remito (etiquetas) -->
-                <t t-raw="'^FO10,211^A0N,18,18^FDOrden de Venta:^FS\n'"/>
-                <t t-raw="'^FO400,211^A0N,18,18^FDRemito:^FS\n'"/>
+                <t t-raw="'^FO10,232^A0N,18,18^FDOrden de Venta:^FS\n'"/>
+                <t t-raw="'^FO400,232^A0N,18,18^FDRemito:^FS\n'"/>
 
                 <!-- Orden de Venta + Remito (valores) -->
-                <t t-raw="'^FO10,233^A0N,26,22^FD'"/>
+                <t t-raw="'^FO10,254^A0N,26,22^FD'"/>
                 <t t-esc="sale_name"/>
                 <t t-raw="'^FS\n'"/>
-                <t t-raw="'^FO400,233^A0N,26,22^FD'"/>
+                <t t-raw="'^FO400,254^A0N,26,22^FD'"/>
                 <t t-esc="remito"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Fecha y Peso -->
-                <t t-raw="'^FO10,264^A0N,20,20^FDFecha: '"/>
+                <t t-raw="'^FO10,285^A0N,20,20^FDFecha: '"/>
                 <t t-esc="fecha"/>
                 <t t-raw="'^FS\n'"/>
 
                 <t t-if="peso_str">
-                    <t t-raw="'^FO400,264^A0N,20,20^FDPeso: '"/>
+                    <t t-raw="'^FO400,285^A0N,20,20^FDPeso: '"/>
                     <t t-esc="peso_str"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO10,289^GB780,2,2^FS\n'"/>
+                <t t-raw="'^FO10,310^GB780,2,2^FS\n'"/>
 
                 <!-- Código de barras Code-128 centrado dinámicamente.
                      Code-128 a módulo 1 dot: ancho = N×11 + 55 dots (start+datos+check+stop+quiet).
@@ -213,12 +220,12 @@
                 <t t-set="bc_x" t-value="max(10, (800 - bc_w) // 2)"/>
                 <t t-raw="'^FO'"/>
                 <t t-esc="bc_x"/>
-                <t t-raw="',296^BY1,3,55^BCN,,Y,N,N^FD'"/>
+                <t t-raw="',317^BY1,3,55^BCN,,Y,N,N^FD'"/>
                 <t t-esc="picking.name"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- Empresa (pie) — Y = 296+58+24 = 378 -->
-                <t t-raw="'^FO10,378^A0N,18,18^FD'"/>
+                <!-- Empresa (pie) — Y = 317+55+24 = 396 -->
+                <t t-raw="'^FO10,399^A0N,18,18^FD'"/>
                 <t t-esc="(picking.company_id.name or '')[:42]"/>
                 <t t-raw="'^FS\n'"/>
 

@@ -206,8 +206,8 @@
                 <!-- Línea separadora fina -->
                 <t t-raw="'^FO10,289^GB780,2,2^FS\n'"/>
 
-                <!-- Código de barras Code-128 — cuerpo h=58; pie ~24 dots → fin ≈ 378 -->
-                <t t-raw="'^FO40,296^BY2,3,58^BCN,,Y,N,N^FD'"/>
+                <!-- Código de barras Code-128 — módulo 1 dot, h=55; pie ~22 dots → fin ≈ 373 -->
+                <t t-raw="'^FO40,296^BY1,3,55^BCN,,Y,N,N^FD'"/>
                 <t t-esc="picking.name"/>
                 <t t-raw="'^FS\n'"/>
 

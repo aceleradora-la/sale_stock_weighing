@@ -215,14 +215,8 @@
                 <!-- Línea separadora fina -->
                 <t t-raw="'^FO10,310^GB780,2,2^FS\n'"/>
 
-                <!-- Código de barras Code-128 centrado dinámicamente.
-                     Usa barcode_ref (l10n_ar_delivery_guide_number si existe, sino picking.name).
-                     Code-128 a módulo 1 dot: ancho = N×11 + 55 dots → X = (800-ancho)//2 -->
-                <t t-set="bc_w" t-value="len(barcode_ref) * 11 + 55"/>
-                <t t-set="bc_x" t-value="max(10, (800 - bc_w) // 2)"/>
-                <t t-raw="'^FO'"/>
-                <t t-esc="bc_x"/>
-                <t t-raw="',317^BY1,3,55^BCN,,Y,N,N^FD'"/>
+                <!-- Código de barras Code-128 alineado a la izquierda -->
+                <t t-raw="'^FO10,317^BY1,3,55^BCN,,Y,N,N^FD'"/>
                 <t t-esc="barcode_ref"/>
                 <t t-raw="'^FS\n'"/>
 

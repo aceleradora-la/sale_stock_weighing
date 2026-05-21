@@ -143,8 +143,10 @@
 
             <!-- Truncar textos para ZPL -->
             <t t-set="cliente"   t-value="(partner.name or '')[:36]"/>
-            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:20]"/>
-            <t t-set="remito"    t-value="(picking.name or '')[:20]"/>
+            <!-- sale_name: máx 10 chars — desde X=30, fuente 38 → 10×38+30=410 < 430 (Remito label) -->
+            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:10]"/>
+            <!-- remito: máx 14 chars — desde X=430, fuente w=26 → 14×26+430=794 < 812 -->
+            <t t-set="remito"    t-value="(picking.name or '')[:14]"/>
             <t t-set="peso_str"  t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
 
             <t t-foreach="range(1, total + 1)" t-as="n">
@@ -186,9 +188,9 @@
                 <t t-esc="sale_name"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- Remito -->
+                <!-- Remito: fuente h=30,w=26 → 14×26+430=794 < 812 ✓ -->
                 <t t-raw="'^FO430,435^A0N,24,24^FDRemito:^FS\n'"/>
-                <t t-raw="'^FO430,465^A0N,38,38^FD'"/>
+                <t t-raw="'^FO430,465^A0N,30,26^FD'"/>
                 <t t-esc="remito"/>
                 <t t-raw="'^FS\n'"/>
 

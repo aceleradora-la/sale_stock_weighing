@@ -128,7 +128,6 @@
             <t t-set="partner"  t-value="picking.partner_id"/>
             <t t-set="weight"   t-value="picking.package_label_weight"/>
             <t t-set="wuom"     t-value="picking.package_label_weight_uom"/>
-            <t t-set="packages" t-value="picking.move_line_ids.result_package_id"/>
 
             <!-- Fecha -->
             <t t-set="ref_date"
@@ -139,82 +138,81 @@
             <t t-set="zpl_street" t-value="partner.street or ''"/>
             <t t-set="zpl_city"   t-value="partner.city or ''"/>
             <t t-set="direccion"
-               t-value="(zpl_street + (', ' + zpl_city if zpl_city else ''))[:42] if zpl_street else zpl_city[:42]"/>
+               t-value="(zpl_street + (', ' + zpl_city if zpl_city else ''))[:38] if zpl_street else zpl_city[:38]"/>
 
-            <!-- Truncar textos para ZPL -->
-            <t t-set="cliente"   t-value="(partner.name or '')[:36]"/>
-            <!-- sale_name: máx 10 chars — desde X=30, fuente 38 → 10×38+30=410 < 430 (Remito label) -->
-            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:10]"/>
-            <!-- remito: máx 14 chars — desde X=430, fuente w=26 → 14×26+430=794 < 812 -->
+            <!-- Truncar textos para ZPL — etiqueta 10 cm × 6 cm (800 × 490 dots @ 203 DPI) -->
+            <!-- cliente:   máx 25 chars — X=10, w=28 → 25×28+10=710 < 800 ✓ -->
+            <t t-set="cliente"   t-value="(partner.name or '')[:25]"/>
+            <!-- sale_name: máx 17 chars — X=10, w=22 → 17×22+10=384 < 400 ✓ -->
+            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:17]"/>
+            <!-- remito:    máx 14 chars — X=400, w=22 → 14×22+400=708 < 800 ✓ -->
             <t t-set="remito"    t-value="(picking.name or '')[:14]"/>
             <t t-set="peso_str"  t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
 
             <t t-foreach="range(1, total + 1)" t-as="n">
-                <t t-set="package" t-value="packages[n - 1] if packages and n &lt;= len(packages) else False"/>
+                <!-- ── Inicio etiqueta: 10 cm × 6 cm, 203 DPI (800 × 490 dots) ── -->
+                <t t-raw="'^XA\n^PW800\n^LL490\n^CI28\n^LH0,0\n'"/>
 
-                <!-- ── Inicio etiqueta: 4"×6" portrait, 203 DPI ── -->
-                <t t-raw="'^XA\n^PW812\n^LL1218\n^CI28\n^LH0,0\n'"/>
+                <!-- "BULTO" pequeño arriba-izquierda -->
+                <t t-raw="'^FO10,5^A0N,28,28^FDBULTO^FS\n'"/>
 
-                <!-- "BULTO" en pequeño -->
-                <t t-raw="'^FO30,15^A0N,55,55^FDBULTO^FS\n'"/>
-
-                <!-- Número "X/N" grande -->
-                <t t-raw="'^FO30,80^A0N,160,130^FD'"/>
+                <!-- Número "X/N" grande arriba-derecha — "12/20": 5×72+300=660 < 800 ✓ -->
+                <t t-raw="'^FO300,5^A0N,95,72^FD'"/>
                 <t t-esc="'%d/%d' % (n, total)"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Línea separadora gruesa -->
-                <t t-raw="'^FO30,265^GB752,5,5^FS\n'"/>
+                <t t-raw="'^FO10,108^GB780,3,3^FS\n'"/>
 
                 <!-- Cliente -->
-                <t t-raw="'^FO30,285^A0N,26,26^FDCliente:^FS\n'"/>
-                <t t-raw="'^FO30,318^A0N,44,44^FD'"/>
+                <t t-raw="'^FO10,118^A0N,20,20^FDCliente:^FS\n'"/>
+                <t t-raw="'^FO10,142^A0N,32,28^FD'"/>
                 <t t-esc="cliente"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Dirección -->
                 <t t-if="direccion">
-                    <t t-raw="'^FO30,373^A0N,28,28^FD'"/>
+                    <t t-raw="'^FO10,178^A0N,20,20^FD'"/>
                     <t t-esc="direccion"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO30,415^GB752,2,2^FS\n'"/>
+                <t t-raw="'^FO10,203^GB780,2,2^FS\n'"/>
 
-                <!-- Orden de Venta -->
-                <t t-raw="'^FO30,435^A0N,24,24^FDOrden de Venta:^FS\n'"/>
-                <t t-raw="'^FO30,465^A0N,38,38^FD'"/>
+                <!-- Orden de Venta + Remito (etiquetas) -->
+                <t t-raw="'^FO10,211^A0N,18,18^FDOrden de Venta:^FS\n'"/>
+                <t t-raw="'^FO400,211^A0N,18,18^FDRemito:^FS\n'"/>
+
+                <!-- Orden de Venta + Remito (valores) -->
+                <t t-raw="'^FO10,233^A0N,26,22^FD'"/>
                 <t t-esc="sale_name"/>
                 <t t-raw="'^FS\n'"/>
-
-                <!-- Remito: fuente h=30,w=26 → 14×26+430=794 < 812 ✓ -->
-                <t t-raw="'^FO430,435^A0N,24,24^FDRemito:^FS\n'"/>
-                <t t-raw="'^FO430,465^A0N,30,26^FD'"/>
+                <t t-raw="'^FO400,233^A0N,26,22^FD'"/>
                 <t t-esc="remito"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Fecha y Peso -->
-                <t t-raw="'^FO30,520^A0N,26,26^FDFecha: '"/>
+                <t t-raw="'^FO10,264^A0N,20,20^FDFecha: '"/>
                 <t t-esc="fecha"/>
                 <t t-raw="'^FS\n'"/>
 
                 <t t-if="peso_str">
-                    <t t-raw="'^FO430,520^A0N,26,26^FDPeso: '"/>
+                    <t t-raw="'^FO400,264^A0N,20,20^FDPeso: '"/>
                     <t t-esc="peso_str"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO30,560^GB752,2,2^FS\n'"/>
+                <t t-raw="'^FO10,289^GB780,2,2^FS\n'"/>
 
-                <!-- Código de barras Code-128 -->
-                <t t-raw="'^FO80,580^BY2,3,90^BCN,,Y,N,N^FD'"/>
+                <!-- Código de barras Code-128 — cuerpo h=58; pie ~24 dots → fin ≈ 378 -->
+                <t t-raw="'^FO40,296^BY2,3,58^BCN,,Y,N,N^FD'"/>
                 <t t-esc="picking.name"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- Empresa (pie) -->
-                <t t-raw="'^FO30,715^A0N,22,22^FD'"/>
+                <!-- Empresa (pie) — Y = 296+58+24 = 378 -->
+                <t t-raw="'^FO10,378^A0N,18,18^FD'"/>
                 <t t-esc="(picking.company_id.name or '')[:42]"/>
                 <t t-raw="'^FS\n'"/>
 

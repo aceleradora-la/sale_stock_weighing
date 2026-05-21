@@ -142,13 +142,15 @@
             <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:49]"/>
 
             <!-- Truncar textos para ZPL — etiqueta 10 cm × 6 cm (800 × 490 dots @ 203 DPI) -->
-            <!-- cliente:   máx 25 chars — X=10, w=28 → 25×28+10=710 < 800 ✓ -->
-            <t t-set="cliente"   t-value="(partner.name or '')[:25]"/>
+            <!-- cliente:   máx 30 chars — X=10, w=24 → 30×24+10=730 < 800 ✓ -->
+            <t t-set="cliente"   t-value="(partner.name or '')[:30]"/>
             <!-- sale_name: máx 17 chars — X=10, w=22 → 17×22+10=384 < 400 ✓ -->
             <t t-set="sale_name" t-value="(sale.name if sale else '-')[:17]"/>
-            <!-- remito:    máx 14 chars — X=400, w=22 → 14×22+400=708 < 800 ✓ -->
-            <t t-set="remito"    t-value="(picking.name or '')[:14]"/>
-            <t t-set="peso_str"  t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
+            <!-- barcode_ref: número de remito oficial si existe, sino picking.name -->
+            <t t-set="barcode_ref" t-value="getattr(picking, 'l10n_ar_delivery_guide_number', False) or picking.name or ''"/>
+            <!-- remito: máx 16 chars — X=400, w=22 → 16×22+400=752 < 800 ✓ -->
+            <t t-set="remito"      t-value="barcode_ref[:16]"/>
+            <t t-set="peso_str"    t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
 
             <t t-foreach="range(1, total + 1)" t-as="n">
                 <!-- ── Inicio etiqueta: 10 cm × 6 cm, 203 DPI (800 × 490 dots) ── -->
@@ -167,7 +169,7 @@
 
                 <!-- Cliente -->
                 <t t-raw="'^FO10,118^A0N,20,20^FDCliente:^FS\n'"/>
-                <t t-raw="'^FO10,142^A0N,32,28^FD'"/>
+                <t t-raw="'^FO10,142^A0N,26,24^FD'"/>
                 <t t-esc="cliente"/>
                 <t t-raw="'^FS\n'"/>
 
@@ -214,14 +216,14 @@
                 <t t-raw="'^FO10,310^GB780,2,2^FS\n'"/>
 
                 <!-- Código de barras Code-128 centrado dinámicamente.
-                     Code-128 a módulo 1 dot: ancho = N×11 + 55 dots (start+datos+check+stop+quiet).
-                     X = max(10, (800 - ancho) // 2) -->
-                <t t-set="bc_w" t-value="len(picking.name) * 11 + 55"/>
+                     Usa barcode_ref (l10n_ar_delivery_guide_number si existe, sino picking.name).
+                     Code-128 a módulo 1 dot: ancho = N×11 + 55 dots → X = (800-ancho)//2 -->
+                <t t-set="bc_w" t-value="len(barcode_ref) * 11 + 55"/>
                 <t t-set="bc_x" t-value="max(10, (800 - bc_w) // 2)"/>
                 <t t-raw="'^FO'"/>
                 <t t-esc="bc_x"/>
                 <t t-raw="',317^BY1,3,55^BCN,,Y,N,N^FD'"/>
-                <t t-esc="picking.name"/>
+                <t t-esc="barcode_ref"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Empresa (pie) — Y = 317+55+24 = 396 -->

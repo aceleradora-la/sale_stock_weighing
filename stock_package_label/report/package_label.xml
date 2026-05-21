@@ -206,8 +206,14 @@
                 <!-- Línea separadora fina -->
                 <t t-raw="'^FO10,289^GB780,2,2^FS\n'"/>
 
-                <!-- Código de barras Code-128 — módulo 1 dot, h=55; centrado: (800-500)/2=150 -->
-                <t t-raw="'^FO150,296^BY1,3,55^BCN,,Y,N,N^FD'"/>
+                <!-- Código de barras Code-128 centrado dinámicamente.
+                     Code-128 a módulo 1 dot: ancho = N×11 + 55 dots (start+datos+check+stop+quiet).
+                     X = max(10, (800 - ancho) // 2) -->
+                <t t-set="bc_w" t-value="len(picking.name) * 11 + 55"/>
+                <t t-set="bc_x" t-value="max(10, (800 - bc_w) // 2)"/>
+                <t t-raw="'^FO'"/>
+                <t t-esc="bc_x"/>
+                <t t-raw="',296^BY1,3,55^BCN,,Y,N,N^FD'"/>
                 <t t-esc="picking.name"/>
                 <t t-raw="'^FS\n'"/>
 

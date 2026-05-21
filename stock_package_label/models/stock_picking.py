@@ -21,6 +21,21 @@ class StockPicking(models.Model):
         string="UdM Peso Etiqueta",
         compute="_compute_package_label_weight",
     )
+    package_label_barcode_ref = fields.Char(
+        string="Referencia Código de Barras",
+        compute="_compute_package_label_barcode_ref",
+        help="Número usado en el código de barras de la etiqueta de bulto. "
+             "Usa l10n_ar_delivery_guide_number si está disponible, si no picking.name.",
+    )
+
+    def _compute_package_label_barcode_ref(self):
+        has_guide = "l10n_ar_delivery_guide_number" in self._fields
+        for picking in self:
+            picking.package_label_barcode_ref = (
+                picking.l10n_ar_delivery_guide_number
+                if has_guide and picking.l10n_ar_delivery_guide_number
+                else picking.name
+            )
 
     @api.depends(
         "move_line_ids.recorded_weight",

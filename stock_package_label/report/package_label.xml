@@ -147,7 +147,7 @@
             <!-- sale_name: máx 17 chars — X=10, w=22 → 17×22+10=384 < 400 ✓ -->
             <t t-set="sale_name" t-value="(sale.name if sale else '-')[:17]"/>
             <!-- barcode_ref: número de remito oficial si existe, sino picking.name -->
-            <t t-set="barcode_ref" t-value="getattr(picking, 'l10n_ar_delivery_guide_number', False) or picking.name or ''"/>
+            <t t-set="barcode_ref" t-value="picking.package_label_barcode_ref or ''"/>
             <!-- remito: máx 16 chars — X=400, w=22 → 16×22+400=752 < 800 ✓ -->
             <t t-set="remito"      t-value="barcode_ref[:16]"/>
             <t t-set="peso_str"    t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>

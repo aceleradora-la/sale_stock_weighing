@@ -13,6 +13,10 @@ class StockPicking(models.Model):
     has_weighing_operations = fields.Boolean(
         compute="_compute_has_weighing_operations",
     )
+    company_use_stock_weighing = fields.Boolean(
+        related="company_id.use_stock_weighing",
+        string="Empresa usa pesaje",
+    )
 
     @api.depends("move_ids.has_weight")
     def _compute_has_weighing_operations(self):

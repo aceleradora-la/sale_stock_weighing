@@ -8,7 +8,7 @@
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_weighing_operations" type="object"
                         class="oe_stat_button" icon="fa-balance-scale"
-                        invisible="not weighing_operations">
+                        invisible="not weighing_operations or not company_use_stock_weighing">
                     <div class="o_form_field o_stat_info">
                         <span class="o_stat_text">Pesaje</span>
                     </div>
@@ -17,6 +17,7 @@
             <xpath expr="//field[@name='picking_type_id']" position="after">
                 <field name="weighing_operations" invisible="1"/>
                 <field name="has_weighing_operations" invisible="1"/>
+                <field name="company_use_stock_weighing" invisible="1"/>
             </xpath>
         </field>
     </record>

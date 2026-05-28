@@ -5,24 +5,35 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+
+            <!-- Campo invisible para que column_invisible pueda leerlo desde la lista -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="company_use_stock_weighing" invisible="1"/>
+            </xpath>
+
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
                 <field name="price_per_weight"
                        optional="show"
+                       column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"/>
                 <field name="x_piece_count"
                        optional="show"
+                       column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"
                        string="Piezas"/>
                 <field name="total_planned_weight"
                        optional="show"
+                       column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"
                        string="Peso Estimado"/>
                 <field name="total_delivered_weight"
                        optional="show"
+                       column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"
                        string="Peso Entregado"/>
                 <field name="delivered_piece_count"
                        optional="hide"
+                       column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"
                        string="Piezas Entregadas"/>
             </xpath>

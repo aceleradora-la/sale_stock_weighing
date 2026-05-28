@@ -33,6 +33,7 @@ Features
     ],
     "data": [
         "security/ir.model.access.csv",
+        "views/res_company_views.xml",
         "views/product_views.xml",
         "views/sale_order_views.xml",
         "views/stock_picking_type_views.xml",

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Grupo que controla la visibilidad de los menús de pesaje.
+        Se asigna automáticamente a usuarios cuya empresa (o alguna de sus
+        empresas en multi-company) tenga use_stock_weighing = True.
+        La sincronización ocurre en ResCompany._sync_weighing_group().
+    -->
+    <record id="group_use_weighing" model="res.groups">
+        <field name="name">Usar Pesaje de Productos</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+    </record>
+</odoo>

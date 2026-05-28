@@ -79,17 +79,20 @@
     <menuitem id="menu_weighing_root"
               name="Pesaje"
               parent="stock.menu_stock_root"
-              sequence="50"/>
+              sequence="50"
+              groups="sale_stock_weighing.group_use_weighing"/>
 
     <menuitem id="menu_weighing_incoming"
               name="Pesaje Entrante"
               parent="menu_weighing_root"
               action="weighing_action_incoming"
-              sequence="10"/>
+              sequence="10"
+              groups="sale_stock_weighing.group_use_weighing"/>
 
     <menuitem id="menu_weighing_outgoing"
               name="Pesaje Saliente"
               parent="menu_weighing_root"
               action="weighing_action_outgoing"
-              sequence="20"/>
+              sequence="20"
+              groups="sale_stock_weighing.group_use_weighing"/>
 </odoo>

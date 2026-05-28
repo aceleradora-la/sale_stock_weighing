@@ -16,6 +16,7 @@ class StockPicking(models.Model):
     company_use_stock_weighing = fields.Boolean(
         related="company_id.use_stock_weighing",
         string="Empresa usa pesaje",
+        store=False,  # no columna en DB — computed vía ir.config_parameter
     )
 
     @api.depends("move_ids.has_weight")

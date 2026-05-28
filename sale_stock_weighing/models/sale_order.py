@@ -7,5 +7,5 @@ class SaleOrder(models.Model):
     company_use_stock_weighing = fields.Boolean(
         related="company_id.use_stock_weighing",
         string="Empresa usa pesaje",
-        # store=False (computed): solo se usa para column_invisible en la vista
+        store=False,  # no columna en DB — computed vía ir.config_parameter
     )

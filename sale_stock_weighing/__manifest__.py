@@ -29,6 +29,7 @@ Features
     "depends": [
         "sale_stock",
         "account",
+        "base_setup",
         "web_widget_remote_measure",
     ],
     "data": [

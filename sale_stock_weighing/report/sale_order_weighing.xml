@@ -11,7 +11,7 @@
 
         <!-- Add header columns before the Subtotal header -->
         <xpath expr="//th[@name='th_subtotal']" position="before">
-            <t t-if="any(l.product_id.is_weighed_product for l in doc.order_line)">
+            <t t-if="doc.company_id.use_stock_weighing and any(l.product_id.is_weighed_product for l in doc.order_line)">
                 <th class="text-end">Piezas</th>
                 <th class="text-end">Peso Est. (kg)</th>
                 <th class="text-end">Precio / kg</th>
@@ -20,7 +20,7 @@
 
         <!-- Add data cells before the Subtotal cell in each line -->
         <xpath expr="//td[@name='td_product_subtotal']" position="before">
-            <t t-if="line.product_id.is_weighed_product">
+            <t t-if="doc.company_id.use_stock_weighing and line.product_id.is_weighed_product">
                 <td class="text-end">
                     <span t-esc="line.x_piece_count or int(line.product_uom_qty)"/>
                 </td>
@@ -43,7 +43,7 @@
                 </td>
             </t>
             <t t-else="">
-                <t t-if="any(l.product_id.is_weighed_product for l in doc.order_line)">
+                <t t-if="doc.company_id.use_stock_weighing and any(l.product_id.is_weighed_product for l in doc.order_line)">
                     <td/><td/><td/>
                 </t>
             </t>

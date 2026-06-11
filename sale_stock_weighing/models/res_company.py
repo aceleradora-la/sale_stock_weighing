@@ -47,18 +47,19 @@ class ResCompany(models.Model):
             ("share", "=", False),
             ("active", "=", True),
         ])
-        to_add = []
-        to_remove = []
+        to_add = self.env["res.users"]
+        to_remove = self.env["res.users"]
         for user in all_users:
             has_weighing = any(
                 ICP.get_param(_PARAM.format(c.id), "True") == "True"
                 for c in user.company_ids
             )
             if has_weighing:
-                to_add.append(user.id)
+                to_add |= user
             else:
-                to_remove.append(user.id)
+                to_remove |= user
+        # En Odoo 19, res.groups no tiene campo 'users' — se escribe desde res.users.groups_id
         if to_add:
-            group.sudo().write({"users": [(4, uid) for uid in to_add]})
+            to_add.sudo().write({"groups_id": [(4, group.id)]})
         if to_remove:
-            group.sudo().write({"users": [(3, uid) for uid in to_remove]})
+            to_remove.sudo().write({"groups_id": [(3, group.id)]})

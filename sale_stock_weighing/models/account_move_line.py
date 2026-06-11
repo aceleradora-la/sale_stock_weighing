@@ -42,6 +42,11 @@ class AccountMoveLine(models.Model):
 class AccountMove(models.Model):
     _inherit = "account.move"
 
+    company_use_stock_weighing = fields.Boolean(
+        related="company_id.use_stock_weighing",
+        store=False,
+    )
+
     def action_recompute_weight_lines(self):
         for invoice in self:
             if invoice.state != "draft":

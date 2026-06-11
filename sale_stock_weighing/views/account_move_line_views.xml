@@ -21,7 +21,7 @@
                 <button name="action_recompute_weight_lines" type="object"
                         class="oe_stat_button" icon="fa-balance-scale"
                         string="Actualizar por Peso"
-                        invisible="state != 'draft'"/>
+                        invisible="state != 'draft' or move_type not in ('out_invoice', 'out_refund') or not company_use_stock_weighing"/>
             </xpath>
         </field>
     </record>

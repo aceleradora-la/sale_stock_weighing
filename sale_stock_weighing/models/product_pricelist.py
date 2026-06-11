@@ -5,6 +5,17 @@ from odoo.exceptions import ValidationError
 class Pricelist(models.Model):
     _inherit = "product.pricelist"
 
+    company_use_stock_weighing = fields.Boolean(
+        compute="_compute_company_use_stock_weighing",
+        store=False,
+    )
+
+    @api.depends("company_id", "company_id.use_stock_weighing")
+    def _compute_company_use_stock_weighing(self):
+        for pl in self:
+            company = pl.company_id or self.env.company
+            pl.company_use_stock_weighing = company.use_stock_weighing
+
     def _get_matched_weighing_items(self, product):
         """Devuelve los ítems de precio por peso que aplican para el producto.
 
@@ -48,6 +59,11 @@ class Pricelist(models.Model):
 
 class PricelistItem(models.Model):
     _inherit = "product.pricelist.item"
+
+    company_use_stock_weighing = fields.Boolean(
+        related="pricelist_id.company_use_stock_weighing",
+        store=False,
+    )
 
     price_per_weight = fields.Float(
         string="Precio por Unidad de Peso",

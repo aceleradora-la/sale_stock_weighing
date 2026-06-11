@@ -6,11 +6,13 @@
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
             <field name="applied_on" position="before">
-                <field name="is_weighed_price"/>
+                <field name="company_use_stock_weighing" invisible="1"/>
+                <field name="is_weighed_price"
+                       invisible="not company_use_stock_weighing"/>
                 <field name="price_per_weight"
-                       invisible="not is_weighed_price or compute_price != 'fixed'"/>
+                       invisible="not company_use_stock_weighing or not is_weighed_price or compute_price != 'fixed'"/>
                 <field name="weight_price_display"
-                       invisible="not is_weighed_price"
+                       invisible="not company_use_stock_weighing or not is_weighed_price"
                        readonly="1"/>
             </field>
         </field>
@@ -22,9 +24,12 @@
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="is_weighed_price" optional="hide"/>
-                <field name="price_per_weight" optional="hide"/>
-                <field name="weight_price_display" optional="show"/>
+                <field name="is_weighed_price" optional="hide"
+                       column_invisible="not parent.company_use_stock_weighing"/>
+                <field name="price_per_weight" optional="hide"
+                       column_invisible="not parent.company_use_stock_weighing"/>
+                <field name="weight_price_display" optional="show"
+                       column_invisible="not parent.company_use_stock_weighing"/>
             </field>
         </field>
     </record>

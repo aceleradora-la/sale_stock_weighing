@@ -67,7 +67,7 @@
     <template id="stock_report_picking_weighing"
               inherit_id="stock.report_picking">
         <!-- Sección Detalle de Pesaje al final del reporte -->
-        <xpath expr="//div[@name='signature']" position="before">
+        <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-if="o.company_use_stock_weighing and o.has_weighing_operations">
                 <div class="mt-4 page-break-inside-avoid">
                     <h5>Detalle de Pesaje</h5>

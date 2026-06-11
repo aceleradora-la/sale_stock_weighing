@@ -19,6 +19,15 @@
                 <field name="has_weighing_operations" invisible="1"/>
                 <field name="company_use_stock_weighing" invisible="1"/>
             </xpath>
+            <!-- Columnas de peso en la pestaña Operaciones -->
+            <xpath expr="//field[@name='move_ids']//list//field[@name='product_uom']" position="after">
+                <field name="planned_weight" string="Peso Estimado" optional="show"
+                       column_invisible="not parent.company_use_stock_weighing or not parent.has_weighing_operations"/>
+                <field name="recorded_weight" string="Peso Entregado" optional="show"
+                       column_invisible="not parent.company_use_stock_weighing or not parent.has_weighing_operations"/>
+                <field name="weighing_uom_name" string="UdM Pesaje" optional="hide"
+                       column_invisible="not parent.company_use_stock_weighing or not parent.has_weighing_operations"/>
+            </xpath>
         </field>
     </record>
 </odoo>

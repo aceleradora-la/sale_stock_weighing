@@ -56,4 +56,79 @@
             </t>
         </xpath>
     </template>
+
+    <!--
+        Extiende el reporte de operaciones de recolección (Picking) para
+        mostrar peso estimado y entregado por línea, y la sección "Detalle
+        de Pesaje" al final. Solo se activa si:
+          - La empresa tiene use_stock_weighing = True
+          - El picking tiene al menos un move con has_weight = True
+    -->
+    <template id="stock_report_picking_weighing"
+              inherit_id="stock.report_picking">
+        <!-- Peso estimado y entregado debajo de las unidades en cada línea -->
+        <xpath expr="//span[@t-field='move.product_uom_qty']" position="after">
+            <t t-if="o.company_use_stock_weighing and move.has_weight">
+                <br/>
+                <small class="text-muted">
+                    Est:
+                    <span t-esc="'%.3f' % move.planned_weight"/>
+                    <span class="ms-1" t-esc="move.weighing_uom_name"/>
+                    <t t-if="move.recorded_weight">
+                        &nbsp;·&nbsp;Entregado:
+                        <span t-esc="'%.3f' % move.recorded_weight"/>
+                        <span class="ms-1" t-esc="move.weighing_uom_name"/>
+                    </t>
+                </small>
+            </t>
+        </xpath>
+        <!-- Sección Detalle de Pesaje al final del reporte -->
+        <xpath expr="//div[@name='signature']" position="before">
+            <t t-if="o.company_use_stock_weighing and o.has_weighing_operations">
+                <div class="mt-4 page-break-inside-avoid">
+                    <h5>Detalle de Pesaje</h5>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-end">Peso Estimado</th>
+                                <th class="text-end">Peso Entregado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="o.move_ids.filtered(lambda m: m.has_weight)" t-as="m">
+                                <tr>
+                                    <td><span t-esc="m.product_id.display_name"/></td>
+                                    <td class="text-end">
+                                        <span t-esc="'%.3f' % m.planned_weight"/>
+                                        <span class="ms-1" t-esc="m.weighing_uom_name"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-if="m.recorded_weight">
+                                            <span t-esc="'%.3f' % m.recorded_weight"/>
+                                            <span class="ms-1" t-esc="m.weighing_uom_name"/>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="2" class="text-end">Peso total entregado:</td>
+                                <td class="text-end">
+                                    <t t-set="total_entregado" t-value="sum(o.move_ids.filtered(lambda m: m.has_weight and m.recorded_weight).mapped('recorded_weight'))"/>
+                                    <t t-if="total_entregado">
+                                        <span t-esc="'%.3f' % total_entregado"/>
+                                        <span class="ms-1">kg</span>
+                                    </t>
+                                    <t t-else="">—</t>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </t>
+        </xpath>
+    </template>
 </odoo>

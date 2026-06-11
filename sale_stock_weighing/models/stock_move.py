@@ -48,11 +48,32 @@ class StockMove(models.Model):
     weighing_uom_name = fields.Char(
         compute="_compute_weighing_uom_name",
     )
+    planned_weight = fields.Float(
+        string="Peso Estimado",
+        compute="_compute_planned_weight",
+        digits="Product Unit of Measure",
+    )
 
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
         for move in self:
             move.weighing_uom_name = move.product_id.weighing_uom_id.name or "kg"
+
+    @api.depends("product_id.weight", "product_uom_qty", "product_id.weighing_uom_id", "has_weight")
+    def _compute_planned_weight(self):
+        kg_uom = self.env.ref("uom.product_uom_kgm")
+        for move in self:
+            if not move.has_weight:
+                move.planned_weight = 0.0
+                continue
+            weight = move.product_id.weight or 0.0
+            weighing_uom = move.product_id.weighing_uom_id
+            if weighing_uom and weighing_uom != kg_uom:
+                try:
+                    weight = kg_uom._compute_quantity(weight, weighing_uom)
+                except Exception:
+                    pass
+            move.planned_weight = move.product_uom_qty * weight
 
     @api.depends("move_line_ids.recorded_weight", "move_line_ids.has_recorded_weight")
     def _compute_recorded_weight(self):

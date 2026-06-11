@@ -31,6 +31,7 @@ Features
         "account",
         "base_setup",
         "web_widget_remote_measure",
+        "l10n_ar_stock_ux",
     ],
     "post_init_hook": "post_init_hook",
     "data": [

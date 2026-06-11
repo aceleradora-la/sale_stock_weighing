@@ -43,30 +43,30 @@ class SaleOrderLine(models.Model):
     @api.depends(
         "product_id.weighing_uom_id",
         "product_id.weight",
-        "product_id.uom_id",
         "product_uom_qty",
     )
     def _compute_total_planned_weight(self):
+        # product.weight en Odoo siempre está expresado en kg, sin importar la
+        # UdM de venta del producto. La conversión correcta es de kg → weighing_uom,
+        # no de product.uom_id → weighing_uom (que son categorías incompatibles).
+        kg_uom = self.env.ref("uom.product_uom_kgm")
         for line in self:
             line.total_planned_weight = 0.0
             product = line.product_id
             if not product.weighing_uom_id:
                 continue
             standard_weight = product.weight or 0.0
-            uom = product.uom_id
             weighing_uom = product.weighing_uom_id
-            if uom and uom != weighing_uom:
+            if weighing_uom and weighing_uom != kg_uom:
                 try:
-                    # _compute_quantity raises UserError if UoMs are incompatible
-                    standard_weight = uom._compute_quantity(
+                    standard_weight = kg_uom._compute_quantity(
                         product.weight, weighing_uom
                     )
                 except Exception:
                     _logger.debug(
-                        "Product %s: UoM %s y UdM de pesaje %s son incompatibles; "
-                        "se usa product.weight sin conversión.",
+                        "Product %s: no se pudo convertir product.weight de kg a %s; "
+                        "se usa el valor en kg sin conversión.",
                         product.display_name,
-                        uom.name,
                         weighing_uom.name,
                     )
             line.total_planned_weight = line.product_uom_qty * standard_weight

@@ -66,22 +66,6 @@
     -->
     <template id="stock_report_picking_weighing"
               inherit_id="stock.report_picking">
-        <!-- Peso estimado y entregado debajo de las unidades en cada línea -->
-        <xpath expr="//span[@t-field='move.product_uom_qty']" position="after">
-            <t t-if="o.company_use_stock_weighing and move.has_weight">
-                <br/>
-                <small class="text-muted">
-                    Est:
-                    <span t-esc="'%.3f' % move.planned_weight"/>
-                    <span class="ms-1" t-esc="move.weighing_uom_name"/>
-                    <t t-if="move.recorded_weight">
-                        &#160;·&#160;Entregado:
-                        <span t-esc="'%.3f' % move.recorded_weight"/>
-                        <span class="ms-1" t-esc="move.weighing_uom_name"/>
-                    </t>
-                </small>
-            </t>
-        </xpath>
         <!-- Sección Detalle de Pesaje al final del reporte -->
         <xpath expr="//div[@name='signature']" position="before">
             <t t-if="o.company_use_stock_weighing and o.has_weighing_operations">

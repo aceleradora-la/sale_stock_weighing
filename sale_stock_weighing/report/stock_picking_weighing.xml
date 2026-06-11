@@ -75,7 +75,7 @@
                     <span t-esc="'%.3f' % move.planned_weight"/>
                     <span class="ms-1" t-esc="move.weighing_uom_name"/>
                     <t t-if="move.recorded_weight">
-                        &nbsp;·&nbsp;Entregado:
+                        &#160;·&#160;Entregado:
                         <span t-esc="'%.3f' % move.recorded_weight"/>
                         <span class="ms-1" t-esc="move.weighing_uom_name"/>
                     </t>

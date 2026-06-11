@@ -177,7 +177,9 @@ class SaleOrderLine(models.Model):
         pricelist = self.order_id.pricelist_id
         if not pricelist:
             return 0.0
-        result = pricelist._get_matched_weighing_items(self.product_id)
+        result = pricelist._get_matched_weighing_items(
+            self.product_id, date=self.order_id.date_order
+        )
         if result:
             return result[0].compute_price_per_weight(self.product_id, 1.0)
         return 0.0

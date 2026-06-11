@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -16,13 +18,20 @@ class Pricelist(models.Model):
             company = pl.company_id or self.env.company
             pl.company_use_stock_weighing = company.use_stock_weighing
 
-    def _get_matched_weighing_items(self, product):
+    def _get_matched_weighing_items(self, product, date=None):
         """Devuelve los ítems de precio por peso que aplican para el producto.
 
         Acepta tanto product.product como product.template — el reporte de
         lista de precios de Odoo pasa el template directamente.
+
+        Filtra por vigencia (date_start/date_end) igual que el pricelist
+        estándar, usando la fecha recibida o la actual.
         """
         self.ensure_one()
+        date = date or fields.Datetime.now()
+        if not isinstance(date, datetime):
+            # acepta date (no datetime), como hace el pricelist estándar
+            date = fields.Datetime.to_datetime(date)
         # Normalizar: obtener template y variante sin importar cuál se recibió.
         if product._name == "product.template":
             product_tmpl = product
@@ -39,6 +48,8 @@ class Pricelist(models.Model):
 
         items = self.item_ids.filtered(
             lambda i: i.is_weighed_price
+            and (not i.date_start or i.date_start <= date)
+            and (not i.date_end or i.date_end >= date)
             and (
                 (i.applied_on == "0_product_variant" and i.product_id == product_variant)
                 or (i.applied_on == "1_product" and i.product_tmpl_id == product_tmpl)
@@ -51,7 +62,7 @@ class Pricelist(models.Model):
     def _get_product_price(self, product, quantity=1.0, *args, **kwargs):
         self.ensure_one()
         if product.is_weighed_product:
-            matched = self._get_matched_weighing_items(product)
+            matched = self._get_matched_weighing_items(product, date=kwargs.get("date"))
             if matched:
                 return matched[0].compute_price_per_weight(product, quantity)
         return super()._get_product_price(product, quantity, *args, **kwargs)

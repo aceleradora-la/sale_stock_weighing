@@ -10,7 +10,7 @@
     <!-- Protege image_data_uri cuando o.signature es False (campo vacío) -->
     <template id="fix_delivery_document_signature"
               inherit_id="l10n_ar_stock_ux.report_delivery_document">
-        <xpath expr="//img[@t-att-src=\"image_data_uri(o.signature)\"]" position="attributes">
+        <xpath expr="//img[@t-att-src='image_data_uri(o.signature)']" position="attributes">
             <attribute name="t-if">o.signature</attribute>
         </xpath>
     </template>

@@ -1,4 +1,5 @@
 from odoo import fields, models
+from odoo.fields import Command
 
 _PARAM = "sale_stock_weighing.use_company_{}"
 
@@ -58,8 +59,7 @@ class ResCompany(models.Model):
                 to_add |= user
             else:
                 to_remove |= user
-        # En Odoo 19, res.groups no tiene campo 'users' — se escribe desde res.users.groups_id
         if to_add:
-            to_add.sudo().write({"groups_id": [(4, group.id)]})
+            to_add.sudo().write({"group_ids": [Command.link(group.id)]})
         if to_remove:
-            to_remove.sudo().write({"groups_id": [(3, group.id)]})
+            to_remove.sudo().write({"group_ids": [Command.unlink(group.id)]})

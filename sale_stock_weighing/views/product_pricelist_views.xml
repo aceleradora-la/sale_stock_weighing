@@ -18,38 +18,12 @@
         </field>
     </record>
 
-    <!-- Lista embebida de ítems dentro del formulario de la lista de precios
-         (pestaña "Precios de venta"): agrega las columnas de precio por peso
-         cuando la empresa usa productos pesables. -->
-    <record id="product_pricelist_form_weighing" model="ir.ui.view">
-        <field name="name">product.pricelist.form.weighing</field>
-        <field name="model">product.pricelist</field>
-        <field name="inherit_id" ref="product.product_pricelist_view"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='item_ids']" position="before">
-                <field name="company_use_stock_weighing" invisible="1"/>
-            </xpath>
-            <xpath expr="//field[@name='item_ids']/list/field[@name='price']" position="after">
-                <field name="is_weighed_price" optional="hide"
-                       column_invisible="not parent.company_use_stock_weighing"/>
-                <field name="price_per_weight" optional="hide"
-                       column_invisible="not parent.company_use_stock_weighing"/>
-                <field name="weight_price_display" optional="show"
-                       column_invisible="not parent.company_use_stock_weighing"/>
-            </xpath>
-        </field>
-    </record>
-
     <record id="product_pricelist_item_tree_weighing" model="ir.ui.view">
         <field name="name">product.pricelist.item.tree.weighing</field>
         <field name="model">product.pricelist.item</field>
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="is_weighed_price" optional="hide"
-                       column_invisible="not parent.company_use_stock_weighing"/>
-                <field name="price_per_weight" optional="hide"
-                       column_invisible="not parent.company_use_stock_weighing"/>
                 <field name="weight_price_display" optional="show"
                        column_invisible="not parent.company_use_stock_weighing"/>
             </field>

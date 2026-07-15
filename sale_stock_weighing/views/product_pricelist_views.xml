@@ -18,9 +18,8 @@
         </field>
     </record>
 
-    <!-- Expone company_use_stock_weighing (stored) en el form de pricelist
-         para que parent.company_use_stock_weighing esté disponible
-         en la lista embebida de ítems. -->
+    <!-- Agrega la columna Precio por Peso directamente en la lista embebida
+         del form de pricelist, que en Odoo 19 no usa la tree view standalone. -->
     <record id="product_pricelist_form_weighing" model="ir.ui.view">
         <field name="name">product.pricelist.form.weighing</field>
         <field name="model">product.pricelist</field>
@@ -28,6 +27,9 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='item_ids']" position="before">
                 <field name="company_use_stock_weighing" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='item_ids']//field[@name='price']" position="after">
+                <field name="weight_price_display" optional="show"/>
             </xpath>
         </field>
     </record>

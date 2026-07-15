@@ -94,6 +94,13 @@ class PricelistItem(models.Model):
         compute="_compute_weight_price_display",
         help="Precio por peso efectivo expresado en $/UdM, calculado según la regla configurada.",
     )
+    price_per_unit_from_weight = fields.Float(
+        string="Precio por Unidad (calculado)",
+        compute="_compute_price_per_unit_from_weight",
+        digits="Product Price",
+        help="Precio por unidad calculado como Precio/kg × Peso del producto. "
+             "Solo aplica para productos pesables con precio por peso fijo.",
+    )
 
     @api.depends(
         "product_id.weighing_uom_id",
@@ -106,6 +113,34 @@ class PricelistItem(models.Model):
                 or item.product_tmpl_id.weighing_uom_id.name
                 or "kg"
             )
+
+    @api.depends(
+        "is_weighed_price",
+        "compute_price",
+        "price_per_weight",
+        "product_id.weight",
+        "product_tmpl_id.weight",
+        "company_use_stock_weighing",
+        "product_id.is_weighed_product",
+        "product_tmpl_id.is_weighed_product",
+    )
+    def _compute_price_per_unit_from_weight(self):
+        for item in self:
+            is_weighed_product = (
+                item.product_id.is_weighed_product
+                or item.product_tmpl_id.is_weighed_product
+            )
+            if (
+                item.company_use_stock_weighing
+                and item.is_weighed_price
+                and item.compute_price == "fixed"
+                and is_weighed_product
+                and item.price_per_weight
+            ):
+                weight = item.product_id.weight or item.product_tmpl_id.weight or 0.0
+                item.price_per_unit_from_weight = item.price_per_weight * weight
+            else:
+                item.price_per_unit_from_weight = 0.0
 
     @api.depends(
         "is_weighed_price",

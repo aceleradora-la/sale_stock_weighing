@@ -14,6 +14,10 @@
                 <field name="weight_price_display"
                        invisible="not company_use_stock_weighing or not is_weighed_price"
                        readonly="1"/>
+                <field name="price_per_unit_from_weight"
+                       string="Precio por Unidad (peso × $/kg)"
+                       invisible="not company_use_stock_weighing or not is_weighed_price or compute_price != 'fixed' or not price_per_unit_from_weight"
+                       readonly="1"/>
             </field>
         </field>
     </record>
@@ -24,8 +28,14 @@
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
+                <!-- company_use_stock_weighing está en el item como campo related,
+                     no usar parent.* que no está disponible en la lista embebida -->
                 <field name="weight_price_display" optional="show"
-                       column_invisible="not parent.company_use_stock_weighing"/>
+                       column_invisible="not company_use_stock_weighing"/>
+                <field name="price_per_unit_from_weight"
+                       string="Precio/Unidad (calc.)"
+                       optional="show"
+                       column_invisible="not company_use_stock_weighing"/>
             </field>
         </field>
     </record>

@@ -38,8 +38,7 @@
         <field name="inherit_id" ref="product.product_pricelist_item_tree_view"/>
         <field name="arch" type="xml">
             <field name="price" position="after">
-                <field name="weight_price_display" optional="show"
-                       column_invisible="not parent.company_use_stock_weighing"/>
+                <field name="weight_price_display" optional="show"/>
             </field>
         </field>
     </record>

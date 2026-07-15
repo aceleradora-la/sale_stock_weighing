@@ -9,7 +9,7 @@ class Pricelist(models.Model):
 
     company_use_stock_weighing = fields.Boolean(
         compute="_compute_company_use_stock_weighing",
-        store=False,
+        store=True,
     )
 
     @api.depends("company_id", "company_id.use_stock_weighing")

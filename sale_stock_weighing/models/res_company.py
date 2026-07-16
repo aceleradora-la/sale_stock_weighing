@@ -24,11 +24,12 @@ class ResCompany(models.Model):
             company.use_stock_weighing = val == "True"
 
     def _inverse_use_stock_weighing(self):
-        """Escribe el flag en ir.config_parameter y sincroniza el grupo de pesaje."""
+        """Escribe el flag en ir.config_parameter y sincroniza el grupo y tipos de operación."""
         ICP = self.env["ir.config_parameter"].sudo()
         for company in self:
             ICP.set_param(_PARAM.format(company.id), str(company.use_stock_weighing))
         self._sync_weighing_group()
+        self._sync_weighing_picking_types()
 
     def _sync_weighing_group(self):
         """Sincroniza la membresía en group_use_weighing según la config por empresa.
@@ -63,3 +64,16 @@ class ResCompany(models.Model):
             to_add.sudo().write({"group_ids": [Command.link(group.id)]})
         if to_remove:
             to_remove.sudo().write({"group_ids": [Command.unlink(group.id)]})
+
+    def _sync_weighing_picking_types(self):
+        """Activa/desactiva weighing_operations en todos los tipos de operación
+        de salida (outgoing) de cada empresa según use_stock_weighing."""
+        for company in self:
+            outgoing_types = self.env["stock.picking.type"].sudo().search([
+                ("company_id", "=", company.id),
+                ("code", "=", "outgoing"),
+            ])
+            if outgoing_types:
+                outgoing_types.write({
+                    "weighing_operations": company.use_stock_weighing,
+                })

@@ -1,7 +1,7 @@
 import ast
 
 from odoo import _, api, fields, models
-from odoo.osv import expression
+from odoo.fields import Domain
 
 
 class StockPickingType(models.Model):
@@ -38,15 +38,12 @@ class StockPickingType(models.Model):
             .sudo()
             .get_param("sale_stock_weighing.any_operation_actions")
         )
-        domain = [("state", "in", ("assigned", "confirmed", "waiting"))]
+        domain = Domain("state", "in", ("assigned", "confirmed", "waiting"))
         if not any_operation_actions:
-            domain = expression.AND([domain, [("has_weight", "=", True)]])
+            domain &= Domain("has_weight", "=", True)
         for picking_type in self:
             picking_type.weight_move_ids = self.env["stock.move"].search(
-                expression.AND([
-                    [("picking_type_id", "=", picking_type.id)],
-                    domain,
-                ])
+                Domain("picking_type_id", "=", picking_type.id) & domain
             )
 
     @api.depends("weight_move_ids")

@@ -17,29 +17,33 @@
                 <t t-call="web.external_layout">
                     <div class="page" style="font-size: 10pt; font-family: Arial, sans-serif;">
 
-                        <!-- Título del lote -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end;
-                                    border-bottom: 1.5pt solid #222; padding-bottom: 5pt; margin-bottom: 10pt;">
-                            <div>
-                                <div style="font-size: 14pt; font-weight: bold; letter-spacing: -0.3pt;">
-                                    Hoja de pesaje por lote
-                                </div>
-                                <div style="font-size: 10pt; color: #444; margin-top: 1pt;">
-                                    <span t-esc="batch.name"/>
+                        <!-- Título del lote — mismo estilo que Hoja de Ruta -->
+                        <t t-set="total_weight" t-value="sum(m.planned_weight for p in batch.picking_ids for m in p.move_ids if m.has_weight)"/>
+                        <div class="row mb-1">
+                            <div class="col-12">
+                                <h2 style="margin-bottom:4px;">
+                                    Hoja de pesaje — <span t-esc="batch.name"/>
+                                </h2>
+                                <span style="font-size:12px;">
                                     <t t-if="batch.user_id">
-                                        &#160;&#160;|&#160;&#160;Operario: <strong><span t-esc="batch.user_id.name"/></strong>
+                                        <strong>Responsable:</strong>
+                                        <span t-esc="batch.user_id.name"/>
+                                        &amp;nbsp;·&amp;nbsp;
                                     </t>
                                     <t t-if="batch.scheduled_date">
-                                        &#160;&#160;|&#160;&#160;<span t-esc="batch.scheduled_date.strftime('%d/%m/%Y')"/>
+                                        <strong>Fecha:</strong>
+                                        <span t-esc="batch.scheduled_date.strftime('%d/%m/%Y')"/>
+                                        &amp;nbsp;·&amp;nbsp;
                                     </t>
-                                </div>
-                            </div>
-                            <div style="text-align: right; font-size: 9pt; color: #555;">
-                                <t t-set="total_weight" t-value="sum(m.planned_weight for p in batch.picking_ids for m in p.move_ids if m.has_weight)"/>
-                                <span t-esc="len(batch.picking_ids)"/> pedidos&#160;&#160;|&#160;&#160;Peso est. total:
-                                <strong><span t-esc="'%.2f' % total_weight"/> kg</strong>
+                                    <strong>Pedidos:</strong>
+                                    <span t-esc="len(batch.picking_ids)"/>
+                                    &amp;nbsp;·&amp;nbsp;
+                                    <strong>Peso est. total:</strong>
+                                    <span t-esc="'%.2f' % total_weight"/> kg
+                                </span>
                             </div>
                         </div>
+                        <div style="border-bottom: 1pt solid #ccc; margin-bottom: 10pt; margin-top: 4pt;"/>
 
                         <!-- Un bloque por pedido -->
                         <t t-foreach="batch.picking_ids.sorted(key=lambda p: p.name)" t-as="picking">

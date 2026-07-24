@@ -16,8 +16,8 @@
     </template>
 
     <template id="stock_picking_weighing_section"
-              inherit_id="stock.report_delivery_document">
-        <xpath expr="//div[@name='signature']" position="before">
+              inherit_id="l10n_ar_stock_ux.report_delivery_document">
+        <table name="stock_move_line_table" position="after">
             <t t-if="any(ml.has_recorded_weight for ml in o.move_line_ids)">
                 <div class="mt-4 page-break-inside-avoid">
                     <h5>Detalle de Pesaje</h5>
@@ -62,7 +62,7 @@
                     </table>
                 </div>
             </t>
-        </xpath>
+        </table>
     </template>
 
     <!--

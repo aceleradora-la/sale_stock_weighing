@@ -5,8 +5,12 @@
         <field name="model">product.pricelist.item</field>
         <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
         <field name="arch" type="xml">
+            <!-- Campo invisible necesario para condicionar visibilidad -->
             <field name="applied_on" position="before">
                 <field name="company_use_stock_weighing" invisible="1"/>
+            </field>
+            <!-- Campos de pesaje debajo de Precio fijo, antes del grupo de fechas -->
+            <xpath expr="//group[@name='pricelist_rule_limits']" position="before">
                 <field name="is_weighed_price"
                        invisible="not company_use_stock_weighing"/>
                 <field name="price_per_weight"
@@ -14,7 +18,7 @@
                 <field name="weight_price_display"
                        invisible="not company_use_stock_weighing or not is_weighed_price"
                        readonly="1"/>
-            </field>
+            </xpath>
         </field>
     </record>
 

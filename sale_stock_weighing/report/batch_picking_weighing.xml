@@ -14,129 +14,154 @@
     <template id="report_batch_picking_weighing">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="batch">
-                <t t-call="web.internal_layout">
-                    <div class="page" style="font-size: 10.5pt; font-family: Arial, sans-serif;">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size: 10pt; font-family: Arial, sans-serif;">
 
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;
-                                    border-bottom: 1.5pt solid #333; padding-bottom: 4pt; margin-bottom: 10pt;">
+                        <!-- Título del lote -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;
+                                    border-bottom: 1.5pt solid #222; padding-bottom: 5pt; margin-bottom: 10pt;">
                             <div>
-                                <div style="font-size: 13pt; font-weight: bold;">
-                                    Hoja de pesaje — <span t-esc="batch.name"/>
+                                <div style="font-size: 14pt; font-weight: bold; letter-spacing: -0.3pt;">
+                                    Hoja de pesaje por lote
                                 </div>
-                                <div style="font-size: 9pt; color: #555; margin-top: 2pt;">
-                                    <span t-esc="batch.company_id.name"/>
+                                <div style="font-size: 10pt; color: #444; margin-top: 1pt;">
+                                    <span t-esc="batch.name"/>
                                     <t t-if="batch.user_id">
-                                        &#160;·&#160; Operario: <span t-esc="batch.user_id.name"/>
+                                        &#160;&#160;|&#160;&#160;Operario: <strong><span t-esc="batch.user_id.name"/></strong>
                                     </t>
-                                    &#160;·&#160; <span t-esc="batch.scheduled_date and batch.scheduled_date.strftime('%d/%m/%Y') or ''"/>
+                                    <t t-if="batch.scheduled_date">
+                                        &#160;&#160;|&#160;&#160;<span t-esc="batch.scheduled_date.strftime('%d/%m/%Y')"/>
+                                    </t>
                                 </div>
                             </div>
                             <div style="text-align: right; font-size: 9pt; color: #555;">
-                                <div><span t-esc="len(batch.picking_ids)"/> pedidos</div>
-                                <div>
-                                    <t t-set="total_weight" t-value="sum(m.planned_weight for p in batch.picking_ids for m in p.move_ids if m.has_weight)"/>
-                                    Peso est. total: <strong><span t-esc="'%.3f' % total_weight"/> kg</strong>
-                                </div>
+                                <t t-set="total_weight" t-value="sum(m.planned_weight for p in batch.picking_ids for m in p.move_ids if m.has_weight)"/>
+                                <span t-esc="len(batch.picking_ids)"/> pedidos&#160;&#160;|&#160;&#160;Peso est. total:
+                                <strong><span t-esc="'%.2f' % total_weight"/> kg</strong>
                             </div>
                         </div>
 
+                        <!-- Un bloque por pedido -->
                         <t t-foreach="batch.picking_ids.sorted(key=lambda p: p.name)" t-as="picking">
                             <t t-set="weighable_moves" t-value="picking.move_ids.filtered(lambda m: m.state not in ('cancel', 'done'))"/>
                             <t t-if="weighable_moves">
-                                <div style="border: 0.5pt solid #bbb; border-radius: 4pt;
-                                            margin-bottom: 7pt; overflow: hidden; page-break-inside: avoid;">
+                                <div style="border: 0.75pt solid #bbb; margin-bottom: 8pt; page-break-inside: avoid;">
 
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;
-                                                background: #f2f2f2; padding: 3pt 6pt;
-                                                border-bottom: 0.5pt solid #ccc;">
-                                        <div style="display: flex; align-items: baseline; gap: 8pt;">
-                                            <span style="font-weight: bold; font-size: 10pt;">
-                                                <t t-esc="picking.sale_id.name or picking.name"/>
-                                            </span>
-                                            <span style="font-weight: bold; font-size: 9pt; color: #333;">
+                                    <!-- Header del pedido: cliente a la izquierda, orden+peso a la derecha -->
+                                    <div style="background: #f0f0f0; border-bottom: 0.75pt solid #bbb;
+                                                padding: 4pt 7pt; display: flex; justify-content: space-between;">
+                                        <div style="width: 65%;">
+                                            <div style="font-size: 8pt; color: #666; text-transform: uppercase;
+                                                        letter-spacing: 0.3pt;">Cliente</div>
+                                            <div style="font-weight: bold; font-size: 10pt; margin-top: 1pt;">
                                                 <t t-esc="picking.partner_id.name or ''"/>
-                                            </span>
-                                        </div>
-                                        <div style="text-align: right; font-size: 8.5pt; color: #555;">
-                                            <t t-if="picking.partner_id.street">
-                                                <span t-esc="picking.partner_id.street"/>
+                                            </div>
+                                            <div style="font-size: 8.5pt; color: #444; margin-top: 1pt;">
+                                                <t t-if="picking.partner_id.street">
+                                                    <span t-esc="picking.partner_id.street"/>
+                                                </t>
                                                 <t t-if="picking.partner_id.city">
                                                     , <span t-esc="picking.partner_id.city"/>
                                                 </t>
-                                            </t>
+                                                <t t-if="picking.partner_id.state_id">
+                                                    , <span t-esc="picking.partner_id.state_id.name"/>
+                                                </t>
+                                            </div>
+                                        </div>
+                                        <div style="width: 35%; display: flex; gap: 16pt; justify-content: flex-end; align-items: flex-start;">
+                                            <div style="text-align: center;">
+                                                <div style="font-size: 8pt; color: #666; text-transform: uppercase;
+                                                            letter-spacing: 0.3pt;">Orden</div>
+                                                <div style="font-weight: bold; font-size: 10pt; margin-top: 1pt;">
+                                                    <t t-esc="picking.sale_id.name or picking.name"/>
+                                                </div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <t t-set="picking_weight" t-value="sum(m.planned_weight for m in weighable_moves if m.has_weight)"/>
+                                                <div style="font-size: 8pt; color: #666; text-transform: uppercase;
+                                                            letter-spacing: 0.3pt;">Peso est.</div>
+                                                <div style="font-weight: bold; font-size: 10pt; margin-top: 1pt;">
+                                                    <span t-esc="'%.2f' % picking_weight"/> kg
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
+                                    <!-- Tabla de productos -->
                                     <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
                                         <thead>
-                                            <tr style="background: #fafafa; border-bottom: 0.5pt solid #ddd;">
-                                                <th style="padding: 2pt 5pt; text-align: left; font-weight: 600;
-                                                           color: #444; width: 44%;">Producto</th>
-                                                <th style="padding: 2pt 5pt; text-align: right; font-weight: 600;
-                                                           color: #444; width: 14%;">Cantidad</th>
-                                                <th style="padding: 2pt 5pt; text-align: right; font-weight: 600;
-                                                           color: #444; width: 14%;">Peso est.</th>
-                                                <th style="padding: 2pt 5pt; text-align: center; font-weight: 600;
-                                                           color: #444; width: 14%;">Lote</th>
-                                                <th style="padding: 2pt 5pt; text-align: right; font-weight: 600;
-                                                           color: #444; width: 14%;">Peso real</th>
+                                            <tr style="background: #fafafa;">
+                                                <th style="padding: 3pt 6pt; text-align: left; font-weight: bold;
+                                                           border-bottom: 0.75pt solid #bbb; border-right: 0.5pt solid #ddd;
+                                                           width: 42%;">Producto</th>
+                                                <th style="padding: 3pt 6pt; text-align: right; font-weight: bold;
+                                                           border-bottom: 0.75pt solid #bbb; border-right: 0.5pt solid #ddd;
+                                                           width: 13%;">Cantidad</th>
+                                                <th style="padding: 3pt 6pt; text-align: right; font-weight: bold;
+                                                           border-bottom: 0.75pt solid #bbb; border-right: 0.5pt solid #ddd;
+                                                           width: 13%;">Peso est.</th>
+                                                <th style="padding: 3pt 6pt; text-align: center; font-weight: bold;
+                                                           border-bottom: 0.75pt solid #bbb; border-right: 0.5pt solid #ddd;
+                                                           width: 16%;">Lote / N&#176; Serie</th>
+                                                <th style="padding: 3pt 6pt; text-align: right; font-weight: bold;
+                                                           border-bottom: 0.75pt solid #bbb;
+                                                           width: 16%;">Peso real</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <t t-foreach="weighable_moves" t-as="move">
-                                                <tr style="border-bottom: 0.3pt solid #eee;">
-                                                    <td style="padding: 2pt 5pt;">
+                                                <tr>
+                                                    <td style="padding: 3pt 6pt; border-bottom: 0.5pt solid #ddd;
+                                                               border-right: 0.5pt solid #ddd;">
                                                         <span t-esc="move.product_id.display_name"/>
                                                     </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right;">
+                                                    <td style="padding: 3pt 6pt; text-align: right;
+                                                               border-bottom: 0.5pt solid #ddd; border-right: 0.5pt solid #ddd;">
                                                         <span t-esc="'%.0f' % move.product_uom_qty"/>
-                                                        <span style="color: #777; margin-left: 2pt;"
-                                                              t-esc="move.product_uom.name"/>
+                                                        <span style="color: #666; margin-left: 2pt;" t-esc="move.product_uom.name"/>
                                                     </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right;">
+                                                    <td style="padding: 3pt 6pt; text-align: right;
+                                                               border-bottom: 0.5pt solid #ddd; border-right: 0.5pt solid #ddd;">
                                                         <t t-if="move.has_weight">
                                                             <span t-esc="'%.3f' % move.planned_weight"/>
-                                                            <span style="color: #777; margin-left: 2pt;"
-                                                                  t-esc="move.weighing_uom_name"/>
+                                                            <span style="color: #666; margin-left: 2pt;" t-esc="move.weighing_uom_name"/>
                                                         </t>
-                                                        <t t-else="">—</t>
+                                                        <t t-else="">&#8212;</t>
                                                     </td>
-                                                    <td style="padding: 2pt 5pt; text-align: center;
-                                                               color: #777; font-size: 8.5pt;">
+                                                    <td style="padding: 3pt 6pt; text-align: center; color: #555;
+                                                               border-bottom: 0.5pt solid #ddd; border-right: 0.5pt solid #ddd;">
                                                         <t t-esc="move.lot_names or ''"/>
                                                     </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right;">
+                                                    <td style="padding: 3pt 6pt; text-align: right;
+                                                               border-bottom: 0.5pt solid #ddd;">
                                                         <t t-if="move.has_weight">
-                                                            <span style="display: inline-block; width: 48pt;
-                                                                         border-bottom: 0.8pt solid #888;"/>
+                                                            <span style="display: inline-block; width: 52pt;
+                                                                         border-bottom: 1pt solid #555; margin-bottom: 1pt;"/>
                                                         </t>
-                                                        <t t-else="">—</t>
+                                                        <t t-else="">&#8212;</t>
                                                     </td>
                                                 </tr>
                                             </t>
                                         </tbody>
-                                        <t t-set="picking_weight" t-value="sum(m.planned_weight for m in weighable_moves if m.has_weight)"/>
-                                        <t t-if="picking_weight > 0">
-                                            <tfoot>
-                                                <tr style="background: #f8f8f8; border-top: 0.5pt solid #ccc;">
-                                                    <td colspan="2" style="padding: 2pt 5pt; text-align: right;
-                                                                           color: #555; font-size: 8.5pt;">
-                                                        Peso estimado pedido:
-                                                    </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right; font-weight: bold;">
-                                                        <span t-esc="'%.3f' % picking_weight"/> kg
-                                                    </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right;
-                                                               color: #555; font-size: 8.5pt;">
-                                                        Peso real total:
-                                                    </td>
-                                                    <td style="padding: 2pt 5pt; text-align: right;">
-                                                        <span style="display: inline-block; width: 48pt;
-                                                                     border-bottom: 0.8pt solid #888;"/>
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </t>
+                                        <tfoot>
+                                            <tr style="background: #f5f5f5;">
+                                                <td colspan="3" style="padding: 3pt 6pt; text-align: right;
+                                                                        border-top: 0.75pt solid #bbb;
+                                                                        border-right: 0.5pt solid #ddd;
+                                                                        font-size: 8.5pt; color: #555;">
+                                                    Peso total estimado:
+                                                    <strong><span t-esc="'%.3f' % picking_weight"/> kg</strong>
+                                                </td>
+                                                <td style="padding: 3pt 6pt; text-align: right; font-size: 8.5pt; color: #555;
+                                                           border-top: 0.75pt solid #bbb; border-right: 0.5pt solid #ddd;">
+                                                    Peso real total:
+                                                </td>
+                                                <td style="padding: 3pt 6pt; border-top: 0.75pt solid #bbb;">
+                                                    <span style="display: inline-block; width: 52pt;
+                                                                 border-bottom: 1pt solid #555; margin-bottom: 1pt;"/>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </t>

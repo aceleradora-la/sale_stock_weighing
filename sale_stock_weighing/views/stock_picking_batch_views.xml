@@ -1,17 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_picking_batch_form_weighing" model="ir.ui.view">
-        <field name="name">stock.picking.batch.form.weighing</field>
-        <field name="model">stock.picking.batch</field>
-        <field name="inherit_id" ref="stock_picking_batch.stock_picking_batch_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//div[@name='button_box']" position="inside">
-                <button name="%(sale_stock_weighing.action_report_batch_picking_weighing)d"
-                        type="action"
-                        class="oe_stat_button"
-                        icon="fa-balance-scale"
-                        string="Hoja de Pesaje"/>
-            </xpath>
-        </field>
-    </record>
 </odoo>

@@ -26,9 +26,9 @@
                                 <div style="font-size: 9pt; color: #555; margin-top: 2pt;">
                                     <span t-esc="batch.company_id.name"/>
                                     <t t-if="batch.user_id">
-                                        &nbsp;·&nbsp; Operario: <span t-esc="batch.user_id.name"/>
+                                        &#160;·&#160; Operario: <span t-esc="batch.user_id.name"/>
                                     </t>
-                                    &nbsp;·&nbsp; <span t-esc="batch.scheduled_date and batch.scheduled_date.strftime('%d/%m/%Y') or ''"/>
+                                    &#160;·&#160; <span t-esc="batch.scheduled_date and batch.scheduled_date.strftime('%d/%m/%Y') or ''"/>
                                 </div>
                             </div>
                             <div style="text-align: right; font-size: 9pt; color: #555;">

@@ -28,16 +28,16 @@
                                     <t t-if="batch.user_id">
                                         <strong>Responsable:</strong>
                                         <span t-esc="batch.user_id.name"/>
-                                        &amp;nbsp;·&amp;nbsp;
+                                        &#160;·&#160;
                                     </t>
                                     <t t-if="batch.scheduled_date">
                                         <strong>Fecha:</strong>
                                         <span t-esc="batch.scheduled_date.strftime('%d/%m/%Y')"/>
-                                        &amp;nbsp;·&amp;nbsp;
+                                        &#160;·&#160;
                                     </t>
                                     <strong>Pedidos:</strong>
                                     <span t-esc="len(batch.picking_ids)"/>
-                                    &amp;nbsp;·&amp;nbsp;
+                                    &#160;·&#160;
                                     <strong>Peso est. total:</strong>
                                     <span t-esc="'%.2f' % total_weight"/> kg
                                 </span>

@@ -106,48 +106,61 @@ class SaleOrderLine(models.Model):
             else:
                 line.delivered_piece_count = int(sum(weighed_lines.mapped("quantity")))
 
-    def _get_weighed_invoice_vals(self, name=None):
-        """Return values to write on an account.move.line for a weighed product."""
+    def _get_weighed_invoice_vals(self, name=None, cumulative=False):
+        """Return values to write on an account.move.line for a weighed product.
+
+        Uses delta (incremental) quantities by default to avoid double-billing
+        when deliveries are split across multiple batches.  Pass cumulative=True
+        when rewriting an existing invoice line (e.g. action_recompute_weight_lines)
+        so the line reflects the full delivered total instead of the delta.
+        """
         self.ensure_one()
         product = self.product_id
-        # Tomar solo la primera línea para evitar duplicar piezas/peso si
-        # _get_weighed_invoice_vals es llamado sobre un nombre que ya fue
-        # enriquecido (ej: cuando Odoo procesa varias SOL del mismo producto
-        # y pasa el nombre acumulado de la línea anterior como base_name).
+
+        if cumulative:
+            weight_to_invoice = self.total_delivered_weight
+            pieces_to_invoice = self.delivered_piece_count
+        else:
+            # Subtract already-invoiced weight/pieces to get the incremental amount.
+            existing_lines = self.invoice_lines.filtered(
+                lambda l: l.move_id.state != "cancel"
+                and l.move_id.move_type == "out_invoice"
+            )
+            weight_already_invoiced = sum(existing_lines.mapped("recorded_weight"))
+            pieces_already_invoiced = sum(
+                l.x_delivered_piece_count or 0 for l in existing_lines
+            )
+            weight_to_invoice = max(
+                0.0, self.total_delivered_weight - weight_already_invoiced
+            )
+            pieces_to_invoice = max(
+                0, self.delivered_piece_count - pieces_already_invoiced
+            )
+
         raw_name = name if name is not None else self.name or ""
         base_name = raw_name.split("\n")[0]
         uom_name = (self.product_uom_id or product.uom_id).name or "u"
 
-        # Construir el nombre de la línea de factura:
-        #   Línea 1: descripción estándar del producto (base_name, ya incluye ref y nombre)
-        #   Línea 2: cantidad de piezas entregadas (si aplica)
-        #   Línea 3: peso total entregado
         name_parts = [base_name]
-        if self.delivered_piece_count:
-            name_parts.append("%d %s" % (self.delivered_piece_count, uom_name))
+        if pieces_to_invoice:
+            name_parts.append("%d %s" % (pieces_to_invoice, uom_name))
         name_parts.append(
-            "Entregado: %s %s" % (self.total_delivered_weight, product.weighing_uom_id.name)
+            "Entregado: %s %s" % (weight_to_invoice, product.weighing_uom_id.name)
         )
 
         vals = {
-            "quantity": self.total_delivered_weight,
+            "quantity": weight_to_invoice,
             "price_unit": self.price_per_weight,
             "product_uom_id": product.weighing_uom_id.id,
-            "recorded_weight": self.total_delivered_weight,
+            "recorded_weight": weight_to_invoice,
             "weight_uom_id": product.weighing_uom_id.id,
-            "x_delivered_piece_count": self.delivered_piece_count,
+            "x_delivered_piece_count": pieces_to_invoice,
             "name": "\n".join(name_parts),
         }
 
-        # Odoo muestra una cantidad "secundaria" en la UdM del producto cuando
-        # product_uom_id (kg) difiere de product_id.uom_id (Unidades). Si el sistema
-        # tiene un factor de conversión incorrecto entre ambas UdM, esa cantidad
-        # secundaria resulta errónea (ej: 3.45 kg → 3450 Unidades en lugar de 2).
-        # Escribimos product_uom_qty explícitamente con el conteo de piezas si el
-        # campo existe en account.move.line (lo agrega el módulo sale en Odoo 17+).
         AML = self.env["account.move.line"]
         if "product_uom_qty" in AML._fields:
-            vals["product_uom_qty"] = float(self.delivered_piece_count)
+            vals["product_uom_qty"] = float(pieces_to_invoice)
 
         return vals
 
@@ -168,7 +181,7 @@ class SaleOrderLine(models.Model):
             for inv_line in invoice.invoice_line_ids.filtered(
                 lambda l: l.product_id == self.product_id
             ):
-                inv_line.write(self._get_weighed_invoice_vals(name=inv_line.name))
+                inv_line.write(self._get_weighed_invoice_vals(name=inv_line.name, cumulative=True))
 
     def _get_price_per_weight_from_pricelist(self):
         self.ensure_one()

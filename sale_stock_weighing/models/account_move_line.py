@@ -58,4 +58,4 @@ class AccountMove(models.Model):
                     and sol.product_id.is_weighed_product
                     and sol.total_delivered_weight > 0
                 ):
-                    inv_line.write(sol._get_weighed_invoice_vals(name=inv_line.name))
+                    inv_line.write(sol._get_weighed_invoice_vals(name=inv_line.name, cumulative=True))

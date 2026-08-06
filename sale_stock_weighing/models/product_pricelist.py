@@ -107,6 +107,19 @@ class PricelistItem(models.Model):
                 or "kg"
             )
 
+    @api.onchange("product_id", "product_tmpl_id")
+    def _onchange_product_set_weighed_price(self):
+        """Marca is_weighed_price automáticamente si el producto es pesable."""
+        for item in self:
+            if not item.company_use_stock_weighing:
+                continue
+            is_weighed = (
+                item.product_id.is_weighed_product
+                or item.product_tmpl_id.is_weighed_product
+            )
+            if is_weighed:
+                item.is_weighed_price = True
+
     @api.onchange("price_per_weight", "product_id", "product_tmpl_id")
     def _onchange_price_per_weight_to_fixed_price(self):
         """Calcula fixed_price = price_per_weight × peso del producto."""

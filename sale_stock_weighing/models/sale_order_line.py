@@ -184,6 +184,23 @@ class SaleOrderLine(models.Model):
             return result[0].compute_price_per_weight(self.product_id, 1.0)
         return 0.0
 
+    @api.depends("invoice_lines.x_delivered_piece_count", "invoice_lines.move_id.state")
+    def _compute_qty_invoiced(self):
+        super()._compute_qty_invoiced()
+        for line in self:
+            if not line.product_id.is_weighed_product:
+                continue
+            qty = 0.0
+            for inv_line in line.invoice_lines:
+                if inv_line.move_id.state == "cancel":
+                    continue
+                pieces = inv_line.x_delivered_piece_count or 0
+                if inv_line.move_id.move_type == "out_invoice":
+                    qty += pieces
+                elif inv_line.move_id.move_type == "out_refund":
+                    qty -= pieces
+            line.qty_invoiced = qty
+
     @api.onchange("product_id")
     def _onchange_product_id_weighing(self):
         if not self.product_id.is_weighed_product:

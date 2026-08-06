@@ -11,13 +11,14 @@
             </field>
             <!-- Campos de pesaje debajo de Precio fijo, antes del grupo de fechas -->
             <xpath expr="//group[@name='pricelist_rule_limits']" position="before">
-                <field name="is_weighed_price"
-                       invisible="not company_use_stock_weighing"/>
-                <field name="price_per_weight"
-                       invisible="not company_use_stock_weighing or not is_weighed_price or compute_price != 'fixed'"/>
-                <field name="weight_price_display"
-                       invisible="not company_use_stock_weighing or not is_weighed_price"
-                       readonly="1"/>
+                <group invisible="not company_use_stock_weighing">
+                    <field name="is_weighed_price"/>
+                    <field name="price_per_weight"
+                           invisible="not is_weighed_price or compute_price != 'fixed'"/>
+                    <field name="weight_price_display"
+                           invisible="not is_weighed_price"
+                           readonly="1"/>
+                </group>
             </xpath>
         </field>
     </record>

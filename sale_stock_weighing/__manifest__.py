@@ -1,4 +1,4 @@
-﻿{
+{
     "name": "Sale Stock Weighing",
     "version": "19.0.8.1.0",
     "category": "Inventory/Sale",

@@ -1,5 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Grilla de carga de pesos: formulario en diálogo con la lista adentro,
+         mismo patrón que el detalle de lotes de Odoo. El footer da el botón de
+         confirmar, y create="0" evita tanto el botón Nuevo como que el
+         tabulador cree filas al salir de la última. -->
+    <record id="stock_picking_weighing_grid_form" model="ir.ui.view">
+        <field name="name">stock.picking.weighing.grid.form</field>
+        <field name="model">stock.picking</field>
+        <field name="priority">200</field>
+        <field name="arch" type="xml">
+            <form string="Registrar pesos">
+                <field name="weighable_move_ids" nolabel="1">
+                    <list editable="bottom" create="0" delete="0"
+                          decoration-muted="weighing_state == 'to_weigh'"
+                          decoration-danger="weight_deviation_pct &gt; 30 or weight_deviation_pct &lt; -30">
+                        <field name="has_weight" column_invisible="1"/>
+                        <field name="weighing_detail_level" column_invisible="1"/>
+                        <field name="weighing_state" widget="badge"
+                               decoration-success="weighing_state == 'weighed'"
+                               decoration-warning="weighing_state == 'weighing'"
+                               decoration-info="weighing_state == 'to_weigh'"
+                               readonly="1" string="Estado"/>
+                        <field name="product_id" readonly="1"/>
+                        <field name="product_uom_qty" readonly="1" string="Cant."/>
+                        <field name="product_uom" readonly="1" optional="hide"/>
+                        <field name="planned_weight" readonly="1" string="Est."/>
+                        <field name="recorded_weight" string="Peso real"
+                               readonly="weighing_detail_level == 'piece'"/>
+                        <field name="weight_deviation_pct" readonly="1"
+                               optional="show" widget="percentage"/>
+                        <field name="piece_progress" readonly="1" optional="show"/>
+                        <button name="action_weight_detailed_operations" type="object"
+                                string="Detalle" icon="fa-list-ul"
+                                invisible="weighing_detail_level != 'piece'"/>
+                    </list>
+                </field>
+                <footer>
+                    <button string="Registrar pesos" type="object"
+                            name="action_confirm_weighing"
+                            class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" special="cancel"
+                            class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
     <record id="view_picking_form_weighing" model="ir.ui.view">
         <field name="name">stock.picking.form.weighing</field>
         <field name="model">stock.picking</field>

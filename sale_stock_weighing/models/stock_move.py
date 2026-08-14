@@ -71,10 +71,11 @@ class StockMove(models.Model):
         compute="_compute_recorded_weight",
     )
     weighing_state = fields.Selection(
+        string="Estado de Pesaje",
         selection=[
-            ("weighed", "Weighed"),
-            ("weighing", "Weighing"),
-            ("to_weigh", "To weigh"),
+            ("weighed", "Pesado"),
+            ("weighing", "Pesando"),
+            ("to_weigh", "Por pesar"),
         ],
         compute="_compute_weighing_state",
         store=True,

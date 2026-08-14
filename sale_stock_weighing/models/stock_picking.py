@@ -18,6 +18,18 @@ class StockPicking(models.Model):
         string="Empresa usa pesaje",
         store=False,  # no columna en DB — computed vía ir.config_parameter
     )
+    weighable_move_ids = fields.One2many(
+        comodel_name="stock.move",
+        inverse_name="picking_id",
+        domain=[("has_weight", "=", True)],
+        string="Operaciones a pesar",
+        help="Movimientos de productos pesables — los que se cargan en la grilla.",
+    )
+
+    def action_confirm_weighing(self):
+        """Cierra el diálogo de carga de pesos. El guardado ya lo hizo el
+        formulario al pulsar el botón, por eso acá solo se vuelve atrás."""
+        return {"type": "ir.actions.act_window_close"}
 
     @api.depends("move_ids.has_weight")
     def _compute_has_weighing_operations(self):
@@ -104,6 +116,27 @@ class StockPicking(models.Model):
             picking.shipping_weight = total
 
     def action_weighing_operations(self):
+        # Modo grilla: formulario en diálogo con la lista de movimientos adentro,
+        # para cargar los pesos de corrido y confirmar con un botón.
+        if self[:1].picking_type_id.weighing_input_mode == "grid":
+            self.ensure_one()
+            return {
+                "type": "ir.actions.act_window",
+                "name": _("Registrar pesos de %(name)s", name=self.name),
+                "res_model": "stock.picking",
+                "res_id": self.id,
+                "view_mode": "form",
+                "views": [
+                    (
+                        self.env.ref(
+                            "sale_stock_weighing.stock_picking_weighing_grid_form"
+                        ).id,
+                        "form",
+                    )
+                ],
+                "target": "new",
+                "context": dict(self.env.context),
+            }
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
         )

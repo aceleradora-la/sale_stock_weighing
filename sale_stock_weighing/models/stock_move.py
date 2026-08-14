@@ -292,8 +292,68 @@ class StockMove(models.Model):
         )
         return action
 
+    def _get_expected_piece_count(self):
+        """Cantidad de piezas a pesar: lo que efectivamente se va a entregar,
+        y si todavía no hay cantidad cargada, la demanda."""
+        self.ensure_one()
+        return int(self.quantity or self.product_uom_qty or 0)
+
+    def _ensure_piece_move_lines(self):
+        """Genera una línea de detalle por pieza para poder pesarlas una a una.
+
+        Cada pieza es un stock.move.line de una unidad — la misma estructura que
+        Odoo arma solo cuando el producto tiene seguimiento por lote. Las líneas
+        existentes se reducen a una unidad y se crean las que falten, de modo que
+        la suma siga dando la cantidad del movimiento.
+
+        Nunca se borran líneas: si ya hay más de las esperadas, se deja como está.
+        """
+        self.ensure_one()
+        if not self.has_weight:
+            return
+        if self.picking_type_id.weighing_detail_level != "piece":
+            return
+        expected = self._get_expected_piece_count()
+        lines = self.move_line_ids
+        if expected <= 1 or expected <= len(lines):
+            return
+
+        template = lines[:1]
+        if template:
+            lines.filtered(lambda line: line.quantity != 1).write({"quantity": 1.0})
+            for _index in range(expected - len(lines)):
+                template.copy(
+                    {
+                        "quantity": 1.0,
+                        "recorded_weight": 0.0,
+                        "has_recorded_weight": False,
+                        "weighing_user_id": False,
+                        "weighing_date": False,
+                        "lot_id": False,
+                    }
+                )
+            return
+
+        # Sin líneas de detalle todavía (movimiento sin reservar): se arman
+        # desde los datos del movimiento.
+        self.env["stock.move.line"].create(
+            [
+                {
+                    "move_id": self.id,
+                    "picking_id": self.picking_id.id,
+                    "product_id": self.product_id.id,
+                    "product_uom_id": self.product_uom.id,
+                    "quantity": 1.0,
+                    "location_id": self.location_id.id,
+                    "location_dest_id": self.location_dest_id.id,
+                }
+                for _index in range(expected)
+            ]
+        )
+
     def action_weight_detailed_operations(self):
         self.ensure_one()
+        self._ensure_piece_move_lines()
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
         )

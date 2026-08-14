@@ -164,15 +164,17 @@
                     </group>
                     <notebook>
                         <page name="move_lines" string="Operaciones Detalladas">
+                            <!-- Una fila por pieza: se dejan a la vista solo las
+                                 columnas que se usan al pesar. -->
                             <field name="move_line_ids">
                                 <list editable="bottom">
-                                    <field name="product_id"/>
-                                    <field name="lot_id"/>
-                                    <field name="quantity"/>
-                                    <field name="recorded_weight"/>
-                                    <field name="has_recorded_weight"/>
-                                    <field name="location_id"/>
-                                    <field name="location_dest_id"/>
+                                    <field name="product_id" optional="hide"/>
+                                    <field name="lot_id" string="Lote"/>
+                                    <field name="quantity" string="Cant."/>
+                                    <field name="recorded_weight" string="Peso"/>
+                                    <field name="has_recorded_weight" optional="hide"/>
+                                    <field name="location_id" optional="hide"/>
+                                    <field name="location_dest_id" optional="hide"/>
                                     <button name="action_weighing" type="object" string="Pesar"
                                             icon="fa-balance-scale"/>
                                 </list>

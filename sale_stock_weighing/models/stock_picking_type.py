@@ -72,24 +72,31 @@ class StockPickingType(models.Model):
             picking_type.to_do_weights = len(picking_type.weight_move_ids)
 
     def _apply_weighing_view_mode(self, action):
-        """Ordena las vistas de la acción de pesaje según el modo configurado:
-        grilla abre en lista editable, tarjetas abre en kanban."""
+        """Adapta la acción de pesaje al modo configurado.
+
+        Grilla: se abre solo la lista editable, en diálogo y sin agrupar, para
+        cargar los pesos de corrido — igual que el detalle de lotes de Odoo.
+        Tarjetas: kanban a pantalla completa, agrupado por transferencia.
+        """
         self.ensure_one()
-        order = (
-            ["list", "kanban", "form"]
-            if self.weighing_input_mode == "grid"
-            else ["kanban", "list", "form"]
-        )
         view_map = {mode: view_id for view_id, mode in action.get("views") or []}
-        action["views"] = [(view_map.get(m), m) for m in order if m in view_map]
-        action["view_mode"] = ",".join(order)
+        if self.weighing_input_mode == "grid":
+            action["views"] = [(view_map.get("list"), "list")]
+            action["view_mode"] = "list"
+            action["target"] = "new"
+            context = dict(action.get("context") or {})
+            context.pop("group_by", None)
+            action["context"] = context
+        else:
+            order = ["kanban", "list", "form"]
+            action["views"] = [(view_map.get(m), m) for m in order if m in view_map]
+            action["view_mode"] = ",".join(order)
         return action
 
     def action_weighing_operations(self):
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
         )
-        self._apply_weighing_view_mode(action)
         action["name"] = _("Pesaje de %(name)s", name=self.name)
         action["domain"] = [("id", "in", self.weight_move_ids.ids)]
         action["context"] = dict(
@@ -97,4 +104,4 @@ class StockPickingType(models.Model):
             **ast.literal_eval(action.get("context", "{}") or "{}"),
             group_by=["picking_id"],
         )
-        return action
+        return self._apply_weighing_view_mode(action)

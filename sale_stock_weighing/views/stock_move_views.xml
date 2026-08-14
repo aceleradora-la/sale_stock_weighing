@@ -96,9 +96,10 @@
         <field name="arch" type="xml">
             <!-- Grilla de carga: editable para tipear los pesos de corrido.
                  decoration-* pinta la fila según el estado de pesaje (semáforo). -->
+            <!-- abs() no existe en el evaluador de vistas de Odoo: se compara por rango. -->
             <list editable="bottom"
                   decoration-muted="weighing_state == 'to_weigh'"
-                  decoration-danger="abs(weight_deviation_pct) &gt; 30">
+                  decoration-danger="weight_deviation_pct &gt; 30 or weight_deviation_pct &lt; -30">
                 <field name="has_weight" column_invisible="1"/>
                 <field name="weighing_detail_level" column_invisible="1"/>
                 <field name="weighing_state" widget="badge"

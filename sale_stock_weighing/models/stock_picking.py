@@ -117,9 +117,6 @@ class StockPicking(models.Model):
             if any_operation_actions
             else self.move_ids.filtered("has_weight")
         )
-        picking_type = self[:1].picking_type_id
-        if picking_type:
-            picking_type._apply_weighing_view_mode(action)
         action["name"] = _("Operaciones de pesaje de %(name)s", name=self.name)
         action["domain"] = [("id", "in", weight_moves.ids)]
         action["context"] = dict(
@@ -127,6 +124,9 @@ class StockPicking(models.Model):
             **ast.literal_eval(action.get("context", "{}") or "{}"),
             group_by=["picking_id"],
         )
+        picking_type = self[:1].picking_type_id
+        if picking_type:
+            picking_type._apply_weighing_view_mode(action)
         return action
 
     def _get_unweighed_moves(self):

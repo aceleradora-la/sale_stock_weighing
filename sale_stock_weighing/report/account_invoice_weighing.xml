@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        Priority 95 > report_layout_extras (90) > l10n_ar/l10n_ar_ux (16).
-        Corre después de que report_layout_extras ya reemplazó el span de
-        cantidad secundaria, así nuestro replace pisa el de ellos.
+        Priority 95 corre después de report_layout_extras (90) que ya reemplazó
+        el span de cantidad secundaria. Nuestro replace pisa el de ellos.
 
-        Para productos pesables: muestra (N Unidades) usando x_delivered_piece_count
-        en lugar de convertir kg→Unidades (que daría 9950 en vez de 3).
-        Para el resto: conserva el comportamiento de report_layout_extras
-        (arx_uom_inline = inline vs. salto de línea).
+        Para productos pesables: muestra (N Unidades) desde x_delivered_piece_count
+        en lugar de convertir kg->Unidades (que daría 9.950 en vez de 3).
+        Para el resto: conserva el comportamiento de report_layout_extras si está
+        instalado (arx_uom_inline), o el comportamiento base de Odoo si no lo está.
+        Se accede a arx_uom_inline via _fields.get() para no requerir ese módulo
+        como dependencia explícita.
     -->
     <template id="account_invoice_weighing_secondary_qty"
               inherit_id="l10n_ar.report_invoice_document"
@@ -22,7 +23,8 @@
                 </t>
                 <t t-else="">
                     <t t-set="product_uom_qty" t-value="line.product_uom_id._compute_quantity(line.quantity, line.product_id.uom_id)"/>
-                    <t t-if="o.company_id.arx_uom_inline">(<span t-out="product_uom_qty" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>&#160;<span t-field="line.product_id.uom_id"/>)</t>
+                    <t t-set="uom_inline" t-value="o.company_id._fields.get('arx_uom_inline') and o.company_id.arx_uom_inline"/>
+                    <t t-if="uom_inline">(<span t-out="product_uom_qty" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>&#160;<span t-field="line.product_id.uom_id"/>)</t>
                     <t t-else=""><br/><span t-out="product_uom_qty" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>&#160;<span t-field="line.product_id.uom_id"/></t>
                 </t>
             </span>

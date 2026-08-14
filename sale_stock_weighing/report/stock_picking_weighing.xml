@@ -8,14 +8,13 @@
         variable principal (el stock.picking), no 'doc'.
     -->
     <!-- Protege image_data_uri cuando o.signature es False (campo vacío) -->
-    <!-- Protege l10n_ar_cai_data.get() cuando el campo retorna False en vez de {} -->
+    <!-- Nota: el AttributeError de l10n_ar_cai_data.get() sobre un False ya está
+         corregido upstream en ingadhoc/argentina-sale (usa (o.l10n_ar_cai_data or {}).get()),
+         por eso no se parchea acá. -->
     <template id="fix_delivery_document_signature"
               inherit_id="l10n_ar_stock_ux.report_delivery_document">
         <xpath expr="//img[@t-att-src='image_data_uri(o.signature)']" position="attributes">
             <attribute name="t-if">o.signature</attribute>
-        </xpath>
-        <xpath expr="//div[contains(@t-if, 'l10n_ar_cai_data.get')]" position="attributes">
-            <attribute name="t-if">not pre_printed_report and o.l10n_ar_cai_data and o.l10n_ar_cai_data.get('cai_authorization_code')</attribute>
         </xpath>
     </template>
 

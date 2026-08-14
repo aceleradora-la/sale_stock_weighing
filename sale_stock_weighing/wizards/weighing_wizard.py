@@ -100,6 +100,11 @@ class WeighingWizard(models.TransientModel):
             }
             if self.lot_id:
                 vals["lot_id"] = self.lot_id.id
+            if selected_line.weight_is_quantity:
+                # La cantidad y el peso son la misma magnitud: el peso pesado
+                # pisa la cantidad de la línea (ej: recepción de 102 kg contra
+                # una demanda de 100 kg).
+                vals["quantity"] = selected_line._get_quantity_from_weight(self.weight)
         else:
             vals = {
                 "recorded_weight": 0,

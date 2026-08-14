@@ -1,6 +1,6 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.7.3.0",
+    "version": "19.0.8.0.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
@@ -28,6 +28,7 @@ Features
     "license": "LGPL-3",
     "depends": [
         "sale_stock",
+        "purchase_stock",
         "account",
         "base_setup",
         "web_widget_remote_measure",
@@ -41,6 +42,7 @@ Features
         "views/res_company_views.xml",
         "views/product_views.xml",
         "views/sale_order_views.xml",
+        "views/purchase_order_views.xml",
         "views/stock_picking_type_views.xml",
         "views/stock_picking_views.xml",
         "views/stock_move_views.xml",

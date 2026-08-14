@@ -33,6 +33,61 @@ class StockMoveLine(models.Model):
         compute="_compute_piece_price",
         help="Símbolo de moneda para el precio por pieza.",
     )
+    weight_is_quantity = fields.Boolean(
+        string="La cantidad ya expresa el peso",
+        compute="_compute_weight_is_quantity",
+        help="La UdM de la línea y la UdM de pesaje del producto son de la misma "
+        "categoría, por lo que la cantidad ingresada ya expresa el peso real "
+        "y no hace falta el asistente de pesaje.",
+    )
+
+    @api.depends("has_weight", "product_id.weighing_uom_id", "product_uom_id")
+    def _compute_weight_is_quantity(self):
+        for line in self:
+            weighing_uom = line.product_id.weighing_uom_id
+            line.weight_is_quantity = bool(
+                line.has_weight
+                and weighing_uom
+                and line.product_uom_id
+                and weighing_uom.category_id == line.product_uom_id.category_id
+            )
+
+    def _get_weight_from_quantity(self):
+        """Convierte la cantidad de la línea a la UdM de pesaje del producto."""
+        self.ensure_one()
+        weighing_uom = self.product_id.weighing_uom_id
+        if not weighing_uom or not self.product_uom_id:
+            return 0.0
+        if weighing_uom == self.product_uom_id:
+            return self.quantity
+        return self.product_uom_id._compute_quantity(self.quantity, weighing_uom)
+
+    def _get_quantity_from_weight(self, weight):
+        """Convierte un peso (en UdM de pesaje) a la UdM de la línea."""
+        self.ensure_one()
+        weighing_uom = self.product_id.weighing_uom_id
+        if not weighing_uom or not self.product_uom_id:
+            return weight
+        if weighing_uom == self.product_uom_id:
+            return weight
+        return weighing_uom._compute_quantity(weight, self.product_uom_id)
+
+    def _sync_weight_from_quantity(self):
+        """Completa recorded_weight desde la cantidad para las líneas donde ambas
+        magnitudes son la misma (UdM de pesaje y de la línea comparten categoría).
+
+        Evita exigir el asistente de pesaje cuando el operario ya cargó el peso
+        directamente en la cantidad — el caso típico de una recepción de
+        mercadería que se compra y almacena en kg."""
+        for line in self.filtered("weight_is_quantity"):
+            line.write(
+                {
+                    "recorded_weight": line._get_weight_from_quantity(),
+                    "has_recorded_weight": True,
+                    "weighing_user_id": line.weighing_user_id.id or self.env.user.id,
+                    "weighing_date": line.weighing_date or fields.Datetime.now(),
+                }
+            )
 
     @api.depends(
         "recorded_weight",

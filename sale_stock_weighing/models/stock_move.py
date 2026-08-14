@@ -54,6 +54,25 @@ class StockMove(models.Model):
         digits="Product Unit of Measure",
     )
 
+    weight_is_quantity = fields.Boolean(
+        string="La cantidad ya expresa el peso",
+        compute="_compute_weight_is_quantity",
+        help="La UdM del movimiento y la UdM de pesaje del producto son de la "
+        "misma categoría: la cantidad ya expresa el peso real y no hace falta "
+        "el asistente de pesaje.",
+    )
+
+    @api.depends("has_weight", "product_id.weighing_uom_id", "product_uom")
+    def _compute_weight_is_quantity(self):
+        for move in self:
+            weighing_uom = move.product_id.weighing_uom_id
+            move.weight_is_quantity = bool(
+                move.has_weight
+                and weighing_uom
+                and move.product_uom
+                and weighing_uom.category_id == move.product_uom.category_id
+            )
+
     @api.depends("product_id.weighing_uom_id")
     def _compute_weighing_uom_name(self):
         for move in self:

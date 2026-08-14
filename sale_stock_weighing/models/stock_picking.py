@@ -56,6 +56,9 @@ class StockPicking(models.Model):
             for ml in bulk_lines:
                 if ml.has_recorded_weight:
                     weight += ml.recorded_weight
+                elif ml.weight_is_quantity:
+                    # La cantidad ya es el peso, aunque todavía no se haya validado.
+                    weight += ml._get_weight_from_quantity()
                 else:
                     weight += (
                         ml.product_uom_id._compute_quantity(
@@ -124,9 +127,19 @@ class StockPicking(models.Model):
         return action
 
     def _get_unweighed_moves(self):
-        """Return moves that need weighing but haven't been fully weighed yet."""
+        """Return moves that need weighing but haven't been fully weighed yet.
+
+        Se excluyen los movimientos donde la cantidad ya expresa el peso
+        (UdM de la línea y UdM de pesaje en la misma categoría): en esos casos
+        no hay nada que pesar aparte, la cantidad cargada es el peso.
+
+        Tampoco se exige pesaje si el tipo de operación no lo tiene habilitado."""
         self.ensure_one()
-        moves_to_weigh = self.move_ids.filtered("has_weight")
+        if not self.picking_type_id.weighing_operations:
+            return self.env["stock.move"]
+        moves_to_weigh = self.move_ids.filtered(
+            lambda m: m.has_weight and not m.weight_is_quantity
+        )
         return moves_to_weigh.filtered(
             lambda m: not m.move_line_ids
             or not all(m.move_line_ids.mapped("has_recorded_weight"))
@@ -134,6 +147,9 @@ class StockPicking(models.Model):
 
     def button_validate(self):
         for picking in self:
+            # Completa el peso desde la cantidad donde ambas son la misma
+            # magnitud, antes de verificar qué falta pesar.
+            picking.move_line_ids._sync_weight_from_quantity()
             unweighed = picking._get_unweighed_moves()
             if unweighed:
                 raise UserError(

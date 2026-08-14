@@ -12,14 +12,17 @@
             </xpath>
 
             <!-- Para productos pesables, el precio unitario es calculado (p/peso × peso);
-                 se grisa para que el usuario edite solo el precio por peso. -->
+                 se grisa para que el usuario edite solo el precio por peso.
+                 Cuando la empresa usa pesaje, se oculta la columna y se muestra
+                 en su lugar la columna de precio por peso. -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="attributes">
                 <attribute name="readonly">product_id.is_weighed_product</attribute>
+                <attribute name="column_invisible">parent.company_use_stock_weighing</attribute>
+                <attribute name="optional">hide</attribute>
             </xpath>
 
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
                 <field name="price_per_weight"
-                       optional="show"
                        column_invisible="not parent.company_use_stock_weighing"
                        invisible="not product_id.is_weighed_product"/>
                 <field name="x_piece_count"

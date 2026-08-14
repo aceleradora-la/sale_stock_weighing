@@ -36,20 +36,22 @@ class StockMoveLine(models.Model):
     weight_is_quantity = fields.Boolean(
         string="La cantidad ya expresa el peso",
         compute="_compute_weight_is_quantity",
-        help="La UdM de la línea y la UdM de pesaje del producto son de la misma "
-        "categoría, por lo que la cantidad ingresada ya expresa el peso real "
+        help="La UdM de la línea y la UdM de pesaje del producto son convertibles "
+        "entre sí, por lo que la cantidad ingresada ya expresa el peso real "
         "y no hace falta el asistente de pesaje.",
     )
 
     @api.depends("has_weight", "product_id.weighing_uom_id", "product_uom_id")
     def _compute_weight_is_quantity(self):
+        # En Odoo 19 las UdM no tienen categoría: forman un árbol vía
+        # relative_uom_id y la compatibilidad se consulta con _has_common_reference.
         for line in self:
             weighing_uom = line.product_id.weighing_uom_id
             line.weight_is_quantity = bool(
                 line.has_weight
                 and weighing_uom
                 and line.product_uom_id
-                and weighing_uom.category_id == line.product_uom_id.category_id
+                and weighing_uom._has_common_reference(line.product_uom_id)
             )
 
     def _get_weight_from_quantity(self):

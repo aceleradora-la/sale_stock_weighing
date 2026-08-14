@@ -72,15 +72,15 @@ class PurchaseOrderLine(models.Model):
         """La lógica de facturación por peso solo aplica cuando la UdM de compra
         y la de pesaje son magnitudes distintas.
 
-        Si comparten categoría (ej: se compra y se pesa en kg) la cantidad ya
-        expresa el peso y la facturación estándar de Odoo es correcta."""
+        Si son convertibles entre sí (ej: se compra y se pesa en kg) la cantidad
+        ya expresa el peso y la facturación estándar de Odoo es correcta."""
         self.ensure_one()
         product = self.product_id
         if not product.is_weighed_product or not product.weighing_uom_id:
             return False
         if not self.product_uom_id:
             return False
-        return product.weighing_uom_id.category_id != self.product_uom_id.category_id
+        return not product.weighing_uom_id._has_common_reference(self.product_uom_id)
 
     def _get_weighed_bill_vals(self, cumulative=False):
         """Valores para la línea de factura de proveedor de un producto pesable.

@@ -57,20 +57,22 @@ class StockMove(models.Model):
     weight_is_quantity = fields.Boolean(
         string="La cantidad ya expresa el peso",
         compute="_compute_weight_is_quantity",
-        help="La UdM del movimiento y la UdM de pesaje del producto son de la "
-        "misma categoría: la cantidad ya expresa el peso real y no hace falta "
-        "el asistente de pesaje.",
+        help="La UdM del movimiento y la UdM de pesaje del producto son "
+        "convertibles entre sí: la cantidad ya expresa el peso real y no hace "
+        "falta el asistente de pesaje.",
     )
 
     @api.depends("has_weight", "product_id.weighing_uom_id", "product_uom")
     def _compute_weight_is_quantity(self):
+        # Odoo 19: las UdM no tienen categoría, la compatibilidad se consulta
+        # con _has_common_reference sobre el árbol de relative_uom_id.
         for move in self:
             weighing_uom = move.product_id.weighing_uom_id
             move.weight_is_quantity = bool(
                 move.has_weight
                 and weighing_uom
                 and move.product_uom
-                and weighing_uom.category_id == move.product_uom.category_id
+                and weighing_uom._has_common_reference(move.product_uom)
             )
 
     @api.depends("product_id.weighing_uom_id")

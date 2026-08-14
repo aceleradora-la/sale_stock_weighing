@@ -11,6 +11,12 @@
                 <field name="company_use_stock_weighing" invisible="1"/>
             </xpath>
 
+            <!-- Para productos pesables, el precio unitario es calculado (p/peso × peso);
+                 se grisa para que el usuario edite solo el precio por peso. -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">product_id.is_weighed_product</attribute>
+            </xpath>
+
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
                 <field name="price_per_weight"
                        optional="show"

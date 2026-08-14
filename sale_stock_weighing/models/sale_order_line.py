@@ -231,6 +231,14 @@ class SaleOrderLine(models.Model):
         if not self.x_piece_count:
             self.x_piece_count = int(self.product_uom_qty)
 
+    @api.onchange("price_per_weight")
+    def _onchange_price_per_weight_weighing(self):
+        """Recalcula price_unit cuando el usuario edita el precio por peso en la SOL."""
+        if not self.product_id.is_weighed_product or not self.price_per_weight:
+            return
+        weight = self.product_id.weight or 0.0
+        self.price_unit = self.price_per_weight * weight if weight else self.price_per_weight
+
     @api.onchange("product_uom_qty")
     def _onchange_product_uom_qty_weighing(self):
         """Sincroniza x_piece_count con la cantidad cuando el producto se vende por peso."""

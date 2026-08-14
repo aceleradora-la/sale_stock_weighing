@@ -293,11 +293,17 @@ class StockMove(models.Model):
         return action
 
     def action_weight_detailed_operations(self):
+        self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id(
             "sale_stock_weighing.weighing_operation_action"
         )
+        # En diálogo: si se llega desde la grilla (que ya es un popup), abrir a
+        # pantalla completa cerraría la carga de pesos a medio hacer.
+        action["target"] = "new"
         action["display_name"] = _(
-            "Operaciones detalladas de %(name)s", name=self.name
+            # stock.move no tiene campo name en Odoo 19: se usa el producto.
+            "Operaciones detalladas de %(name)s",
+            name=self.product_id.display_name,
         )
         action["domain"] = [("id", "=", self.id)]
         action["view_mode"] = "form"

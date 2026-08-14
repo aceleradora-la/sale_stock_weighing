@@ -11,8 +11,62 @@ class StockMove(models.Model):
     recorded_weight = fields.Float(
         string="Peso Registrado",
         compute="_compute_recorded_weight",
+        inverse="_inverse_recorded_weight",
         digits="Product Unit of Measure",
+        help="Peso total de la operación. Editable en modo grilla: se reparte "
+        "entre las líneas de detalle proporcionalmente a su cantidad.",
     )
+    weighing_detail_level = fields.Selection(
+        related="picking_type_id.weighing_detail_level",
+        string="Nivel de detalle de pesaje",
+    )
+    weight_deviation_pct = fields.Float(
+        string="Desvío",
+        compute="_compute_weight_deviation_pct",
+        help="Diferencia porcentual entre el peso real y el peso estimado. "
+        "Sirve para detectar errores de carga.",
+    )
+    weighed_piece_count = fields.Integer(
+        compute="_compute_piece_progress",
+    )
+    total_piece_count = fields.Integer(
+        compute="_compute_piece_progress",
+    )
+    piece_progress = fields.Char(
+        string="Piezas",
+        compute="_compute_piece_progress",
+        help="Piezas pesadas sobre el total de la línea.",
+    )
+
+    @api.depends("recorded_weight", "planned_weight")
+    def _compute_weight_deviation_pct(self):
+        for move in self:
+            if move.planned_weight and move.recorded_weight:
+                move.weight_deviation_pct = (
+                    (move.recorded_weight - move.planned_weight)
+                    / move.planned_weight
+                    * 100
+                )
+            else:
+                move.weight_deviation_pct = 0.0
+
+    @api.depends(
+        "move_line_ids.has_recorded_weight",
+        "product_uom_qty",
+        "weighing_detail_level",
+    )
+    def _compute_piece_progress(self):
+        for move in self:
+            weighed = len(move.move_line_ids.filtered("has_recorded_weight"))
+            # En modo pieza el total esperado es la cantidad del movimiento;
+            # si ya hay más líneas que la cantidad, manda la cantidad de líneas.
+            expected = max(int(move.product_uom_qty or 0), len(move.move_line_ids))
+            move.weighed_piece_count = weighed
+            move.total_piece_count = expected
+            if move.weighing_detail_level == "piece" and move.has_weight:
+                move.piece_progress = "%d/%d" % (weighed, expected)
+            else:
+                move.piece_progress = ""
     move_lines_weighed = fields.Boolean(
         compute="_compute_recorded_weight",
     )
@@ -103,6 +157,52 @@ class StockMove(models.Model):
             move.move_lines_weighed = bool(move.move_line_ids) and all(
                 move.move_line_ids.mapped("has_recorded_weight")
             )
+
+    def _inverse_recorded_weight(self):
+        """Distribuye el peso total del movimiento entre sus líneas de detalle.
+
+        Se usa desde la grilla en modo "total por línea". El reparto es
+        proporcional a la cantidad de cada línea; si las cantidades no están
+        cargadas, se reparte en partes iguales. En el caso habitual — una sola
+        línea de detalle — el peso va entero ahí.
+        """
+        for move in self:
+            lines = move.move_line_ids
+            if not lines:
+                continue
+            weight = move.recorded_weight or 0.0
+            if not weight:
+                lines.write(
+                    {
+                        "recorded_weight": 0.0,
+                        "has_recorded_weight": False,
+                        "weighing_user_id": False,
+                        "weighing_date": False,
+                    }
+                )
+                continue
+            total_qty = sum(lines.mapped("quantity"))
+            now = fields.Datetime.now()
+            user_id = self.env.user.id
+            assigned = 0.0
+            for index, line in enumerate(lines):
+                is_last = index == len(lines) - 1
+                if is_last:
+                    # La última absorbe el redondeo para que la suma cierre exacta.
+                    share = weight - assigned
+                elif total_qty:
+                    share = weight * (line.quantity / total_qty)
+                else:
+                    share = weight / len(lines)
+                assigned += share
+                line.write(
+                    {
+                        "recorded_weight": share,
+                        "has_recorded_weight": True,
+                        "weighing_user_id": line.weighing_user_id.id or user_id,
+                        "weighing_date": line.weighing_date or now,
+                    }
+                )
 
     @api.depends(
         "move_line_ids.recorded_weight",

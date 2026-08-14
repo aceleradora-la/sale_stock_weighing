@@ -1,6 +1,6 @@
-{
+﻿{
     "name": "Sale Stock Weighing",
-    "version": "19.0.8.0.0",
+    "version": "19.0.8.1.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
@@ -18,9 +18,9 @@ Features
 - Operation lock to avoid concurrent weighing.
 - Remote scale support via WebSocket/F501 (requires web_widget_remote_measure).
 - Pricelist with three pricing modes for $/weight: fixed, discount, formula.
-- Invoice generated using the actual delivered weight × price/kg.
+- Invoice generated using the actual delivered weight Ã— price/kg.
 - Weight label printing in PDF or ZPL format, including piece price.
-- Cotización and factura reports show pieces + weight + price/kg columns.
+- CotizaciÃ³n and factura reports show pieces + weight + price/kg columns.
 - Lot tracking: each lot = one physical piece; piece count derived automatically.
 """,
     "author": "Aceleradora LA",

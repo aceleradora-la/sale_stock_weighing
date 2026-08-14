@@ -94,15 +94,33 @@
         <field name="name">stock.move.weighing.tree</field>
         <field name="model">stock.move</field>
         <field name="arch" type="xml">
-            <list>
-                <field name="picking_id"/>
-                <field name="product_id"/>
-                <field name="product_uom_qty"/>
-                <field name="quantity"/>
-                <field name="product_uom"/>
-                <field name="has_weight" optional="hide"/>
-                <field name="weighing_state"/>
-                <field name="recorded_weight"/>
+            <!-- Grilla de carga: editable para tipear los pesos de corrido.
+                 decoration-* pinta la fila según el estado de pesaje (semáforo). -->
+            <list editable="bottom"
+                  decoration-muted="weighing_state == 'to_weigh'"
+                  decoration-danger="abs(weight_deviation_pct) &gt; 30">
+                <field name="has_weight" column_invisible="1"/>
+                <field name="weighing_detail_level" column_invisible="1"/>
+                <field name="weighing_state" widget="badge"
+                       decoration-success="weighing_state == 'weighed'"
+                       decoration-warning="weighing_state == 'weighing'"
+                       decoration-info="weighing_state == 'to_weigh'"
+                       readonly="1" string="Estado"/>
+                <field name="picking_id" readonly="1" optional="show"/>
+                <field name="product_id" readonly="1"/>
+                <field name="product_uom_qty" readonly="1" string="Cant."/>
+                <field name="quantity" readonly="1" optional="hide"/>
+                <field name="product_uom" readonly="1" optional="hide"/>
+                <field name="planned_weight" readonly="1" string="Est."/>
+                <field name="recorded_weight"
+                       string="Peso real"
+                       readonly="weighing_detail_level == 'piece'"/>
+                <field name="weight_deviation_pct" readonly="1" optional="show"
+                       widget="percentage"/>
+                <field name="piece_progress" readonly="1" optional="show"/>
+                <button name="action_weight_detailed_operations" type="object"
+                        string="Detalle" icon="fa-list-ul"
+                        invisible="weighing_detail_level != 'piece' or not has_weight"/>
                 <button name="action_weighing" type="object" string="Pesar"
                         icon="fa-balance-scale"
                         invisible="not has_weight"/>

@@ -8,6 +8,8 @@
             <group name="second" position="after">
                 <group name="weighing" string="Pesaje">
                     <field name="weighing_operations"/>
+                    <field name="weighing_input_mode" invisible="not weighing_operations"/>
+                    <field name="weighing_detail_level" invisible="not weighing_operations"/>
                     <field name="weighing_label_format" invisible="not weighing_operations"/>
                     <field name="print_weighing_label" invisible="not weighing_operations"/>
                 </group>

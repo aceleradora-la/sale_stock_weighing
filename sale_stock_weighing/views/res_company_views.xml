@@ -22,6 +22,34 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-lg-6 o_setting_box"
+                             invisible="not use_stock_weighing">
+                            <div class="o_setting_right_pane">
+                                <label for="weighing_default_input_mode"/>
+                                <div class="text-muted">
+                                    Con el que se crean los tipos de operación
+                                    nuevos. Se puede cambiar en cada uno.
+                                </div>
+                                <div class="mt8">
+                                    <field name="weighing_default_input_mode"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box"
+                             invisible="not use_stock_weighing">
+                            <div class="o_setting_right_pane">
+                                <label for="weighing_default_detail_level"/>
+                                <div class="text-muted">
+                                    Si el peso se carga por el total de la línea
+                                    o pieza por pieza.
+                                </div>
+                                <div class="mt8">
+                                    <field name="weighing_default_detail_level"
+                                           class="o_light_label"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </xpath>

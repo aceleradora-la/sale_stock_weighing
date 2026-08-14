@@ -16,6 +16,27 @@ class ResCompany(models.Model):
              "pesaje para usuarios de esta compañía.",
     )
 
+    weighing_default_input_mode = fields.Selection(
+        selection=[
+            ("cards", "Tarjetas"),
+            ("grid", "Grilla"),
+        ],
+        string="Modo de carga por defecto",
+        default="cards",
+        help="Valor con el que se crean los tipos de operación nuevos. "
+        "Tarjetas: una operación por vez, pensado para depósito con balanza. "
+        "Grilla: todas las líneas juntas, pensado para carga administrativa.",
+    )
+    weighing_default_detail_level = fields.Selection(
+        selection=[
+            ("line", "Total por línea"),
+            ("piece", "Detalle por pieza"),
+        ],
+        string="Nivel de detalle por defecto",
+        default="line",
+        help="Valor con el que se crean los tipos de operación nuevos.",
+    )
+
     def _compute_use_stock_weighing(self):
         """Lee el flag desde ir.config_parameter para evitar columna en res_company."""
         ICP = self.env["ir.config_parameter"].sudo()

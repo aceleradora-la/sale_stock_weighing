@@ -32,6 +32,7 @@ Features
         "base_setup",
         "web_widget_remote_measure",
         "l10n_ar_stock_ux",
+        "report_layout_extras",
         "stock_picking_batch",
     ],
     "post_init_hook": "post_init_hook",

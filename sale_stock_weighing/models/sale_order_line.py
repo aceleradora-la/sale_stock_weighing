@@ -139,14 +139,6 @@ class SaleOrderLine(models.Model):
 
         raw_name = name if name is not None else self.name or ""
         base_name = raw_name.split("\n")[0]
-        uom_name = (self.product_uom_id or product.uom_id).name or "u"
-
-        name_parts = [base_name]
-        if pieces_to_invoice:
-            name_parts.append("%d %s" % (pieces_to_invoice, uom_name))
-        name_parts.append(
-            "Entregado: %s %s" % (weight_to_invoice, product.weighing_uom_id.name)
-        )
 
         vals = {
             "quantity": weight_to_invoice,
@@ -155,7 +147,7 @@ class SaleOrderLine(models.Model):
             "recorded_weight": weight_to_invoice,
             "weight_uom_id": product.weighing_uom_id.id,
             "x_delivered_piece_count": pieces_to_invoice,
-            "name": "\n".join(name_parts),
+            "name": base_name,
         }
 
         AML = self.env["account.move.line"]

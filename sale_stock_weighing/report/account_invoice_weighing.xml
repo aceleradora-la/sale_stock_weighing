@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        Inherit the standard invoice report to show weighed-product columns:
-        Delivered Pieces and Price/Weight Unit.
+        Priority 95 > report_layout_extras (90) > l10n_ar/l10n_ar_ux (16).
+        Corre después de que report_layout_extras ya reemplazó el span de
+        cantidad secundaria, así nuestro replace pisa el de ellos.
 
-        The quantity column already shows the delivered weight (kg) because
-        _prepare_invoice_line sets quantity = total_delivered_weight and
-        product_uom_id = weighing_uom_id. We add Pieces and Price/kg.
+        Para productos pesables: muestra (N Unidades) usando x_delivered_piece_count
+        en lugar de convertir kg→Unidades (que daría 9950 en vez de 3).
+        Para el resto: conserva el comportamiento de report_layout_extras
+        (arx_uom_inline = inline vs. salto de línea).
     -->
-    <!--
-        Suprimir el display secundario de cantidad en UdM nativa del producto
-        para líneas de productos pesables.
-
-        Odoo muestra automáticamente la cantidad convertida a la UdM del producto
-        cuando invoice_line.product_uom_id (kg) != product.uom_id (Unidades).
-        Si ambas UdM tienen un factor de conversión definido (aunque sea en
-        categorías distintas), la conversión puede dar valores incorrectos,
-        ej: 3.45 kg → 3.450 Unidades si "Unidades" tiene factor 0.001 (= 1g).
-
-        Se modifica el t-if del span para excluir líneas de productos pesables.
-    -->
-    <template id="account_invoice_weighing_hide_secondary_uom"
-              inherit_id="account.report_invoice_document">
-        <xpath expr="//span[@class='text-muted small'][@t-if]" position="attributes">
-            <attribute name="t-if">
-                line.product_uom_id != line.product_id.uom_id
-                and not (line.sale_line_ids and line.sale_line_ids[:1].product_id.is_weighed_product)
-            </attribute>
+    <template id="account_invoice_weighing_secondary_qty"
+              inherit_id="l10n_ar.report_invoice_document"
+              priority="95">
+        <xpath expr="//td[@name='td_quantity']/span[hasclass('text-muted')]" position="replace">
+            <span t-if="line.product_uom_id != line.product_id.uom_id"
+                  groups="uom.group_uom"
+                  class="text-muted small">
+                <t t-if="line.sale_line_ids and line.sale_line_ids[:1].product_id.is_weighed_product">
+                    (<t t-out="line.x_delivered_piece_count"/>&#160;<span t-field="line.product_id.uom_id"/>)
+                </t>
+                <t t-else="">
+                    <t t-set="product_uom_qty" t-value="line.product_uom_id._compute_quantity(line.quantity, line.product_id.uom_id)"/>
+                    <t t-if="o.company_id.arx_uom_inline">(<span t-out="product_uom_qty" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>&#160;<span t-field="line.product_id.uom_id"/>)</t>
+                    <t t-else=""><br/><span t-out="product_uom_qty" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>&#160;<span t-field="line.product_id.uom_id"/></t>
+                </t>
+            </span>
         </xpath>
     </template>
 </odoo>

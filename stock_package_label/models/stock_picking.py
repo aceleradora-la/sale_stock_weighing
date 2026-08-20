@@ -37,28 +37,34 @@ class StockPicking(models.Model):
                 else picking.name
             )
 
-    @api.depends(
-        "move_line_ids.recorded_weight",
-        "move_line_ids.has_recorded_weight",
-    )
+    # No se declaran aquí recorded_weight ni has_recorded_weight: los aporta
+    # sale_stock_weighing, que no es dependencia de este módulo, y Odoo valida
+    # los @depends contra el registro al cargar (ValueError si el campo falta).
+    # El campo no es almacenado, así que se recalcula en cada lectura.
+    @api.depends("move_line_ids")
     def _compute_package_label_weight(self):
         """Determina el peso y la UdM a mostrar en la etiqueta de bulto,
-        compatible con y sin el módulo stock_delivery instalado."""
+        compatible con y sin los módulos stock_delivery y sale_stock_weighing."""
         has_shipping_weight = "shipping_weight" in self._fields
         has_weight_bulk = "weight_bulk" in self._fields
         has_weight_uom_name = "weight_uom_name" in self._fields
+        has_recorded_weight = (
+            "recorded_weight" in self.env["stock.move.line"]._fields
+        )
 
         for picking in self:
             if has_shipping_weight and picking.shipping_weight:
                 weight = picking.shipping_weight
             elif has_weight_bulk and picking.weight_bulk:
                 weight = picking.weight_bulk
-            else:
+            elif has_recorded_weight:
                 weight = sum(
                     picking.move_line_ids
                     .filtered(lambda ml: ml.has_recorded_weight)
                     .mapped("recorded_weight")
                 )
+            else:
+                weight = 0.0
             picking.package_label_weight = weight
             picking.package_label_weight_uom = (
                 picking.weight_uom_name if has_weight_uom_name and picking.weight_uom_name

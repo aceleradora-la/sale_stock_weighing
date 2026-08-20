@@ -2,6 +2,7 @@ from datetime import datetime
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_round
 
 
 class Pricelist(models.Model):
@@ -215,17 +216,23 @@ class PricelistItem(models.Model):
             return self.price_per_weight
         if self.compute_price in ("discount", "formula"):
             base_price = self._compute_base_price_for_weight(product)
-            if base_price <= 0 and self.compute_price == "discount":
+            # Sin precio en la lista base no hay precio por peso: no se fabrica
+            # uno a partir del precio unitario del producto.
+            if base_price <= 0:
                 return 0.0
-            # discount subtracts the percentage, formula adds it (markup).
-            sign = -1 if self.compute_price == "discount" else 1
-            result = base_price * (1 + sign * (self.price_discount or 0) / 100)
+            # Misma convención que el pricelist estándar de Odoo, tanto para
+            # Descuento como para Fórmula: price_discount SIEMPRE resta.
+            # Para recargar se carga un porcentaje negativo (-15% -> x1,15).
+            result = base_price * (1 - (self.price_discount or 0) / 100)
+            if self.price_round:
+                result = float_round(result, precision_rounding=self.price_round)
             result += self.price_surcharge or 0.0
-            cost = product.standard_price or 0.0
+            # Los márgenes son relativos al precio base, no al costo — igual
+            # que price_limit en _compute_price de Odoo.
             if self.price_min_margin:
-                result = max(result, cost + self.price_min_margin)
+                result = max(result, base_price + self.price_min_margin)
             if self.price_max_margin:
-                result = min(result, cost + self.price_max_margin)
+                result = min(result, base_price + self.price_max_margin)
             return result
         return 0.0
 
@@ -237,6 +244,12 @@ class PricelistItem(models.Model):
         the historical fall-backs (rarely useful but harmless)."""
         self.ensure_one()
         if self.base == "pricelist" and self.base_pricelist_id:
+            # Solo vale un precio POR PESO de la lista base. Si la lista base no
+            # tiene regla de peso vigente para este producto, no hay precio:
+            # devolver 0 evita que _get_product_price caiga al precio unitario
+            # estándar del producto y termine publicando un precio inventado.
+            if not self.base_pricelist_id._get_matched_weighing_items(product):
+                return 0.0
             return self.base_pricelist_id._get_product_price(product, 1.0)
         if self.base == "standard_price":
             return product.standard_price or 0.0

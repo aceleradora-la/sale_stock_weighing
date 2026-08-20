@@ -211,11 +211,17 @@ class SaleOrderLine(models.Model):
         if not self.product_id.is_weighed_product:
             return
         price_per_weight = self._get_price_per_weight_from_pricelist()
+        weight = self.product_id.weight or 0.0
         if price_per_weight:
             self.price_per_weight = price_per_weight
             # price_unit = precio por UNIDAD = precio/kg × peso del producto
-            weight = self.product_id.weight or 0.0
             self.price_unit = price_per_weight * weight if weight else price_per_weight
+        elif weight:
+            # Sin precio por peso en la lista, el unitario lo fija Odoo: se
+            # deriva el $/kg dividiendo por el peso, que es la inversa exacta
+            # del cálculo de arriba. Igualarlo al precio unitario daría un $/kg
+            # inflado por el peso del producto y ensuciaría la factura.
+            self.price_per_weight = self.price_unit / weight
         else:
             self.price_per_weight = self.price_unit
         self.product_uom_id = self.product_id.uom_id

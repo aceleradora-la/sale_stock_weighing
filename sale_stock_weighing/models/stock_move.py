@@ -380,7 +380,22 @@ class StockMove(models.Model):
         return action
 
     def action_print_weight_record_label(self):
-        return self.move_line_ids.action_print_weight_record_label()
+        """Imprime las etiquetas de las piezas de estos movimientos.
+
+        Sirve tanto para una operación sola (botón de la tarjeta) como para una
+        selección desde la grilla, donde se emite un único trabajo con todas las
+        etiquetas. El formato — PDF o ZPL para la impresora de la IoT — lo define
+        el tipo de operación.
+
+        Se imprimen todas las piezas, estén pesadas o no: la etiqueta sin peso
+        sirve para pegarla y completarla a mano.
+        """
+        lines = self.move_line_ids
+        if not lines:
+            raise UserError(
+                _("Las operaciones seleccionadas no tienen piezas para etiquetar.")
+            )
+        return lines.action_print_weight_record_label()
 
     def action_reset_weights(self):
         self.move_line_ids.action_reset_weights()

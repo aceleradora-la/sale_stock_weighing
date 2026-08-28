@@ -39,6 +39,13 @@
                     <button string="Registrar pesos" type="object"
                             name="action_confirm_weighing"
                             class="btn-primary" data-hotkey="q"/>
+                    <!-- Botón de tipo object: Odoo guarda los pesos tipeados
+                         antes de ejecutarlo, así que la etiqueta sale con el
+                         valor recién cargado. -->
+                    <button string="Imprimir etiquetas" type="object"
+                            name="action_print_weighing_labels"
+                            icon="fa-print"
+                            class="btn-secondary" data-hotkey="p"/>
                     <button string="Cancelar" special="cancel"
                             class="btn-secondary" data-hotkey="x"/>
                 </footer>

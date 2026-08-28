@@ -31,6 +31,21 @@ class StockPicking(models.Model):
         formulario al pulsar el botón, por eso acá solo se vuelve atrás."""
         return {"type": "ir.actions.act_window_close"}
 
+    def action_print_weighing_labels(self):
+        """Imprime las etiquetas de todas las piezas pesables de esta entrega.
+
+        Se llama desde el footer del diálogo de carga: al ser un botón de tipo
+        object, Odoo guarda los pesos tipeados antes de ejecutarlo, así que la
+        etiqueta sale con el valor recién cargado.
+        """
+        self.ensure_one()
+        moves = self.weighable_move_ids
+        if not moves:
+            raise UserError(
+                _("Esta entrega no tiene operaciones de pesaje para etiquetar.")
+            )
+        return moves.action_print_weight_record_label()
+
     @api.depends("move_ids.has_weight")
     def _compute_has_weighing_operations(self):
         for picking in self:

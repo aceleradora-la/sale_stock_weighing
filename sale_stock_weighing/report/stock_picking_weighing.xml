@@ -18,6 +18,23 @@
         </xpath>
     </template>
 
+    <!--
+        El remito imprime o.weight, que es el peso ESTIMADO calculado desde el
+        maestro de productos. Para productos pesables el peso real ya está en
+        shipping_weight (nuestro _compute_shipping_weight usa recorded_weight).
+
+        shipping_weight también es correcto sin pesaje: cae al cálculo estándar
+        product.weight x cantidad. Se deja o.weight como respaldo por si quedara
+        en cero.
+    -->
+    <template id="delivery_document_shipping_weight"
+              inherit_id="l10n_ar_stock_delivery.report_delivery_document">
+        <xpath expr="//span[@t-field='o.weight']" position="replace">
+            <span t-out="o.shipping_weight or o.weight"
+                  t-options='{"widget": "float", "precision": 2}'/>
+        </xpath>
+    </template>
+
     <template id="stock_picking_weighing_section"
               inherit_id="l10n_ar_stock_ux.report_delivery_document">
         <table name="stock_move_line_table" position="after">

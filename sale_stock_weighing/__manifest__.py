@@ -1,6 +1,6 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.8.3.0",
+    "version": "19.0.8.4.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
@@ -33,6 +33,9 @@ Features
         "base_setup",
         "web_widget_remote_measure",
         "l10n_ar_stock_ux",
+        # El peso del encabezado del remito lo agrega l10n_ar_stock_delivery:
+        # se depende de él para que el xpath que lo corrige tenga su anclaje.
+        "l10n_ar_stock_delivery",
         "stock_picking_batch",
     ],
     "post_init_hook": "post_init_hook",

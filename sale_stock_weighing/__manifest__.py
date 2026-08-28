@@ -1,6 +1,6 @@
 {
     "name": "Sale Stock Weighing",
-    "version": "19.0.8.2.0",
+    "version": "19.0.8.3.0",
     "category": "Inventory/Sale",
     "summary": "Sell by units, deliver and invoice by weight",
     "description": """
@@ -55,7 +55,9 @@ Features
         "report/sale_order_weighing.xml",
         "report/account_invoice_weighing.xml",
         "report/stock_picking_weighing.xml",
+        "report/weighing_picking_block.xml",
         "report/batch_picking_weighing.xml",
+        "report/picking_weighing_sheet.xml",
     ],
     "installable": True,
     "auto_install": False,

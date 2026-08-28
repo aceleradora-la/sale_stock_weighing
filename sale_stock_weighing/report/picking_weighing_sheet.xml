@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_picking_weighing_sheet" model="ir.actions.report">
+        <field name="name">Hoja de Pesaje</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sale_stock_weighing.report_picking_weighing_sheet</field>
+        <field name="report_file">sale_stock_weighing.report_picking_weighing_sheet</field>
+        <field name="print_report_name">'Hoja_Pesaje_' + (object.name or 'Entrega')</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!--
+        Hoja de pesaje de una sola entrega. Reutiliza el mismo bloque que el
+        reporte por lote (weighing_picking_block), así los dos muestran lo mismo.
+
+        A diferencia del de lote, incluye los movimientos ya hechos: permite
+        reimprimir la hoja de una entrega validada como respaldo.
+    -->
+    <template id="report_picking_weighing_sheet">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="picking">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size: 10pt; font-family: Arial, sans-serif;">
+
+                        <t t-set="weighable_moves"
+                           t-value="picking.move_ids.filtered(lambda m: m.state != 'cancel')"/>
+                        <t t-set="total_weight"
+                           t-value="sum(m.planned_weight for m in weighable_moves if m.has_weight)"/>
+
+                        <div class="row mb-1">
+                            <div class="col-12">
+                                <h2 style="margin-bottom:4px;">
+                                    Hoja de pesaje — <span t-esc="picking.name"/>
+                                </h2>
+                                <span style="font-size:12px;">
+                                    <t t-if="picking.scheduled_date">
+                                        <strong>Fecha:</strong>
+                                        <span t-esc="picking.scheduled_date.strftime('%d/%m/%Y')"/>
+                                        &#160;·&#160;
+                                    </t>
+                                    <strong>Peso est. total:</strong>
+                                    <span t-esc="'%.2f' % total_weight"/> kg
+                                </span>
+                            </div>
+                        </div>
+                        <div style="border-bottom: 1pt solid #ccc; margin-bottom: 10pt; margin-top: 4pt;"/>
+
+                        <t t-if="weighable_moves">
+                            <t t-call="sale_stock_weighing.weighing_picking_block"/>
+                        </t>
+                        <t t-else="">
+                            <p style="font-size: 9pt; color: #666;">
+                                Esta entrega no tiene movimientos para pesar.
+                            </p>
+                        </t>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -90,6 +90,14 @@
                                        border-bottom: 0.5pt solid #ddd; border-right: 0.5pt solid #ddd;">
                                 <span t-esc="'%.0f' % move.product_uom_qty"/>
                                 <span style="color: #666; margin-left: 2pt;" t-esc="move.product_uom.name"/>
+                                <!-- Unidad de embalaje entre paréntesis, igual que el
+                                     remito estándar: packaging_uom_id / packaging_uom_qty. -->
+                                <t t-if="move.packaging_uom_id and move.packaging_uom_id != move.product_uom">
+                                    <span style="color: #666; margin-left: 2pt;">
+                                        (<span t-field="move.packaging_uom_qty"/>
+                                        <span t-esc="move.packaging_uom_id.name"/>)
+                                    </span>
+                                </t>
                             </td>
                             <td style="padding: 3pt 6pt; text-align: right;
                                        border-bottom: 0.5pt solid #ddd; border-right: 0.5pt solid #ddd;">

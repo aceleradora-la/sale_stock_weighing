@@ -2,6 +2,7 @@ import ast
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import float_is_zero
 
 
 class StockMove(models.Model):
@@ -52,12 +53,14 @@ class StockMove(models.Model):
 
     @api.depends(
         "move_line_ids.has_recorded_weight",
+        "move_line_ids.quantity",
         "product_uom_qty",
         "weighing_detail_level",
     )
     def _compute_piece_progress(self):
         for move in self:
-            weighed = len(move.move_line_ids.filtered("has_recorded_weight"))
+            relevant = move.move_line_ids._weighing_relevant()
+            weighed = len(relevant.filtered("has_recorded_weight"))
             # En modo pieza el total esperado es la cantidad del movimiento;
             # si ya hay más líneas que la cantidad, manda la cantidad de líneas.
             expected = max(int(move.product_uom_qty or 0), len(move.move_line_ids))
@@ -151,12 +154,26 @@ class StockMove(models.Model):
                     pass
             move.planned_weight = move.product_uom_qty * weight
 
-    @api.depends("move_line_ids.recorded_weight", "move_line_ids.has_recorded_weight")
+    def _is_zero_quantity(self):
+        """El movimiento no entrega nada: no hay qué pesar."""
+        self.ensure_one()
+        precision = self.env["decimal.precision"].precision_get(
+            "Product Unit of Measure"
+        )
+        return float_is_zero(self.quantity, precision_digits=precision)
+
+    @api.depends(
+        "move_line_ids.recorded_weight",
+        "move_line_ids.has_recorded_weight",
+        "move_line_ids.quantity",
+    )
     def _compute_recorded_weight(self):
         for move in self:
-            move.recorded_weight = sum(move.move_line_ids.mapped("recorded_weight"))
-            move.move_lines_weighed = bool(move.move_line_ids) and all(
-                move.move_line_ids.mapped("has_recorded_weight")
+            # Las líneas en cantidad cero no suman peso aunque lo tengan cargado.
+            lines = move.move_line_ids._weighing_relevant()
+            move.recorded_weight = sum(lines.mapped("recorded_weight"))
+            move.move_lines_weighed = bool(lines) and all(
+                lines.mapped("has_recorded_weight")
             )
 
     def _inverse_recorded_weight(self):

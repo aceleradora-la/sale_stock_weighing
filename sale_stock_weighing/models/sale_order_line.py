@@ -74,12 +74,15 @@ class SaleOrderLine(models.Model):
     @api.depends(
         "move_ids.move_line_ids.recorded_weight",
         "move_ids.move_line_ids.has_recorded_weight",
+        "move_ids.move_line_ids.quantity",
         "move_ids.state",
     )
     def _compute_total_delivered_weight(self):
+        # _weighing_relevant descarta las líneas en cantidad cero: si se decidió
+        # no entregar algo, su peso no se factura aunque haya quedado registrado.
         for line in self:
             line.total_delivered_weight = sum(
-                line.move_ids.move_line_ids
+                line.move_ids.move_line_ids._weighing_relevant()
                 .filtered("has_recorded_weight")
                 .mapped("recorded_weight")
             )
@@ -96,7 +99,9 @@ class SaleOrderLine(models.Model):
                 line.delivered_piece_count = 0
                 continue
             done_moves = line.move_ids.filtered(lambda m: m.state == "done")
-            weighed_lines = done_moves.move_line_ids.filtered("has_recorded_weight")
+            weighed_lines = done_moves.move_line_ids._weighing_relevant().filtered(
+                "has_recorded_weight"
+            )
             # Prefer counting distinct lots (= physical pieces).
             # When lot tracking is off, sum the quantities on the weighed lines
             # (quantity is in pieces since we no longer sync it with recorded_weight).

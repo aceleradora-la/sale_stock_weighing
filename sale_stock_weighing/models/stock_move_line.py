@@ -1,4 +1,5 @@
 from odoo import _, api, fields, models
+from odoo.tools import float_is_zero
 
 
 class StockMoveLine(models.Model):
@@ -53,6 +54,20 @@ class StockMoveLine(models.Model):
                 and line.product_uom_id
                 and weighing_uom._has_common_reference(line.product_uom_id)
             )
+
+    def _weighing_relevant(self):
+        """Líneas que cuentan para el pesaje.
+
+        Se descartan las de cantidad cero: representan algo que se decidió no
+        entregar, así que ni hay que pesarlas ni su peso —si quedó registrado de
+        antes— debe sumar al remito, al peso de envío ni a la factura.
+        """
+        precision = self.env["decimal.precision"].precision_get(
+            "Product Unit of Measure"
+        )
+        return self.filtered(
+            lambda line: not float_is_zero(line.quantity, precision_digits=precision)
+        )
 
     def _get_weight_from_quantity(self):
         """Convierte la cantidad de la línea a la UdM de pesaje del producto."""

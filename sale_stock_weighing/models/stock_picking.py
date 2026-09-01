@@ -41,7 +41,9 @@ class StockPicking(models.Model):
         """
         self.ensure_one()
         grouped = {}
-        for line in self.move_line_ids.filtered("has_recorded_weight"):
+        for line in self.move_line_ids._weighing_relevant().filtered(
+            "has_recorded_weight"
+        ):
             key = (line.product_id.id, line.lot_id.id)
             entry = grouped.get(key)
             if not entry:
@@ -106,7 +108,9 @@ class StockPicking(models.Model):
         Para productos sin pesaje usa el cálculo estándar (product.weight × qty)."""
         for picking in self:
             weight = 0.0
-            bulk_lines = picking.move_line_ids.filtered(
+            # _weighing_relevant descarta las líneas en cantidad cero, que no
+            # se entregan y por lo tanto no pesan.
+            bulk_lines = picking.move_line_ids._weighing_relevant().filtered(
                 lambda ml: ml.product_id and not ml.result_package_id
             )
             for ml in bulk_lines:
@@ -141,7 +145,7 @@ class StockPicking(models.Model):
                     # Peso configurado manualmente en el paquete → prioridad.
                     total += package.shipping_weight
                 else:
-                    pkg_lines = picking.move_line_ids.filtered(
+                    pkg_lines = picking.move_line_ids._weighing_relevant().filtered(
                         lambda ml, p=package: ml.result_package_id == p
                     )
                     weighed = pkg_lines.filtered("has_recorded_weight")
@@ -213,16 +217,22 @@ class StockPicking(models.Model):
         (UdM de la línea y UdM de pesaje en la misma categoría): en esos casos
         no hay nada que pesar aparte, la cantidad cargada es el peso.
 
-        Tampoco se exige pesaje si el tipo de operación no lo tiene habilitado."""
+        Tampoco se exige pesaje si el tipo de operación no lo tiene habilitado,
+        ni para los movimientos en cantidad cero: poner cero es decir que eso no
+        se entrega, así que no hay nada que pesar."""
         self.ensure_one()
         if not self.picking_type_id.weighing_operations:
             return self.env["stock.move"]
         moves_to_weigh = self.move_ids.filtered(
-            lambda m: m.has_weight and not m.weight_is_quantity
+            lambda m: m.has_weight
+            and not m.weight_is_quantity
+            and not m._is_zero_quantity()
         )
         return moves_to_weigh.filtered(
-            lambda m: not m.move_line_ids
-            or not all(m.move_line_ids.mapped("has_recorded_weight"))
+            lambda m: not m.move_line_ids._weighing_relevant()
+            or not all(
+                m.move_line_ids._weighing_relevant().mapped("has_recorded_weight")
+            )
         )
 
     def button_validate(self):
@@ -254,7 +264,7 @@ class StockPicking(models.Model):
         para los paquetes que contienen al menos una línea con peso registrado."""
         for picking in self:
             for package in picking.move_line_ids.result_package_id:
-                pkg_lines = picking.move_line_ids.filtered(
+                pkg_lines = picking.move_line_ids._weighing_relevant().filtered(
                     lambda ml, p=package: ml.result_package_id == p
                 )
                 weighed = pkg_lines.filtered("has_recorded_weight")

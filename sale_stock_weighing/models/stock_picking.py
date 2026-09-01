@@ -31,6 +31,35 @@ class StockPicking(models.Model):
         formulario al pulsar el botón, por eso acá solo se vuelve atrás."""
         return {"type": "ir.actions.act_window_close"}
 
+    def _get_weighing_detail_lines(self):
+        """Líneas agrupadas para el "Detalle de Pesaje" del remito.
+
+        Se agrupa por producto y lote. Con seguimiento por lote cada lote sigue
+        teniendo su fila, porque identifica una pieza concreta. Sin lotes, las
+        piezas de un mismo producto son varias move lines equivalentes y
+        mostrarlas por separado solo repite la misma fila: se suman en una.
+        """
+        self.ensure_one()
+        grouped = {}
+        for line in self.move_line_ids.filtered("has_recorded_weight"):
+            key = (line.product_id.id, line.lot_id.id)
+            entry = grouped.get(key)
+            if not entry:
+                entry = {
+                    "product": line.product_id,
+                    "lot_name": line.lot_id.name or "",
+                    "uom_name": line.product_uom_id.name or "",
+                    "weighing_uom_name": (
+                        line.product_id.weighing_uom_id.name or "kg"
+                    ),
+                    "quantity": 0.0,
+                    "weight": 0.0,
+                }
+                grouped[key] = entry
+            entry["quantity"] += line.quantity
+            entry["weight"] += line.recorded_weight
+        return list(grouped.values())
+
     def action_print_weighing_labels(self):
         """Imprime las etiquetas de todas las piezas pesables de esta entrega.
 

@@ -51,21 +51,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="o.move_line_ids.filtered(lambda ml: ml.has_recorded_weight)" t-as="ml">
+                            <!-- Agrupado por producto y lote: sin lotes, las piezas
+                                 de un mismo producto se suman en una sola fila. -->
+                            <t t-foreach="o._get_weighing_detail_lines()" t-as="detail">
                                 <tr>
                                     <td>
-                                        <span t-esc="ml.product_id.display_name"/>
+                                        <span t-esc="detail['product'].display_name"/>
                                     </td>
                                     <td>
-                                        <span t-esc="ml.lot_id.name or ''"/>
+                                        <span t-esc="detail['lot_name']"/>
                                     </td>
                                     <td class="text-end">
-                                        <span t-esc="'%.0f' % ml.quantity"/>
-                                        <span class="ms-1" t-esc="ml.product_uom_id.name"/>
+                                        <span t-esc="'%.0f' % detail['quantity']"/>
+                                        <span class="ms-1" t-esc="detail['uom_name']"/>
                                     </td>
                                     <td class="text-end">
-                                        <span t-esc="'%.3f' % ml.recorded_weight"/>
-                                        <span class="ms-1" t-esc="ml.product_id.weighing_uom_id.name or 'kg'"/>
+                                        <span t-esc="'%.3f' % detail['weight']"/>
+                                        <span class="ms-1" t-esc="detail['weighing_uom_name']"/>
                                     </td>
                                 </tr>
                             </t>

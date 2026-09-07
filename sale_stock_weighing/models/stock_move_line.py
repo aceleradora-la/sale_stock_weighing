@@ -95,8 +95,15 @@ class StockMoveLine(models.Model):
 
         Evita exigir el asistente de pesaje cuando el operario ya cargó el peso
         directamente en la cantidad — el caso típico de una recepción de
-        mercadería que se compra y almacena en kg."""
-        for line in self.filtered("weight_is_quantity"):
+        mercadería que se compra y almacena en kg.
+
+        Solo completa lo que falta: si la línea ya tiene un peso registrado, se
+        respeta. Antes sobrescribía siempre, y al validar pisaba con la cantidad
+        demandada el peso que se había cargado desde la grilla.
+        """
+        for line in self.filtered(
+            lambda l: l.weight_is_quantity and not l.has_recorded_weight
+        ):
             line.write(
                 {
                     "recorded_weight": line._get_weight_from_quantity(),

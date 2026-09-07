@@ -194,11 +194,31 @@ class SaleOrderLine(models.Model):
             return result[0].compute_price_per_weight(self.product_id, 1.0)
         return 0.0
 
+    def _weighed_qty_in_pieces(self):
+        """Si la cantidad facturada debe contarse en piezas en lugar de convertir.
+
+        Solo aplica cuando la UdM de venta y la de pesaje son magnitudes
+        distintas (ej: se vende por Unidades y se factura por kg): ahí la
+        conversión de Odoo cruza categorías incompatibles y multiplica por el
+        factor equivocado.
+
+        Si son compatibles —el producto se vende y se pesa en kg— la conversión
+        estándar es correcta y contar piezas daría de menos, porque
+        delivered_piece_count trunca los kilos a entero.
+        """
+        self.ensure_one()
+        product = self.product_id
+        if not product.is_weighed_product or not product.weighing_uom_id:
+            return False
+        if not self.product_uom_id:
+            return False
+        return not product.weighing_uom_id._has_common_reference(self.product_uom_id)
+
     @api.depends("invoice_lines.x_delivered_piece_count", "invoice_lines.move_id.state")
     def _compute_qty_invoiced(self):
         super()._compute_qty_invoiced()
         for line in self:
-            if not line.product_id.is_weighed_product:
+            if not line._weighed_qty_in_pieces():
                 continue
             qty = 0.0
             for inv_line in line.invoice_lines:

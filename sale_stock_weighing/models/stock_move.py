@@ -213,14 +213,18 @@ class StockMove(models.Model):
                 else:
                     share = weight / len(lines)
                 assigned += share
-                line.write(
-                    {
-                        "recorded_weight": share,
-                        "has_recorded_weight": True,
-                        "weighing_user_id": line.weighing_user_id.id or user_id,
-                        "weighing_date": line.weighing_date or now,
-                    }
-                )
+                vals = {
+                    "recorded_weight": share,
+                    "has_recorded_weight": True,
+                    "weighing_user_id": line.weighing_user_id.id or user_id,
+                    "weighing_date": line.weighing_date or now,
+                }
+                # Cuando el peso y la cantidad son la misma magnitud (ej: kg
+                # contra kg), no pueden decir cosas distintas: lo pesado pasa a
+                # ser lo entregado. Es lo mismo que ya hace el asistente.
+                if line.weight_is_quantity:
+                    vals["quantity"] = line._get_quantity_from_weight(share)
+                line.write(vals)
 
     @api.depends(
         "move_line_ids.recorded_weight",

@@ -121,9 +121,36 @@ class PricelistItem(models.Model):
             if is_weighed:
                 item.is_weighed_price = True
 
+    def _compute_weighed_fixed_price(self):
+        """Precio por unidad de venta equivalente al precio por peso.
+
+        Dos casos, según la unidad de venta del producto:
+
+        - Compatible con la de pesaje (se vende en kg y se pesa en kg): una
+          unidad de venta ya es una cantidad de peso, así que se convierte
+          directamente. El peso del maestro no interviene — para un producto
+          que se vende por kg ese dato no significa nada.
+        - Incompatible (se vende por Unidades y se pesa en kg): hace falta el
+          peso del maestro para saber cuántos kg trae cada unidad.
+        """
+        self.ensure_one()
+        product = self.product_id or self.product_tmpl_id
+        weighing_uom = product.weighing_uom_id
+        if not weighing_uom or not self.price_per_weight:
+            return 0.0
+        uom = product.uom_id
+        if uom and weighing_uom._has_common_reference(uom):
+            return self.price_per_weight * uom._compute_quantity(1.0, weighing_uom)
+        return self.price_per_weight * (product.weight or 0.0)
+
     @api.onchange("price_per_weight", "product_id", "product_tmpl_id")
     def _onchange_price_per_weight_to_fixed_price(self):
-        """Calcula fixed_price = price_per_weight × peso del producto."""
+        """Mantiene fixed_price coherente con el precio por peso.
+
+        Nunca escribe cero: si el producto se vende por unidades y todavía no
+        tiene peso cargado, no hay con qué derivar el precio unitario y pisar
+        el valor con un cero deja la regla facturando gratis sin avisar.
+        """
         for item in self:
             if not (
                 item.company_use_stock_weighing
@@ -137,8 +164,9 @@ class PricelistItem(models.Model):
             )
             if not is_weighed or not item.price_per_weight:
                 continue
-            weight = item.product_id.weight or item.product_tmpl_id.weight or 0.0
-            item.fixed_price = item.price_per_weight * weight
+            new_price = item._compute_weighed_fixed_price()
+            if new_price:
+                item.fixed_price = new_price
 
     @api.depends(
         "is_weighed_price",

@@ -229,6 +229,13 @@ class SaleOrderLine(models.Model):
                     qty += pieces
                 elif inv_line.move_id.move_type == "out_refund":
                     qty -= pieces
+            # Las piezas se cuentan en la UdM del producto (ej: Unidades), pero
+            # qty_invoiced se expresa en la UdM de la línea de venta, que puede
+            # ser un embalaje. Sin convertir, vender 2 Caja x 16 dejaba la
+            # cantidad facturada en 32 y el pedido aparecía sobre-facturado.
+            uom = line.product_id.uom_id
+            if uom and line.product_uom_id and uom != line.product_uom_id:
+                qty = uom._compute_quantity(qty, line.product_uom_id)
             line.qty_invoiced = qty
 
     @api.onchange("product_id")

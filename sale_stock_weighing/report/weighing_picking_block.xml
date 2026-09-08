@@ -22,8 +22,12 @@
                 <tr>
                     <td style="padding: 5pt 8pt; width: 62%; vertical-align: top;">
                         <span style="font-weight: bold; font-size: 9pt;">Cliente:</span>
+                        <!-- display_name, no name: partner_id es el contacto de
+                             entrega, y su nombre suelto es solo "Entrega". El
+                             display_name arma "Empresa, Contacto", igual que
+                             muestra Odoo en la orden de entrega. -->
                         <span style="font-weight: bold; font-size: 9pt; margin-left: 3pt;">
-                            <t t-esc="picking.partner_id.name or ''"/>
+                            <t t-esc="picking.partner_id.display_name or ''"/>
                         </span>
                         <br/>
                         <span style="font-size: 8.5pt; color: #444;">

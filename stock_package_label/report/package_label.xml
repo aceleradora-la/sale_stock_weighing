@@ -142,8 +142,8 @@
             <t t-set="zpl_street" t-value="partner.street or ''"/>
             <t t-set="zpl_city"   t-value="partner.city or ''"/>
             <!-- Dirección: línea 1 = calle · línea 2 = CP - Ciudad, Provincia -->
-            <t t-set="zpl_line1" t-value="zpl_street[:37]"/>
-            <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:46]"/>
+            <t t-set="zpl_line1" t-value="zpl_street[:28]"/>
+            <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:37]"/>
 
             <!--
                 Geometría — etiqueta 10 cm x 6 cm a 203 DPI = 800 x 479 dots.
@@ -159,101 +159,74 @@
                  abajo. En un solo renglón el nombre no entraba y se cortaba
                  justo la parte que identifica a dónde va el bulto. -->
             <t t-set="empresa_p"  t-value="partner.commercial_partner_id"/>
-            <t t-set="cliente1"   t-value="(empresa_p.name or partner.name or '')[:29]"/>
-            <t t-set="cliente2"   t-value="(partner.name or '')[:37] if partner != empresa_p else ''"/>
-            <!-- sale_name: máx 16 chars — X=20, w=22 → 16x22+20=372 < 400 -->
-            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:16]"/>
-            <!-- barcode_ref: número de remito oficial si existe, sino picking.name -->
+            <t t-set="cliente1"   t-value="(empresa_p.name or partner.name or '')[:22]"/>
+            <t t-set="cliente2"   t-value="(partner.name or '')[:28] if partner != empresa_p else ''"/>
+            <!-- sale_name: máx 14 chars — X=20, w=26 → 14x26+20=384 < 400 -->
+            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:14]"/>
+            <!-- Número de remito oficial si existe, sino picking.name -->
             <t t-set="barcode_ref" t-value="picking.package_label_barcode_ref or ''"/>
-            <!-- remito: máx 16 chars — X=400, w=22 → 16x22+400=752 < 770 -->
-            <t t-set="remito"      t-value="barcode_ref[:16]"/>
+            <!-- remito: máx 14 chars — X=400, w=26 → 14x26+400=764 < 770 -->
+            <t t-set="remito"      t-value="barcode_ref[:14]"/>
             <t t-set="peso_str"    t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
 
+            <!--
+                Cada campo se arma en UN solo t-raw concatenando el valor.
+
+                Antes el comando y el dato iban en nodos separados
+                (<t t-raw="'...^FD'"/> y luego <t t-esc="valor"/>): QWeb emite
+                el salto de linea y la indentacion del XML que hay entre ambos,
+                y esos espacios caen DENTRO del ^FD, o sea que se imprimen.
+                Por eso los valores salian corridos a la derecha respecto de sus
+                etiquetas y el codigo de barras codificaba los espacios y se
+                salia del area imprimible.
+
+                No hay codigo de barras: el espacio se usa para que el cliente y
+                la direccion se lean desde lejos, que es para lo que sirve la
+                etiqueta pegada al bulto.
+            -->
             <t t-foreach="range(1, total + 1)" t-as="n">
                 <!-- Inicio etiqueta: 10 cm x 6 cm, 203 DPI (800 x 479 dots) -->
                 <t t-raw="'^XA\n^PW800\n^LL479\n^CI28\n^LH0,0\n'"/>
 
-                <!-- "BULTO" pequeño arriba-izquierda -->
+                <!-- Encabezado: "BULTO" a la izquierda, "X/N" grande a la derecha -->
                 <t t-raw="'^FO20,44^A0N,26,26^FDBULTO^FS\n'"/>
+                <t t-raw="'^FO380,34^A0N,90,68^FD%d/%d^FS\n' % (n, total)"/>
 
-                <!-- Número "X/N" grande arriba-derecha — "12/20": 5x68+380=720 < 770 -->
-                <t t-raw="'^FO380,34^A0N,90,68^FD'"/>
-                <t t-esc="'%d/%d' % (n, total)"/>
-                <t t-raw="'^FS\n'"/>
-
-                <!-- Línea separadora gruesa -->
+                <!-- Linea separadora gruesa -->
                 <t t-raw="'^FO20,138^GB750,3,3^FS\n'"/>
 
-                <!-- Cliente: empresa + dirección de entrega -->
-                <t t-raw="'^FO20,148^A0N,20,20^FDCliente:^FS\n'"/>
-                <t t-raw="'^FO20,172^A0N,28,26^FD'"/>
-                <t t-esc="cliente1"/>
-                <t t-raw="'^FS\n'"/>
-                <t t-if="cliente2">
-                    <t t-raw="'^FO20,204^A0N,22,20^FD'"/>
-                    <t t-esc="cliente2"/>
-                    <t t-raw="'^FS\n'"/>
-                </t>
+                <!-- Cliente: empresa grande y, debajo, direccion de entrega -->
+                <t t-raw="'^FO20,146^A0N,18,18^FDCliente:^FS\n'"/>
+                <t t-raw="'^FO20,170^A0N,40,34^FD' + cliente1 + '^FS\n'"/>
+                <t t-if="cliente2"
+                   t-raw="'^FO20,216^A0N,30,26^FD' + cliente2 + '^FS\n'"/>
 
-                <!-- Dirección: calle (máx 37 chars, w=20 → 37x20+20=760 < 770) -->
-                <t t-if="zpl_line1">
-                    <t t-raw="'^FO20,230^A0N,20,20^FD'"/>
-                    <t t-esc="zpl_line1"/>
-                    <t t-raw="'^FS\n'"/>
-                </t>
-                <!-- Dirección: CP - Ciudad, Provincia (máx 46 chars, w=16 → 46x16+20=756 < 770) -->
-                <t t-if="zpl_l2">
-                    <t t-raw="'^FO20,253^A0N,18,16^FD'"/>
-                    <t t-esc="zpl_l2"/>
-                    <t t-raw="'^FS\n'"/>
-                </t>
+                <!-- Direccion: calle (max 28 chars, w=26 -> 28x26+20=748 &lt; 770) -->
+                <t t-if="zpl_line1"
+                   t-raw="'^FO20,252^A0N,30,26^FD' + zpl_line1 + '^FS\n'"/>
+                <!-- Direccion: CP - Ciudad, Provincia (max 37 chars, w=20 -> 760 &lt; 770) -->
+                <t t-if="zpl_l2"
+                   t-raw="'^FO20,288^A0N,26,20^FD' + zpl_l2 + '^FS\n'"/>
 
-                <!-- Línea separadora fina -->
-                <t t-raw="'^FO20,276^GB750,2,2^FS\n'"/>
+                <!-- Linea separadora fina -->
+                <t t-raw="'^FO20,320^GB750,2,2^FS\n'"/>
 
-                <!-- Orden de Venta + Remito (etiquetas) -->
-                <t t-raw="'^FO20,284^A0N,18,18^FDOrden de Venta:^FS\n'"/>
-                <t t-raw="'^FO400,284^A0N,18,18^FDRemito:^FS\n'"/>
-
-                <!-- Orden de Venta + Remito (valores) -->
-                <t t-raw="'^FO20,306^A0N,26,22^FD'"/>
-                <t t-esc="sale_name"/>
-                <t t-raw="'^FS\n'"/>
-                <t t-raw="'^FO400,306^A0N,26,22^FD'"/>
-                <t t-esc="remito"/>
-                <t t-raw="'^FS\n'"/>
+                <!-- Orden de Venta y Remito -->
+                <t t-raw="'^FO20,328^A0N,18,18^FDOrden de Venta:^FS\n'"/>
+                <t t-raw="'^FO400,328^A0N,18,18^FDRemito:^FS\n'"/>
+                <t t-raw="'^FO20,350^A0N,30,26^FD' + sale_name + '^FS\n'"/>
+                <t t-raw="'^FO400,350^A0N,30,26^FD' + remito + '^FS\n'"/>
 
                 <!-- Fecha y Peso -->
-                <t t-raw="'^FO20,337^A0N,20,20^FDFecha: '"/>
-                <t t-esc="fecha"/>
-                <t t-raw="'^FS\n'"/>
+                <t t-raw="'^FO20,388^A0N,24,22^FDFecha: ' + fecha + '^FS\n'"/>
+                <t t-if="peso_str"
+                   t-raw="'^FO400,388^A0N,24,22^FDPeso: ' + peso_str + '^FS\n'"/>
 
-                <t t-if="peso_str">
-                    <t t-raw="'^FO400,337^A0N,20,20^FDPeso: '"/>
-                    <t t-esc="peso_str"/>
-                    <t t-raw="'^FS\n'"/>
-                </t>
+                <!-- Linea separadora fina -->
+                <t t-raw="'^FO20,418^GB750,2,2^FS\n'"/>
 
-                <!-- Línea separadora fina -->
-                <t t-raw="'^FO20,362^GB750,2,2^FS\n'"/>
-
-                <!-- Código de barras Code-128 centrado.  ^BC no se autocentra:
-                     se estima el ancho en dots ((n+3) simbolos de 11 modulos mas
-                     13 de parada, por el ancho de modulo de ^BY) y de ahi el X.
-                     El texto legible que imprime ^BC ya queda centrado bajo el
-                     codigo, asi que el numero de remito se centra con el. -->
-                <t t-set="bc_w" t-value="((len(barcode_ref) + 3) * 11 + 13) * 2"/>
-                <t t-set="bc_x" t-value="max(20, int((800 - bc_w) / 2))"/>
-                <t t-raw="'^FO'"/>
-                <t t-esc="bc_x"/>
-                <t t-raw="',370^BY2,3,50^BCN,,Y,N,N^FD'"/>
-                <t t-esc="barcode_ref"/>
-                <t t-raw="'^FS\n'"/>
-
-                <!-- Empresa (pie), centrada — Y = 362+50+22 = 434 -->
-                <t t-raw="'^FO20,450^A0N,18,18^FB750,1,0,C^FD'"/>
-                <t t-esc="(picking.company_id.name or '')[:41]"/>
-                <t t-raw="'^FS\n'"/>
+                <!-- Empresa al pie, centrada -->
+                <t t-raw="'^FO20,428^A0N,20,20^FB750,1,0,C^FD' + (picking.company_id.name or '')[:37] + '^FS\n'"/>
 
                 <!-- Fin de etiqueta -->
                 <t t-raw="'^XZ\n'"/>

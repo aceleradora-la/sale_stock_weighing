@@ -57,7 +57,7 @@
                             <t t-foreach="weighing_details" t-as="detail">
                                 <tr>
                                     <td>
-                                        <span t-esc="detail['product'].display_name"/>
+                                        <span t-esc="detail['name']"/>
                                     </td>
                                     <td>
                                         <span t-esc="detail['lot_name']"/>

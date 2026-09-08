@@ -49,6 +49,15 @@ class StockPicking(models.Model):
             if not entry:
                 entry = {
                     "product": line.product_id,
+                    # Mismo nombre que muestran las lineas de arriba del remito:
+                    # _get_aggregated_properties es el hook estandar de agrupacion,
+                    # y stock_ux lo sobreescribe para usar la descripcion de origen
+                    # —nombre y codigo del partner— cuando ese ajuste esta activo.
+                    # Con el ajuste apagado devuelve el display_name de siempre.
+                    "name": (
+                        line._get_aggregated_properties(move_line=line).get("name")
+                        or line.product_id.display_name
+                    ),
                     "lot_name": line.lot_id.name or "",
                     "uom_name": line.product_uom_id.name or "",
                     "weighing_uom_name": (

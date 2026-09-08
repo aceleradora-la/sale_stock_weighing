@@ -121,7 +121,7 @@
 
     <!-- ============================================================
          ETIQUETA DE BULTO — ZPL
-         Formato para impresoras Zebra. Etiqueta 4"×6" portrait (812×1218 dots a 203 DPI).
+         Formato para impresoras Zebra. Etiqueta 10 cm x 6 cm (800 x 479 dots a 203 DPI).
          Una etiqueta ZPL por bulto.
     ============================================================ -->
 
@@ -142,98 +142,112 @@
             <t t-set="zpl_street" t-value="partner.street or ''"/>
             <t t-set="zpl_city"   t-value="partner.city or ''"/>
             <!-- Dirección: línea 1 = calle · línea 2 = CP - Ciudad, Provincia -->
-            <t t-set="zpl_line1" t-value="zpl_street[:38]"/>
-            <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:49]"/>
+            <t t-set="zpl_line1" t-value="zpl_street[:37]"/>
+            <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:46]"/>
 
-            <!-- Truncar textos para ZPL — etiqueta 10 cm × 6 cm (800 × 490 dots @ 203 DPI) -->
-            <!-- cliente:   máx 30 chars — X=10, w=24 → 30×24+10=730 < 800 ✓
-                 display_name y no name: el partner es el contacto de entrega y
-                 su nombre suelto no dice de qué empresa es. Al truncar a 30 se
-                 puede perder el final, pero se prioriza la empresa, que es lo
-                 que identifica al destinatario. -->
-            <t t-set="cliente"   t-value="(partner.display_name or '')[:30]"/>
-            <!-- sale_name: máx 17 chars — X=10, w=22 → 17×22+10=384 < 400 ✓ -->
-            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:17]"/>
+            <!--
+                Geometría — etiqueta 10 cm x 6 cm a 203 DPI = 800 x 479 dots.
+
+                Márgenes: X=20 a la izquierda y nada más allá de X=770. La franja
+                contra cada borde queda fuera del área imprimible real de la Zebra
+                y ésta descarta el campo COMPLETO en lugar de recortarlo: por eso
+                las líneas ^GB de 780 dots no se imprimían. Por el mismo motivo el
+                contenido arranca en Y=20 y no en Y=5, que salía cortado arriba.
+            -->
+
+            <!-- Cliente en dos renglones: empresa arriba, dirección de entrega
+                 abajo. En un solo renglón el nombre no entraba y se cortaba
+                 justo la parte que identifica a dónde va el bulto. -->
+            <t t-set="empresa_p"  t-value="partner.commercial_partner_id"/>
+            <t t-set="cliente1"   t-value="(empresa_p.name or partner.name or '')[:29]"/>
+            <t t-set="cliente2"   t-value="(partner.name or '')[:37] if partner != empresa_p else ''"/>
+            <!-- sale_name: máx 16 chars — X=20, w=22 → 16x22+20=372 < 400 -->
+            <t t-set="sale_name" t-value="(sale.name if sale else '-')[:16]"/>
             <!-- barcode_ref: número de remito oficial si existe, sino picking.name -->
             <t t-set="barcode_ref" t-value="picking.package_label_barcode_ref or ''"/>
-            <!-- remito: máx 16 chars — X=400, w=22 → 16×22+400=752 < 800 ✓ -->
+            <!-- remito: máx 16 chars — X=400, w=22 → 16x22+400=752 < 770 -->
             <t t-set="remito"      t-value="barcode_ref[:16]"/>
             <t t-set="peso_str"    t-value="('%.3f %s' % (weight, wuom)) if weight else ''"/>
 
             <t t-foreach="range(1, total + 1)" t-as="n">
-                <!-- ── Inicio etiqueta: 10 cm × 6 cm, 203 DPI (800 × 490 dots) ── -->
-                <t t-raw="'^XA\n^PW800\n^LL490\n^CI28\n^LH0,0\n'"/>
+                <!-- Inicio etiqueta: 10 cm x 6 cm, 203 DPI (800 x 479 dots) -->
+                <t t-raw="'^XA\n^PW800\n^LL479\n^CI28\n^LH0,0\n'"/>
 
                 <!-- "BULTO" pequeño arriba-izquierda -->
-                <t t-raw="'^FO10,5^A0N,28,28^FDBULTO^FS\n'"/>
+                <t t-raw="'^FO20,30^A0N,26,26^FDBULTO^FS\n'"/>
 
-                <!-- Número "X/N" grande arriba-derecha — "12/20": 5×72+300=660 < 800 ✓ -->
-                <t t-raw="'^FO300,5^A0N,95,72^FD'"/>
+                <!-- Número "X/N" grande arriba-derecha — "12/20": 5x68+380=720 < 770 -->
+                <t t-raw="'^FO380,20^A0N,90,68^FD'"/>
                 <t t-esc="'%d/%d' % (n, total)"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Línea separadora gruesa -->
-                <t t-raw="'^FO10,108^GB780,3,3^FS\n'"/>
+                <t t-raw="'^FO20,124^GB750,3,3^FS\n'"/>
 
-                <!-- Cliente -->
-                <t t-raw="'^FO10,118^A0N,20,20^FDCliente:^FS\n'"/>
-                <t t-raw="'^FO10,142^A0N,26,24^FD'"/>
-                <t t-esc="cliente"/>
+                <!-- Cliente: empresa + dirección de entrega -->
+                <t t-raw="'^FO20,134^A0N,20,20^FDCliente:^FS\n'"/>
+                <t t-raw="'^FO20,158^A0N,28,26^FD'"/>
+                <t t-esc="cliente1"/>
                 <t t-raw="'^FS\n'"/>
+                <t t-if="cliente2">
+                    <t t-raw="'^FO20,190^A0N,22,20^FD'"/>
+                    <t t-esc="cliente2"/>
+                    <t t-raw="'^FS\n'"/>
+                </t>
 
-                <!-- Dirección: calle -->
+                <!-- Dirección: calle (máx 37 chars, w=20 → 37x20+20=760 < 770) -->
                 <t t-if="zpl_line1">
-                    <t t-raw="'^FO10,178^A0N,20,20^FD'"/>
+                    <t t-raw="'^FO20,216^A0N,20,20^FD'"/>
                     <t t-esc="zpl_line1"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
-                <!-- Dirección: CP - Ciudad, Provincia (máx 49 chars, w=16 → 49×16+10=794 < 800) -->
+                <!-- Dirección: CP - Ciudad, Provincia (máx 46 chars, w=16 → 46x16+20=756 < 770) -->
                 <t t-if="zpl_l2">
-                    <t t-raw="'^FO10,201^A0N,18,16^FD'"/>
+                    <t t-raw="'^FO20,239^A0N,18,16^FD'"/>
                     <t t-esc="zpl_l2"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO10,224^GB780,2,2^FS\n'"/>
+                <t t-raw="'^FO20,262^GB750,2,2^FS\n'"/>
 
                 <!-- Orden de Venta + Remito (etiquetas) -->
-                <t t-raw="'^FO10,232^A0N,18,18^FDOrden de Venta:^FS\n'"/>
-                <t t-raw="'^FO400,232^A0N,18,18^FDRemito:^FS\n'"/>
+                <t t-raw="'^FO20,270^A0N,18,18^FDOrden de Venta:^FS\n'"/>
+                <t t-raw="'^FO400,270^A0N,18,18^FDRemito:^FS\n'"/>
 
                 <!-- Orden de Venta + Remito (valores) -->
-                <t t-raw="'^FO10,254^A0N,26,22^FD'"/>
+                <t t-raw="'^FO20,292^A0N,26,22^FD'"/>
                 <t t-esc="sale_name"/>
                 <t t-raw="'^FS\n'"/>
-                <t t-raw="'^FO400,254^A0N,26,22^FD'"/>
+                <t t-raw="'^FO400,292^A0N,26,22^FD'"/>
                 <t t-esc="remito"/>
                 <t t-raw="'^FS\n'"/>
 
                 <!-- Fecha y Peso -->
-                <t t-raw="'^FO10,285^A0N,20,20^FDFecha: '"/>
+                <t t-raw="'^FO20,323^A0N,20,20^FDFecha: '"/>
                 <t t-esc="fecha"/>
                 <t t-raw="'^FS\n'"/>
 
                 <t t-if="peso_str">
-                    <t t-raw="'^FO400,285^A0N,20,20^FDPeso: '"/>
+                    <t t-raw="'^FO400,323^A0N,20,20^FDPeso: '"/>
                     <t t-esc="peso_str"/>
                     <t t-raw="'^FS\n'"/>
                 </t>
 
                 <!-- Línea separadora fina -->
-                <t t-raw="'^FO10,310^GB780,2,2^FS\n'"/>
+                <t t-raw="'^FO20,348^GB750,2,2^FS\n'"/>
 
                 <!-- Código de barras Code-128 alineado a la izquierda -->
-                <t t-raw="'^FO10,317^BY1,3,55^BCN,,Y,N,N^FD'"/>
+                <t t-raw="'^FO20,356^BY1,3,50^BCN,,Y,N,N^FD'"/>
                 <t t-esc="barcode_ref"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- Empresa (pie) — Y = 317+55+24 = 396 -->
-                <t t-raw="'^FO10,399^A0N,18,18^FD'"/>
-                <t t-esc="(picking.company_id.name or '')[:42]"/>
+                <!-- Empresa (pie) — Y = 356+50+22 = 428, +18 de alto = 446 < 479 -->
+                <t t-raw="'^FO20,428^A0N,18,18^FD'"/>
+                <t t-esc="(picking.company_id.name or '')[:41]"/>
                 <t t-raw="'^FS\n'"/>
 
-                <!-- ── Fin de etiqueta ── -->
+                <!-- Fin de etiqueta -->
                 <t t-raw="'^XZ\n'"/>
             </t>
         </t>

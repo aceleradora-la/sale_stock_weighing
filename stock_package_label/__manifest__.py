@@ -1,6 +1,6 @@
 {
     "name": "Stock Package Label",
-    "version": "19.0.1.0.2",
+    "version": "19.0.1.0.3",
     "category": "Inventory",
     "summary": "Imprime etiquetas de bultos (PDF o ZPL) desde órdenes de entrega",
     "description": """

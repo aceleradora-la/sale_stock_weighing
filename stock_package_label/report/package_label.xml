@@ -53,7 +53,11 @@
                                                 <!-- Cliente -->
                                                 <div style="margin-bottom:8px;">
                                                     <div style="font-size:0.7em; color:#666; text-transform:uppercase; letter-spacing:1px;">Cliente</div>
-                                                    <div style="font-size:1.2em; font-weight:700;"><t t-esc="partner.name or ''"/></div>
+                                                    <!-- display_name, no name: el partner del picking
+                                                         es el contacto de entrega, y su nombre suelto
+                                                         es solo "ENTREGA CAPILLA". display_name arma
+                                                         "Empresa, Contacto" como muestra Odoo. -->
+                                                    <div style="font-size:1.2em; font-weight:700;"><t t-esc="partner.display_name or ''"/></div>
                                                     <t t-if="partner.street">
                                                         <div style="font-size:0.88em; color:#333;">
                                                             <t t-esc="partner.street"/>
@@ -142,8 +146,12 @@
             <t t-set="zpl_l2"    t-value="((partner.zip + ' - ' if partner.zip else '') + zpl_city + (', ' + partner.state_id.name if partner.state_id else ''))[:49]"/>
 
             <!-- Truncar textos para ZPL — etiqueta 10 cm × 6 cm (800 × 490 dots @ 203 DPI) -->
-            <!-- cliente:   máx 30 chars — X=10, w=24 → 30×24+10=730 < 800 ✓ -->
-            <t t-set="cliente"   t-value="(partner.name or '')[:30]"/>
+            <!-- cliente:   máx 30 chars — X=10, w=24 → 30×24+10=730 < 800 ✓
+                 display_name y no name: el partner es el contacto de entrega y
+                 su nombre suelto no dice de qué empresa es. Al truncar a 30 se
+                 puede perder el final, pero se prioriza la empresa, que es lo
+                 que identifica al destinatario. -->
+            <t t-set="cliente"   t-value="(partner.display_name or '')[:30]"/>
             <!-- sale_name: máx 17 chars — X=10, w=22 → 17×22+10=384 < 400 ✓ -->
             <t t-set="sale_name" t-value="(sale.name if sale else '-')[:17]"/>
             <!-- barcode_ref: número de remito oficial si existe, sino picking.name -->

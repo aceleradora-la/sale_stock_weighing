@@ -14,36 +14,47 @@
             <!-- Para productos pesables, el precio unitario es calculado (p/peso × peso);
                  se grisa para que el usuario edite solo el precio por peso.
                  Cuando la empresa usa pesaje, se oculta la columna y se muestra
-                 en su lugar la columna de precio por peso. -->
+                 en su lugar la columna de precio por peso.
+
+                 El readonly se AGREGA a la condicion heredada con add/separator
+                 en lugar de reemplazarla. Antes se escribia el atributo entero,
+                 lo que borraba el `qty_invoiced > 0` de Odoo y, sobre todo,
+                 dejaba el precio bloqueado en empresas que no usan pesaje y en
+                 productos no pesables.
+
+                 La condicion usa el campo is_weighed_product de la linea (un
+                 related) y no product_id.is_weighed_product: los modificadores
+                 no resuelven rutas con punto. -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="attributes">
-                <attribute name="readonly">product_id.is_weighed_product</attribute>
+                <attribute name="readonly" add="(parent.company_use_stock_weighing and is_weighed_product)" separator=" or "/>
                 <attribute name="column_invisible">parent.company_use_stock_weighing</attribute>
                 <attribute name="optional">hide</attribute>
             </xpath>
 
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
+                <field name="is_weighed_product" column_invisible="1"/>
                 <field name="price_per_weight"
                        column_invisible="not parent.company_use_stock_weighing"
-                       invisible="not product_id.is_weighed_product"/>
+                       invisible="not is_weighed_product"/>
                 <field name="x_piece_count"
                        optional="show"
                        column_invisible="not parent.company_use_stock_weighing"
-                       invisible="not product_id.is_weighed_product"
+                       invisible="not is_weighed_product"
                        string="Piezas"/>
                 <field name="total_planned_weight"
                        optional="show"
                        column_invisible="not parent.company_use_stock_weighing"
-                       invisible="not product_id.is_weighed_product"
+                       invisible="not is_weighed_product"
                        string="Peso Estimado"/>
                 <field name="total_delivered_weight"
                        optional="show"
                        column_invisible="not parent.company_use_stock_weighing"
-                       invisible="not product_id.is_weighed_product"
+                       invisible="not is_weighed_product"
                        string="Peso Entregado"/>
                 <field name="delivered_piece_count"
                        optional="hide"
                        column_invisible="not parent.company_use_stock_weighing"
-                       invisible="not product_id.is_weighed_product"
+                       invisible="not is_weighed_product"
                        string="Piezas Entregadas"/>
             </xpath>
         </field>

@@ -8,6 +8,14 @@ _logger = logging.getLogger(__name__)
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
+    is_weighed_product = fields.Boolean(
+        related="product_id.is_weighed_product",
+        string="Producto pesable",
+        help="Related al producto. Existe para que la vista de lista pueda "
+        "evaluarlo en un modificador: los modificadores no resuelven rutas "
+        "con punto (product_id.is_weighed_product), asi que hay que tener el "
+        "campo en la linea y en la vista.",
+    )
     price_per_weight = fields.Float(
         string="Precio / Unidad de Peso",
         digits="Product Price",

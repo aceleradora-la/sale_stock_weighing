@@ -13,8 +13,11 @@
 
             <!-- Para productos pesables, el precio unitario es calculado (p/peso × peso);
                  se grisa para que el usuario edite solo el precio por peso.
-                 Cuando la empresa usa pesaje, se oculta la columna y se muestra
-                 en su lugar la columna de precio por peso.
+                 El criterio es por FILA y no por columna: column_invisible oculta
+                 la columna para toda la orden, asi que en una orden que mezcla
+                 productos pesables y no pesables el hielo o el envase quedaban
+                 sin ningun precio editable. Ahora conviven las dos columnas y
+                 en cada linea se muestra la que corresponde.
 
                  El readonly se AGREGA a la condicion heredada con add/separator
                  en lugar de reemplazarla. Antes se escribia el atributo entero,
@@ -27,8 +30,8 @@
                  no resuelven rutas con punto. -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="attributes">
                 <attribute name="readonly" add="(parent.company_use_stock_weighing and is_weighed_product)" separator=" or "/>
-                <attribute name="column_invisible">parent.company_use_stock_weighing</attribute>
-                <attribute name="optional">hide</attribute>
+                <attribute name="invisible" add="(parent.company_use_stock_weighing and is_weighed_product)" separator=" or "/>
+                <attribute name="optional">show</attribute>
             </xpath>
 
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
